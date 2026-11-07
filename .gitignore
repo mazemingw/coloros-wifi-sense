@@ -1,0 +1,7 @@
+/build/
+*.class
+*.dex
+*.zip
+.idea/
+.vscode/
+local.properties

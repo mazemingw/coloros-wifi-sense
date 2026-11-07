@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/KernelSU-Modules/tools/main/schemas/module.schema.json
+schemaVersion: 1
+id: coloros_wifi_sense
+name: ColorOS WIFI感知
+summary: 弱信号时自动断开当前 Wi-Fi 接入点，可选原生流体云倒计时与手动断开。
+description: README.md
+license: Apache-2.0
+homepage: https://github.com/mazemingw/coloros-wifi-sense
+support: https://github.com/mazemingw/coloros-wifi-sense/issues
+tags: [network, wifi, coloros]
+authors:
+  - name: 酷安@NVMEX夜莺
+    url: https://github.com/mazemingw
+compatibility:
+  androidMinApi: 29
+release:
+  assetPattern: coloros-wifi-sense-*.zip
