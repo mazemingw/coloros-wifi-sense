@@ -1,0 +1,622 @@
+installer	shell	case	rc	threshold	fluid	staging	tmp	old_module	update	fluid_dex	dir_mode	file_mode	passed	log_directory	errors
+kernelsu-v1.0.5	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/001-kernelsu-v1.0.5-ash-normal_up	
+kernelsu-v1.0.5	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/002-kernelsu-v1.0.5-ash-normal_down	
+kernelsu-v1.0.5	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/003-kernelsu-v1.0.5-ash-fresh_up	
+kernelsu-v1.0.5	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/004-kernelsu-v1.0.5-ash-upgrade_threshold	
+kernelsu-v1.0.5	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/005-kernelsu-v1.0.5-ash-dir_conflict	
+kernelsu-v1.0.5	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/006-kernelsu-v1.0.5-ash-dir_denied	
+kernelsu-v1.0.5	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/007-kernelsu-v1.0.5-ash-dir_exists_unwritable	
+kernelsu-v1.0.5	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/008-kernelsu-v1.0.5-ash-upgrade_readonly_config	
+kernelsu-v1.0.5	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/009-kernelsu-v1.0.5-ash-threshold_is_dir	
+kernelsu-v1.0.5	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/010-kernelsu-v1.0.5-ash-existing_dir_mkdir_error	
+kernelsu-v1.0.5	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/011-kernelsu-v1.0.5-ash-tmp_missing_initial	
+kernelsu-v1.0.5	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/012-kernelsu-v1.0.5-ash-tmp_denied	
+kernelsu-v1.0.5	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/013-kernelsu-v1.0.5-ash-env_tmp_empty	
+kernelsu-v1.0.5	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/014-kernelsu-v1.0.5-ash-env_tmp_invalid	
+kernelsu-v1.0.5	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/015-kernelsu-v1.0.5-ash-env_api_empty	
+kernelsu-v1.0.5	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/016-kernelsu-v1.0.5-ash-env_api_invalid	
+kernelsu-v1.0.5	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/017-kernelsu-v1.0.5-ash-env_api_old	
+kernelsu-v1.0.5	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/018-kernelsu-v1.0.5-ash-env_ksu_empty	
+kernelsu-v1.0.5	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/019-kernelsu-v1.0.5-ash-abort_mid	
+kernelsu-v1.0.5	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/020-kernelsu-v1.0.5-ash-root_einval	
+kernelsu-v1.0.5	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/021-kernelsu-v1.0.5-ash-env_mod_empty	
+kernelsu-v1.0.5	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/022-kernelsu-v1.0.5-ash-env_mod_relative	
+kernelsu-v1.0.5	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/023-kernelsu-v1.0.5-ash-env_mod_root	
+kernelsu-v1.0.5	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/024-kernelsu-v1.0.5-ksu-ash-normal_up	
+kernelsu-v1.0.5	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/025-kernelsu-v1.0.5-ksu-ash-normal_down	
+kernelsu-v1.0.5	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/026-kernelsu-v1.0.5-ksu-ash-fresh_up	
+kernelsu-v1.0.5	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/027-kernelsu-v1.0.5-ksu-ash-upgrade_threshold	
+kernelsu-v1.0.5	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/028-kernelsu-v1.0.5-ksu-ash-dir_conflict	
+kernelsu-v1.0.5	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/029-kernelsu-v1.0.5-ksu-ash-dir_denied	
+kernelsu-v1.0.5	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/030-kernelsu-v1.0.5-ksu-ash-dir_exists_unwritable	
+kernelsu-v1.0.5	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/031-kernelsu-v1.0.5-ksu-ash-upgrade_readonly_config	
+kernelsu-v1.0.5	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/032-kernelsu-v1.0.5-ksu-ash-threshold_is_dir	
+kernelsu-v1.0.5	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/033-kernelsu-v1.0.5-ksu-ash-existing_dir_mkdir_error	
+kernelsu-v1.0.5	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/034-kernelsu-v1.0.5-ksu-ash-tmp_missing_initial	
+kernelsu-v1.0.5	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/035-kernelsu-v1.0.5-ksu-ash-tmp_denied	
+kernelsu-v1.0.5	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/036-kernelsu-v1.0.5-ksu-ash-env_tmp_empty	
+kernelsu-v1.0.5	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/037-kernelsu-v1.0.5-ksu-ash-env_tmp_invalid	
+kernelsu-v1.0.5	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/038-kernelsu-v1.0.5-ksu-ash-env_api_empty	
+kernelsu-v1.0.5	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/039-kernelsu-v1.0.5-ksu-ash-env_api_invalid	
+kernelsu-v1.0.5	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/040-kernelsu-v1.0.5-ksu-ash-env_api_old	
+kernelsu-v1.0.5	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/041-kernelsu-v1.0.5-ksu-ash-env_ksu_empty	
+kernelsu-v1.0.5	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/042-kernelsu-v1.0.5-ksu-ash-abort_mid	
+kernelsu-v1.0.5	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/043-kernelsu-v1.0.5-ksu-ash-root_einval	
+kernelsu-v1.0.5	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/044-kernelsu-v1.0.5-ksu-ash-env_mod_empty	
+kernelsu-v1.0.5	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/045-kernelsu-v1.0.5-ksu-ash-env_mod_relative	
+kernelsu-v1.0.5	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/046-kernelsu-v1.0.5-ksu-ash-env_mod_root	
+kernelsu-v1.0.5	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/047-kernelsu-v1.0.5-dash-normal_up	
+kernelsu-v1.0.5	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/048-kernelsu-v1.0.5-dash-normal_down	
+kernelsu-v1.0.5	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/049-kernelsu-v1.0.5-dash-fresh_up	
+kernelsu-v1.0.5	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/050-kernelsu-v1.0.5-dash-upgrade_threshold	
+kernelsu-v1.0.5	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/051-kernelsu-v1.0.5-dash-dir_conflict	
+kernelsu-v1.0.5	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/052-kernelsu-v1.0.5-dash-dir_denied	
+kernelsu-v1.0.5	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/053-kernelsu-v1.0.5-dash-dir_exists_unwritable	
+kernelsu-v1.0.5	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/054-kernelsu-v1.0.5-dash-upgrade_readonly_config	
+kernelsu-v1.0.5	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/055-kernelsu-v1.0.5-dash-threshold_is_dir	
+kernelsu-v1.0.5	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/056-kernelsu-v1.0.5-dash-existing_dir_mkdir_error	
+kernelsu-v1.0.5	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/057-kernelsu-v1.0.5-dash-tmp_missing_initial	
+kernelsu-v1.0.5	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/058-kernelsu-v1.0.5-dash-tmp_denied	
+kernelsu-v1.0.5	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/059-kernelsu-v1.0.5-dash-env_tmp_empty	
+kernelsu-v1.0.5	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/060-kernelsu-v1.0.5-dash-env_tmp_invalid	
+kernelsu-v1.0.5	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/061-kernelsu-v1.0.5-dash-env_api_empty	
+kernelsu-v1.0.5	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/062-kernelsu-v1.0.5-dash-env_api_invalid	
+kernelsu-v1.0.5	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/063-kernelsu-v1.0.5-dash-env_api_old	
+kernelsu-v1.0.5	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/064-kernelsu-v1.0.5-dash-env_ksu_empty	
+kernelsu-v1.0.5	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/065-kernelsu-v1.0.5-dash-abort_mid	
+kernelsu-v1.0.5	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/066-kernelsu-v1.0.5-dash-root_einval	
+kernelsu-v1.0.5	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/067-kernelsu-v1.0.5-dash-env_mod_empty	
+kernelsu-v1.0.5	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/068-kernelsu-v1.0.5-dash-env_mod_relative	
+kernelsu-v1.0.5	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/069-kernelsu-v1.0.5-dash-env_mod_root	
+kernelsu	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/070-kernelsu-ash-normal_up	
+kernelsu	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/071-kernelsu-ash-normal_down	
+kernelsu	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/072-kernelsu-ash-fresh_up	
+kernelsu	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/073-kernelsu-ash-upgrade_threshold	
+kernelsu	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/074-kernelsu-ash-dir_conflict	
+kernelsu	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/075-kernelsu-ash-dir_denied	
+kernelsu	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/076-kernelsu-ash-dir_exists_unwritable	
+kernelsu	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/077-kernelsu-ash-upgrade_readonly_config	
+kernelsu	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/078-kernelsu-ash-threshold_is_dir	
+kernelsu	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/079-kernelsu-ash-existing_dir_mkdir_error	
+kernelsu	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/080-kernelsu-ash-tmp_missing_initial	
+kernelsu	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/081-kernelsu-ash-tmp_denied	
+kernelsu	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/082-kernelsu-ash-env_tmp_empty	
+kernelsu	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/083-kernelsu-ash-env_tmp_invalid	
+kernelsu	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/084-kernelsu-ash-env_api_empty	
+kernelsu	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/085-kernelsu-ash-env_api_invalid	
+kernelsu	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/086-kernelsu-ash-env_api_old	
+kernelsu	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/087-kernelsu-ash-env_ksu_empty	
+kernelsu	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/088-kernelsu-ash-abort_mid	
+kernelsu	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/089-kernelsu-ash-root_einval	
+kernelsu	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/090-kernelsu-ash-env_mod_empty	
+kernelsu	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/091-kernelsu-ash-env_mod_relative	
+kernelsu	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/092-kernelsu-ash-env_mod_root	
+kernelsu	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/093-kernelsu-ksu-ash-normal_up	
+kernelsu	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/094-kernelsu-ksu-ash-normal_down	
+kernelsu	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/095-kernelsu-ksu-ash-fresh_up	
+kernelsu	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/096-kernelsu-ksu-ash-upgrade_threshold	
+kernelsu	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/097-kernelsu-ksu-ash-dir_conflict	
+kernelsu	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/098-kernelsu-ksu-ash-dir_denied	
+kernelsu	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/099-kernelsu-ksu-ash-dir_exists_unwritable	
+kernelsu	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/100-kernelsu-ksu-ash-upgrade_readonly_config	
+kernelsu	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/101-kernelsu-ksu-ash-threshold_is_dir	
+kernelsu	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/102-kernelsu-ksu-ash-existing_dir_mkdir_error	
+kernelsu	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/103-kernelsu-ksu-ash-tmp_missing_initial	
+kernelsu	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/104-kernelsu-ksu-ash-tmp_denied	
+kernelsu	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/105-kernelsu-ksu-ash-env_tmp_empty	
+kernelsu	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/106-kernelsu-ksu-ash-env_tmp_invalid	
+kernelsu	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/107-kernelsu-ksu-ash-env_api_empty	
+kernelsu	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/108-kernelsu-ksu-ash-env_api_invalid	
+kernelsu	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/109-kernelsu-ksu-ash-env_api_old	
+kernelsu	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/110-kernelsu-ksu-ash-env_ksu_empty	
+kernelsu	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/111-kernelsu-ksu-ash-abort_mid	
+kernelsu	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/112-kernelsu-ksu-ash-root_einval	
+kernelsu	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/113-kernelsu-ksu-ash-env_mod_empty	
+kernelsu	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/114-kernelsu-ksu-ash-env_mod_relative	
+kernelsu	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/115-kernelsu-ksu-ash-env_mod_root	
+kernelsu	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/116-kernelsu-dash-normal_up	
+kernelsu	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/117-kernelsu-dash-normal_down	
+kernelsu	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/118-kernelsu-dash-fresh_up	
+kernelsu	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/119-kernelsu-dash-upgrade_threshold	
+kernelsu	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/120-kernelsu-dash-dir_conflict	
+kernelsu	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/121-kernelsu-dash-dir_denied	
+kernelsu	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/122-kernelsu-dash-dir_exists_unwritable	
+kernelsu	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/123-kernelsu-dash-upgrade_readonly_config	
+kernelsu	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/124-kernelsu-dash-threshold_is_dir	
+kernelsu	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/125-kernelsu-dash-existing_dir_mkdir_error	
+kernelsu	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/126-kernelsu-dash-tmp_missing_initial	
+kernelsu	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/127-kernelsu-dash-tmp_denied	
+kernelsu	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/128-kernelsu-dash-env_tmp_empty	
+kernelsu	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/129-kernelsu-dash-env_tmp_invalid	
+kernelsu	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/130-kernelsu-dash-env_api_empty	
+kernelsu	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/131-kernelsu-dash-env_api_invalid	
+kernelsu	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/132-kernelsu-dash-env_api_old	
+kernelsu	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/133-kernelsu-dash-env_ksu_empty	
+kernelsu	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/134-kernelsu-dash-abort_mid	
+kernelsu	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/135-kernelsu-dash-root_einval	
+kernelsu	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/136-kernelsu-dash-env_mod_empty	
+kernelsu	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/137-kernelsu-dash-env_mod_relative	
+kernelsu	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/138-kernelsu-dash-env_mod_root	
+next	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/139-next-ash-normal_up	
+next	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/140-next-ash-normal_down	
+next	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/141-next-ash-fresh_up	
+next	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/142-next-ash-upgrade_threshold	
+next	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/143-next-ash-dir_conflict	
+next	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/144-next-ash-dir_denied	
+next	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/145-next-ash-dir_exists_unwritable	
+next	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/146-next-ash-upgrade_readonly_config	
+next	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/147-next-ash-threshold_is_dir	
+next	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/148-next-ash-existing_dir_mkdir_error	
+next	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/149-next-ash-tmp_missing_initial	
+next	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/150-next-ash-tmp_denied	
+next	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/151-next-ash-env_tmp_empty	
+next	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/152-next-ash-env_tmp_invalid	
+next	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/153-next-ash-env_api_empty	
+next	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/154-next-ash-env_api_invalid	
+next	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/155-next-ash-env_api_old	
+next	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/156-next-ash-env_ksu_empty	
+next	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/157-next-ash-abort_mid	
+next	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/158-next-ash-root_einval	
+next	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/159-next-ash-env_mod_empty	
+next	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/160-next-ash-env_mod_relative	
+next	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/161-next-ash-env_mod_root	
+next	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/162-next-ksu-ash-normal_up	
+next	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/163-next-ksu-ash-normal_down	
+next	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/164-next-ksu-ash-fresh_up	
+next	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/165-next-ksu-ash-upgrade_threshold	
+next	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/166-next-ksu-ash-dir_conflict	
+next	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/167-next-ksu-ash-dir_denied	
+next	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/168-next-ksu-ash-dir_exists_unwritable	
+next	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/169-next-ksu-ash-upgrade_readonly_config	
+next	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/170-next-ksu-ash-threshold_is_dir	
+next	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/171-next-ksu-ash-existing_dir_mkdir_error	
+next	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/172-next-ksu-ash-tmp_missing_initial	
+next	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/173-next-ksu-ash-tmp_denied	
+next	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/174-next-ksu-ash-env_tmp_empty	
+next	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/175-next-ksu-ash-env_tmp_invalid	
+next	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/176-next-ksu-ash-env_api_empty	
+next	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/177-next-ksu-ash-env_api_invalid	
+next	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/178-next-ksu-ash-env_api_old	
+next	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/179-next-ksu-ash-env_ksu_empty	
+next	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/180-next-ksu-ash-abort_mid	
+next	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/181-next-ksu-ash-root_einval	
+next	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/182-next-ksu-ash-env_mod_empty	
+next	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/183-next-ksu-ash-env_mod_relative	
+next	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/184-next-ksu-ash-env_mod_root	
+next	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/185-next-dash-normal_up	
+next	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-a/results/186-next-dash-normal_down	
+next	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-a/results/187-next-dash-fresh_up	
+next	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-a/results/188-next-dash-upgrade_threshold	
+next	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-a/results/189-next-dash-dir_conflict	
+next	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/190-next-dash-dir_denied	
+next	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-a/results/191-next-dash-dir_exists_unwritable	
+next	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-a/results/192-next-dash-upgrade_readonly_config	
+next	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-a/results/193-next-dash-threshold_is_dir	
+next	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-a/results/194-next-dash-existing_dir_mkdir_error	
+next	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/195-next-dash-tmp_missing_initial	
+next	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/196-next-dash-tmp_denied	
+next	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/197-next-dash-env_tmp_empty	
+next	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/198-next-dash-env_tmp_invalid	
+next	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/199-next-dash-env_api_empty	
+next	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/200-next-dash-env_api_invalid	
+next	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/201-next-dash-env_api_old	
+next	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/202-next-dash-env_ksu_empty	
+next	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/203-next-dash-abort_mid	
+next	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-a/results/204-next-dash-root_einval	
+next	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/205-next-dash-env_mod_empty	
+next	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/206-next-dash-env_mod_relative	
+next	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-a/results/207-next-dash-env_mod_root	
+next-v1.0.9-magic	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/001-next-v1.0.9-magic-ash-normal_up	
+next-v1.0.9-magic	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/002-next-v1.0.9-magic-ash-normal_down	
+next-v1.0.9-magic	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/003-next-v1.0.9-magic-ash-fresh_up	
+next-v1.0.9-magic	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/004-next-v1.0.9-magic-ash-upgrade_threshold	
+next-v1.0.9-magic	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/005-next-v1.0.9-magic-ash-dir_conflict	
+next-v1.0.9-magic	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/006-next-v1.0.9-magic-ash-dir_denied	
+next-v1.0.9-magic	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/007-next-v1.0.9-magic-ash-dir_exists_unwritable	
+next-v1.0.9-magic	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/008-next-v1.0.9-magic-ash-upgrade_readonly_config	
+next-v1.0.9-magic	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/009-next-v1.0.9-magic-ash-threshold_is_dir	
+next-v1.0.9-magic	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/010-next-v1.0.9-magic-ash-existing_dir_mkdir_error	
+next-v1.0.9-magic	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/011-next-v1.0.9-magic-ash-tmp_missing_initial	
+next-v1.0.9-magic	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/012-next-v1.0.9-magic-ash-tmp_denied	
+next-v1.0.9-magic	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/013-next-v1.0.9-magic-ash-env_tmp_empty	
+next-v1.0.9-magic	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/014-next-v1.0.9-magic-ash-env_tmp_invalid	
+next-v1.0.9-magic	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/015-next-v1.0.9-magic-ash-env_api_empty	
+next-v1.0.9-magic	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/016-next-v1.0.9-magic-ash-env_api_invalid	
+next-v1.0.9-magic	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/017-next-v1.0.9-magic-ash-env_api_old	
+next-v1.0.9-magic	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/018-next-v1.0.9-magic-ash-env_ksu_empty	
+next-v1.0.9-magic	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/019-next-v1.0.9-magic-ash-abort_mid	
+next-v1.0.9-magic	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/020-next-v1.0.9-magic-ash-root_einval	
+next-v1.0.9-magic	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/021-next-v1.0.9-magic-ash-env_mod_empty	
+next-v1.0.9-magic	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/022-next-v1.0.9-magic-ash-env_mod_relative	
+next-v1.0.9-magic	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/023-next-v1.0.9-magic-ash-env_mod_root	
+next-v1.0.9-magic	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/024-next-v1.0.9-magic-ksu-ash-normal_up	
+next-v1.0.9-magic	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/025-next-v1.0.9-magic-ksu-ash-normal_down	
+next-v1.0.9-magic	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/026-next-v1.0.9-magic-ksu-ash-fresh_up	
+next-v1.0.9-magic	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/027-next-v1.0.9-magic-ksu-ash-upgrade_threshold	
+next-v1.0.9-magic	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/028-next-v1.0.9-magic-ksu-ash-dir_conflict	
+next-v1.0.9-magic	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/029-next-v1.0.9-magic-ksu-ash-dir_denied	
+next-v1.0.9-magic	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/030-next-v1.0.9-magic-ksu-ash-dir_exists_unwritable	
+next-v1.0.9-magic	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/031-next-v1.0.9-magic-ksu-ash-upgrade_readonly_config	
+next-v1.0.9-magic	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/032-next-v1.0.9-magic-ksu-ash-threshold_is_dir	
+next-v1.0.9-magic	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/033-next-v1.0.9-magic-ksu-ash-existing_dir_mkdir_error	
+next-v1.0.9-magic	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/034-next-v1.0.9-magic-ksu-ash-tmp_missing_initial	
+next-v1.0.9-magic	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/035-next-v1.0.9-magic-ksu-ash-tmp_denied	
+next-v1.0.9-magic	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/036-next-v1.0.9-magic-ksu-ash-env_tmp_empty	
+next-v1.0.9-magic	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/037-next-v1.0.9-magic-ksu-ash-env_tmp_invalid	
+next-v1.0.9-magic	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/038-next-v1.0.9-magic-ksu-ash-env_api_empty	
+next-v1.0.9-magic	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/039-next-v1.0.9-magic-ksu-ash-env_api_invalid	
+next-v1.0.9-magic	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/040-next-v1.0.9-magic-ksu-ash-env_api_old	
+next-v1.0.9-magic	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/041-next-v1.0.9-magic-ksu-ash-env_ksu_empty	
+next-v1.0.9-magic	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/042-next-v1.0.9-magic-ksu-ash-abort_mid	
+next-v1.0.9-magic	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/043-next-v1.0.9-magic-ksu-ash-root_einval	
+next-v1.0.9-magic	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/044-next-v1.0.9-magic-ksu-ash-env_mod_empty	
+next-v1.0.9-magic	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/045-next-v1.0.9-magic-ksu-ash-env_mod_relative	
+next-v1.0.9-magic	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/046-next-v1.0.9-magic-ksu-ash-env_mod_root	
+next-v1.0.9-magic	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/047-next-v1.0.9-magic-dash-normal_up	
+next-v1.0.9-magic	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/048-next-v1.0.9-magic-dash-normal_down	
+next-v1.0.9-magic	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/049-next-v1.0.9-magic-dash-fresh_up	
+next-v1.0.9-magic	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/050-next-v1.0.9-magic-dash-upgrade_threshold	
+next-v1.0.9-magic	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/051-next-v1.0.9-magic-dash-dir_conflict	
+next-v1.0.9-magic	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/052-next-v1.0.9-magic-dash-dir_denied	
+next-v1.0.9-magic	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/053-next-v1.0.9-magic-dash-dir_exists_unwritable	
+next-v1.0.9-magic	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/054-next-v1.0.9-magic-dash-upgrade_readonly_config	
+next-v1.0.9-magic	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/055-next-v1.0.9-magic-dash-threshold_is_dir	
+next-v1.0.9-magic	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/056-next-v1.0.9-magic-dash-existing_dir_mkdir_error	
+next-v1.0.9-magic	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/057-next-v1.0.9-magic-dash-tmp_missing_initial	
+next-v1.0.9-magic	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/058-next-v1.0.9-magic-dash-tmp_denied	
+next-v1.0.9-magic	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/059-next-v1.0.9-magic-dash-env_tmp_empty	
+next-v1.0.9-magic	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/060-next-v1.0.9-magic-dash-env_tmp_invalid	
+next-v1.0.9-magic	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/061-next-v1.0.9-magic-dash-env_api_empty	
+next-v1.0.9-magic	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/062-next-v1.0.9-magic-dash-env_api_invalid	
+next-v1.0.9-magic	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/063-next-v1.0.9-magic-dash-env_api_old	
+next-v1.0.9-magic	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/064-next-v1.0.9-magic-dash-env_ksu_empty	
+next-v1.0.9-magic	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/065-next-v1.0.9-magic-dash-abort_mid	
+next-v1.0.9-magic	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/066-next-v1.0.9-magic-dash-root_einval	
+next-v1.0.9-magic	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/067-next-v1.0.9-magic-dash-env_mod_empty	
+next-v1.0.9-magic	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/068-next-v1.0.9-magic-dash-env_mod_relative	
+next-v1.0.9-magic	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/069-next-v1.0.9-magic-dash-env_mod_root	
+next-v1.0.9-overlayfs	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/070-next-v1.0.9-overlayfs-ash-normal_up	
+next-v1.0.9-overlayfs	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/071-next-v1.0.9-overlayfs-ash-normal_down	
+next-v1.0.9-overlayfs	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/072-next-v1.0.9-overlayfs-ash-fresh_up	
+next-v1.0.9-overlayfs	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/073-next-v1.0.9-overlayfs-ash-upgrade_threshold	
+next-v1.0.9-overlayfs	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/074-next-v1.0.9-overlayfs-ash-dir_conflict	
+next-v1.0.9-overlayfs	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/075-next-v1.0.9-overlayfs-ash-dir_denied	
+next-v1.0.9-overlayfs	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/076-next-v1.0.9-overlayfs-ash-dir_exists_unwritable	
+next-v1.0.9-overlayfs	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/077-next-v1.0.9-overlayfs-ash-upgrade_readonly_config	
+next-v1.0.9-overlayfs	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/078-next-v1.0.9-overlayfs-ash-threshold_is_dir	
+next-v1.0.9-overlayfs	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/079-next-v1.0.9-overlayfs-ash-existing_dir_mkdir_error	
+next-v1.0.9-overlayfs	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/080-next-v1.0.9-overlayfs-ash-tmp_missing_initial	
+next-v1.0.9-overlayfs	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/081-next-v1.0.9-overlayfs-ash-tmp_denied	
+next-v1.0.9-overlayfs	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/082-next-v1.0.9-overlayfs-ash-env_tmp_empty	
+next-v1.0.9-overlayfs	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/083-next-v1.0.9-overlayfs-ash-env_tmp_invalid	
+next-v1.0.9-overlayfs	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/084-next-v1.0.9-overlayfs-ash-env_api_empty	
+next-v1.0.9-overlayfs	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/085-next-v1.0.9-overlayfs-ash-env_api_invalid	
+next-v1.0.9-overlayfs	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/086-next-v1.0.9-overlayfs-ash-env_api_old	
+next-v1.0.9-overlayfs	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/087-next-v1.0.9-overlayfs-ash-env_ksu_empty	
+next-v1.0.9-overlayfs	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/088-next-v1.0.9-overlayfs-ash-abort_mid	
+next-v1.0.9-overlayfs	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/089-next-v1.0.9-overlayfs-ash-root_einval	
+next-v1.0.9-overlayfs	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/090-next-v1.0.9-overlayfs-ash-env_mod_empty	
+next-v1.0.9-overlayfs	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/091-next-v1.0.9-overlayfs-ash-env_mod_relative	
+next-v1.0.9-overlayfs	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/092-next-v1.0.9-overlayfs-ash-env_mod_root	
+next-v1.0.9-overlayfs	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/093-next-v1.0.9-overlayfs-ksu-ash-normal_up	
+next-v1.0.9-overlayfs	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/094-next-v1.0.9-overlayfs-ksu-ash-normal_down	
+next-v1.0.9-overlayfs	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/095-next-v1.0.9-overlayfs-ksu-ash-fresh_up	
+next-v1.0.9-overlayfs	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/096-next-v1.0.9-overlayfs-ksu-ash-upgrade_threshold	
+next-v1.0.9-overlayfs	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/097-next-v1.0.9-overlayfs-ksu-ash-dir_conflict	
+next-v1.0.9-overlayfs	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/098-next-v1.0.9-overlayfs-ksu-ash-dir_denied	
+next-v1.0.9-overlayfs	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/099-next-v1.0.9-overlayfs-ksu-ash-dir_exists_unwritable	
+next-v1.0.9-overlayfs	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/100-next-v1.0.9-overlayfs-ksu-ash-upgrade_readonly_config	
+next-v1.0.9-overlayfs	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/101-next-v1.0.9-overlayfs-ksu-ash-threshold_is_dir	
+next-v1.0.9-overlayfs	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/102-next-v1.0.9-overlayfs-ksu-ash-existing_dir_mkdir_error	
+next-v1.0.9-overlayfs	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/103-next-v1.0.9-overlayfs-ksu-ash-tmp_missing_initial	
+next-v1.0.9-overlayfs	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/104-next-v1.0.9-overlayfs-ksu-ash-tmp_denied	
+next-v1.0.9-overlayfs	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/105-next-v1.0.9-overlayfs-ksu-ash-env_tmp_empty	
+next-v1.0.9-overlayfs	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/106-next-v1.0.9-overlayfs-ksu-ash-env_tmp_invalid	
+next-v1.0.9-overlayfs	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/107-next-v1.0.9-overlayfs-ksu-ash-env_api_empty	
+next-v1.0.9-overlayfs	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/108-next-v1.0.9-overlayfs-ksu-ash-env_api_invalid	
+next-v1.0.9-overlayfs	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/109-next-v1.0.9-overlayfs-ksu-ash-env_api_old	
+next-v1.0.9-overlayfs	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/110-next-v1.0.9-overlayfs-ksu-ash-env_ksu_empty	
+next-v1.0.9-overlayfs	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/111-next-v1.0.9-overlayfs-ksu-ash-abort_mid	
+next-v1.0.9-overlayfs	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/112-next-v1.0.9-overlayfs-ksu-ash-root_einval	
+next-v1.0.9-overlayfs	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/113-next-v1.0.9-overlayfs-ksu-ash-env_mod_empty	
+next-v1.0.9-overlayfs	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/114-next-v1.0.9-overlayfs-ksu-ash-env_mod_relative	
+next-v1.0.9-overlayfs	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/115-next-v1.0.9-overlayfs-ksu-ash-env_mod_root	
+next-v1.0.9-overlayfs	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/116-next-v1.0.9-overlayfs-dash-normal_up	
+next-v1.0.9-overlayfs	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/117-next-v1.0.9-overlayfs-dash-normal_down	
+next-v1.0.9-overlayfs	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/118-next-v1.0.9-overlayfs-dash-fresh_up	
+next-v1.0.9-overlayfs	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/119-next-v1.0.9-overlayfs-dash-upgrade_threshold	
+next-v1.0.9-overlayfs	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/120-next-v1.0.9-overlayfs-dash-dir_conflict	
+next-v1.0.9-overlayfs	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/121-next-v1.0.9-overlayfs-dash-dir_denied	
+next-v1.0.9-overlayfs	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/122-next-v1.0.9-overlayfs-dash-dir_exists_unwritable	
+next-v1.0.9-overlayfs	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/123-next-v1.0.9-overlayfs-dash-upgrade_readonly_config	
+next-v1.0.9-overlayfs	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/124-next-v1.0.9-overlayfs-dash-threshold_is_dir	
+next-v1.0.9-overlayfs	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/125-next-v1.0.9-overlayfs-dash-existing_dir_mkdir_error	
+next-v1.0.9-overlayfs	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/126-next-v1.0.9-overlayfs-dash-tmp_missing_initial	
+next-v1.0.9-overlayfs	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/127-next-v1.0.9-overlayfs-dash-tmp_denied	
+next-v1.0.9-overlayfs	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/128-next-v1.0.9-overlayfs-dash-env_tmp_empty	
+next-v1.0.9-overlayfs	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/129-next-v1.0.9-overlayfs-dash-env_tmp_invalid	
+next-v1.0.9-overlayfs	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/130-next-v1.0.9-overlayfs-dash-env_api_empty	
+next-v1.0.9-overlayfs	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/131-next-v1.0.9-overlayfs-dash-env_api_invalid	
+next-v1.0.9-overlayfs	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/132-next-v1.0.9-overlayfs-dash-env_api_old	
+next-v1.0.9-overlayfs	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/133-next-v1.0.9-overlayfs-dash-env_ksu_empty	
+next-v1.0.9-overlayfs	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/134-next-v1.0.9-overlayfs-dash-abort_mid	
+next-v1.0.9-overlayfs	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/135-next-v1.0.9-overlayfs-dash-root_einval	
+next-v1.0.9-overlayfs	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/136-next-v1.0.9-overlayfs-dash-env_mod_empty	
+next-v1.0.9-overlayfs	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/137-next-v1.0.9-overlayfs-dash-env_mod_relative	
+next-v1.0.9-overlayfs	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/138-next-v1.0.9-overlayfs-dash-env_mod_root	
+sukisu	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/139-sukisu-ash-normal_up	
+sukisu	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/140-sukisu-ash-normal_down	
+sukisu	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/141-sukisu-ash-fresh_up	
+sukisu	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/142-sukisu-ash-upgrade_threshold	
+sukisu	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/143-sukisu-ash-dir_conflict	
+sukisu	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/144-sukisu-ash-dir_denied	
+sukisu	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/145-sukisu-ash-dir_exists_unwritable	
+sukisu	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/146-sukisu-ash-upgrade_readonly_config	
+sukisu	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/147-sukisu-ash-threshold_is_dir	
+sukisu	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/148-sukisu-ash-existing_dir_mkdir_error	
+sukisu	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/149-sukisu-ash-tmp_missing_initial	
+sukisu	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/150-sukisu-ash-tmp_denied	
+sukisu	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/151-sukisu-ash-env_tmp_empty	
+sukisu	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/152-sukisu-ash-env_tmp_invalid	
+sukisu	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/153-sukisu-ash-env_api_empty	
+sukisu	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/154-sukisu-ash-env_api_invalid	
+sukisu	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/155-sukisu-ash-env_api_old	
+sukisu	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/156-sukisu-ash-env_ksu_empty	
+sukisu	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/157-sukisu-ash-abort_mid	
+sukisu	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/158-sukisu-ash-root_einval	
+sukisu	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/159-sukisu-ash-env_mod_empty	
+sukisu	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/160-sukisu-ash-env_mod_relative	
+sukisu	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/161-sukisu-ash-env_mod_root	
+sukisu	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/162-sukisu-ksu-ash-normal_up	
+sukisu	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/163-sukisu-ksu-ash-normal_down	
+sukisu	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/164-sukisu-ksu-ash-fresh_up	
+sukisu	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/165-sukisu-ksu-ash-upgrade_threshold	
+sukisu	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/166-sukisu-ksu-ash-dir_conflict	
+sukisu	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/167-sukisu-ksu-ash-dir_denied	
+sukisu	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/168-sukisu-ksu-ash-dir_exists_unwritable	
+sukisu	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/169-sukisu-ksu-ash-upgrade_readonly_config	
+sukisu	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/170-sukisu-ksu-ash-threshold_is_dir	
+sukisu	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/171-sukisu-ksu-ash-existing_dir_mkdir_error	
+sukisu	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/172-sukisu-ksu-ash-tmp_missing_initial	
+sukisu	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/173-sukisu-ksu-ash-tmp_denied	
+sukisu	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/174-sukisu-ksu-ash-env_tmp_empty	
+sukisu	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/175-sukisu-ksu-ash-env_tmp_invalid	
+sukisu	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/176-sukisu-ksu-ash-env_api_empty	
+sukisu	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/177-sukisu-ksu-ash-env_api_invalid	
+sukisu	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/178-sukisu-ksu-ash-env_api_old	
+sukisu	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/179-sukisu-ksu-ash-env_ksu_empty	
+sukisu	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/180-sukisu-ksu-ash-abort_mid	
+sukisu	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/181-sukisu-ksu-ash-root_einval	
+sukisu	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/182-sukisu-ksu-ash-env_mod_empty	
+sukisu	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/183-sukisu-ksu-ash-env_mod_relative	
+sukisu	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/184-sukisu-ksu-ash-env_mod_root	
+sukisu	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/185-sukisu-dash-normal_up	
+sukisu	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-b/results/186-sukisu-dash-normal_down	
+sukisu	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-b/results/187-sukisu-dash-fresh_up	
+sukisu	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-b/results/188-sukisu-dash-upgrade_threshold	
+sukisu	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-b/results/189-sukisu-dash-dir_conflict	
+sukisu	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/190-sukisu-dash-dir_denied	
+sukisu	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-b/results/191-sukisu-dash-dir_exists_unwritable	
+sukisu	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-b/results/192-sukisu-dash-upgrade_readonly_config	
+sukisu	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-b/results/193-sukisu-dash-threshold_is_dir	
+sukisu	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-b/results/194-sukisu-dash-existing_dir_mkdir_error	
+sukisu	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/195-sukisu-dash-tmp_missing_initial	
+sukisu	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/196-sukisu-dash-tmp_denied	
+sukisu	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/197-sukisu-dash-env_tmp_empty	
+sukisu	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/198-sukisu-dash-env_tmp_invalid	
+sukisu	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/199-sukisu-dash-env_api_empty	
+sukisu	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/200-sukisu-dash-env_api_invalid	
+sukisu	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/201-sukisu-dash-env_api_old	
+sukisu	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/202-sukisu-dash-env_ksu_empty	
+sukisu	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/203-sukisu-dash-abort_mid	
+sukisu	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-b/results/204-sukisu-dash-root_einval	
+sukisu	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/205-sukisu-dash-env_mod_empty	
+sukisu	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/206-sukisu-dash-env_mod_relative	
+sukisu	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-b/results/207-sukisu-dash-env_mod_root	
+fina-v1.3.0	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/001-fina-v1.3.0-ash-normal_up	
+fina-v1.3.0	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/002-fina-v1.3.0-ash-normal_down	
+fina-v1.3.0	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/003-fina-v1.3.0-ash-fresh_up	
+fina-v1.3.0	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/004-fina-v1.3.0-ash-upgrade_threshold	
+fina-v1.3.0	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/005-fina-v1.3.0-ash-dir_conflict	
+fina-v1.3.0	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/006-fina-v1.3.0-ash-dir_denied	
+fina-v1.3.0	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/007-fina-v1.3.0-ash-dir_exists_unwritable	
+fina-v1.3.0	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/008-fina-v1.3.0-ash-upgrade_readonly_config	
+fina-v1.3.0	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/009-fina-v1.3.0-ash-threshold_is_dir	
+fina-v1.3.0	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/010-fina-v1.3.0-ash-existing_dir_mkdir_error	
+fina-v1.3.0	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/011-fina-v1.3.0-ash-tmp_missing_initial	
+fina-v1.3.0	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/012-fina-v1.3.0-ash-tmp_denied	
+fina-v1.3.0	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/013-fina-v1.3.0-ash-env_tmp_empty	
+fina-v1.3.0	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/014-fina-v1.3.0-ash-env_tmp_invalid	
+fina-v1.3.0	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/015-fina-v1.3.0-ash-env_api_empty	
+fina-v1.3.0	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/016-fina-v1.3.0-ash-env_api_invalid	
+fina-v1.3.0	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/017-fina-v1.3.0-ash-env_api_old	
+fina-v1.3.0	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/018-fina-v1.3.0-ash-env_ksu_empty	
+fina-v1.3.0	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/019-fina-v1.3.0-ash-abort_mid	
+fina-v1.3.0	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/020-fina-v1.3.0-ash-root_einval	
+fina-v1.3.0	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/021-fina-v1.3.0-ash-env_mod_empty	
+fina-v1.3.0	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/022-fina-v1.3.0-ash-env_mod_relative	
+fina-v1.3.0	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/023-fina-v1.3.0-ash-env_mod_root	
+fina-v1.3.0	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/024-fina-v1.3.0-ksu-ash-normal_up	
+fina-v1.3.0	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/025-fina-v1.3.0-ksu-ash-normal_down	
+fina-v1.3.0	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/026-fina-v1.3.0-ksu-ash-fresh_up	
+fina-v1.3.0	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/027-fina-v1.3.0-ksu-ash-upgrade_threshold	
+fina-v1.3.0	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/028-fina-v1.3.0-ksu-ash-dir_conflict	
+fina-v1.3.0	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/029-fina-v1.3.0-ksu-ash-dir_denied	
+fina-v1.3.0	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/030-fina-v1.3.0-ksu-ash-dir_exists_unwritable	
+fina-v1.3.0	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/031-fina-v1.3.0-ksu-ash-upgrade_readonly_config	
+fina-v1.3.0	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/032-fina-v1.3.0-ksu-ash-threshold_is_dir	
+fina-v1.3.0	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/033-fina-v1.3.0-ksu-ash-existing_dir_mkdir_error	
+fina-v1.3.0	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/034-fina-v1.3.0-ksu-ash-tmp_missing_initial	
+fina-v1.3.0	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/035-fina-v1.3.0-ksu-ash-tmp_denied	
+fina-v1.3.0	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/036-fina-v1.3.0-ksu-ash-env_tmp_empty	
+fina-v1.3.0	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/037-fina-v1.3.0-ksu-ash-env_tmp_invalid	
+fina-v1.3.0	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/038-fina-v1.3.0-ksu-ash-env_api_empty	
+fina-v1.3.0	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/039-fina-v1.3.0-ksu-ash-env_api_invalid	
+fina-v1.3.0	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/040-fina-v1.3.0-ksu-ash-env_api_old	
+fina-v1.3.0	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/041-fina-v1.3.0-ksu-ash-env_ksu_empty	
+fina-v1.3.0	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/042-fina-v1.3.0-ksu-ash-abort_mid	
+fina-v1.3.0	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/043-fina-v1.3.0-ksu-ash-root_einval	
+fina-v1.3.0	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/044-fina-v1.3.0-ksu-ash-env_mod_empty	
+fina-v1.3.0	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/045-fina-v1.3.0-ksu-ash-env_mod_relative	
+fina-v1.3.0	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/046-fina-v1.3.0-ksu-ash-env_mod_root	
+fina-v1.3.0	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/047-fina-v1.3.0-dash-normal_up	
+fina-v1.3.0	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/048-fina-v1.3.0-dash-normal_down	
+fina-v1.3.0	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/049-fina-v1.3.0-dash-fresh_up	
+fina-v1.3.0	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/050-fina-v1.3.0-dash-upgrade_threshold	
+fina-v1.3.0	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/051-fina-v1.3.0-dash-dir_conflict	
+fina-v1.3.0	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/052-fina-v1.3.0-dash-dir_denied	
+fina-v1.3.0	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/053-fina-v1.3.0-dash-dir_exists_unwritable	
+fina-v1.3.0	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/054-fina-v1.3.0-dash-upgrade_readonly_config	
+fina-v1.3.0	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/055-fina-v1.3.0-dash-threshold_is_dir	
+fina-v1.3.0	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/056-fina-v1.3.0-dash-existing_dir_mkdir_error	
+fina-v1.3.0	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/057-fina-v1.3.0-dash-tmp_missing_initial	
+fina-v1.3.0	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/058-fina-v1.3.0-dash-tmp_denied	
+fina-v1.3.0	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/059-fina-v1.3.0-dash-env_tmp_empty	
+fina-v1.3.0	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/060-fina-v1.3.0-dash-env_tmp_invalid	
+fina-v1.3.0	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/061-fina-v1.3.0-dash-env_api_empty	
+fina-v1.3.0	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/062-fina-v1.3.0-dash-env_api_invalid	
+fina-v1.3.0	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/063-fina-v1.3.0-dash-env_api_old	
+fina-v1.3.0	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/064-fina-v1.3.0-dash-env_ksu_empty	
+fina-v1.3.0	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/065-fina-v1.3.0-dash-abort_mid	
+fina-v1.3.0	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/066-fina-v1.3.0-dash-root_einval	
+fina-v1.3.0	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/067-fina-v1.3.0-dash-env_mod_empty	
+fina-v1.3.0	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/068-fina-v1.3.0-dash-env_mod_relative	
+fina-v1.3.0	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/069-fina-v1.3.0-dash-env_mod_root	
+fina	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/070-fina-ash-normal_up	
+fina	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/071-fina-ash-normal_down	
+fina	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/072-fina-ash-fresh_up	
+fina	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/073-fina-ash-upgrade_threshold	
+fina	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/074-fina-ash-dir_conflict	
+fina	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/075-fina-ash-dir_denied	
+fina	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/076-fina-ash-dir_exists_unwritable	
+fina	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/077-fina-ash-upgrade_readonly_config	
+fina	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/078-fina-ash-threshold_is_dir	
+fina	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/079-fina-ash-existing_dir_mkdir_error	
+fina	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/080-fina-ash-tmp_missing_initial	
+fina	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/081-fina-ash-tmp_denied	
+fina	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/082-fina-ash-env_tmp_empty	
+fina	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/083-fina-ash-env_tmp_invalid	
+fina	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/084-fina-ash-env_api_empty	
+fina	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/085-fina-ash-env_api_invalid	
+fina	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/086-fina-ash-env_api_old	
+fina	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/087-fina-ash-env_ksu_empty	
+fina	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/088-fina-ash-abort_mid	
+fina	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/089-fina-ash-root_einval	
+fina	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/090-fina-ash-env_mod_empty	
+fina	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/091-fina-ash-env_mod_relative	
+fina	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/092-fina-ash-env_mod_root	
+fina	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/093-fina-ksu-ash-normal_up	
+fina	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/094-fina-ksu-ash-normal_down	
+fina	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/095-fina-ksu-ash-fresh_up	
+fina	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/096-fina-ksu-ash-upgrade_threshold	
+fina	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/097-fina-ksu-ash-dir_conflict	
+fina	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/098-fina-ksu-ash-dir_denied	
+fina	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/099-fina-ksu-ash-dir_exists_unwritable	
+fina	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/100-fina-ksu-ash-upgrade_readonly_config	
+fina	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/101-fina-ksu-ash-threshold_is_dir	
+fina	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/102-fina-ksu-ash-existing_dir_mkdir_error	
+fina	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/103-fina-ksu-ash-tmp_missing_initial	
+fina	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/104-fina-ksu-ash-tmp_denied	
+fina	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/105-fina-ksu-ash-env_tmp_empty	
+fina	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/106-fina-ksu-ash-env_tmp_invalid	
+fina	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/107-fina-ksu-ash-env_api_empty	
+fina	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/108-fina-ksu-ash-env_api_invalid	
+fina	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/109-fina-ksu-ash-env_api_old	
+fina	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/110-fina-ksu-ash-env_ksu_empty	
+fina	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/111-fina-ksu-ash-abort_mid	
+fina	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/112-fina-ksu-ash-root_einval	
+fina	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/113-fina-ksu-ash-env_mod_empty	
+fina	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/114-fina-ksu-ash-env_mod_relative	
+fina	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/115-fina-ksu-ash-env_mod_root	
+fina	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/116-fina-dash-normal_up	
+fina	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/117-fina-dash-normal_down	
+fina	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/118-fina-dash-fresh_up	
+fina	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/119-fina-dash-upgrade_threshold	
+fina	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/120-fina-dash-dir_conflict	
+fina	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/121-fina-dash-dir_denied	
+fina	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/122-fina-dash-dir_exists_unwritable	
+fina	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/123-fina-dash-upgrade_readonly_config	
+fina	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/124-fina-dash-threshold_is_dir	
+fina	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/125-fina-dash-existing_dir_mkdir_error	
+fina	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/126-fina-dash-tmp_missing_initial	
+fina	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/127-fina-dash-tmp_denied	
+fina	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/128-fina-dash-env_tmp_empty	
+fina	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/129-fina-dash-env_tmp_invalid	
+fina	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/130-fina-dash-env_api_empty	
+fina	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/131-fina-dash-env_api_invalid	
+fina	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/132-fina-dash-env_api_old	
+fina	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/133-fina-dash-env_ksu_empty	
+fina	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/134-fina-dash-abort_mid	
+fina	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/135-fina-dash-root_einval	
+fina	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/136-fina-dash-env_mod_empty	
+fina	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/137-fina-dash-env_mod_relative	
+fina	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/138-fina-dash-env_mod_root	
+magisk	ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/139-magisk-ash-normal_up	
+magisk	ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/140-magisk-ash-normal_down	
+magisk	ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/141-magisk-ash-fresh_up	
+magisk	ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/142-magisk-ash-upgrade_threshold	
+magisk	ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/143-magisk-ash-dir_conflict	
+magisk	ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/144-magisk-ash-dir_denied	
+magisk	ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/145-magisk-ash-dir_exists_unwritable	
+magisk	ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/146-magisk-ash-upgrade_readonly_config	
+magisk	ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/147-magisk-ash-threshold_is_dir	
+magisk	ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/148-magisk-ash-existing_dir_mkdir_error	
+magisk	ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/149-magisk-ash-tmp_missing_initial	
+magisk	ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/150-magisk-ash-tmp_denied	
+magisk	ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/151-magisk-ash-env_tmp_empty	
+magisk	ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/152-magisk-ash-env_tmp_invalid	
+magisk	ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/153-magisk-ash-env_api_empty	
+magisk	ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/154-magisk-ash-env_api_invalid	
+magisk	ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/155-magisk-ash-env_api_old	
+magisk	ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/156-magisk-ash-env_ksu_empty	
+magisk	ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/157-magisk-ash-abort_mid	
+magisk	ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/158-magisk-ash-root_einval	
+magisk	ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/159-magisk-ash-env_mod_empty	
+magisk	ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/160-magisk-ash-env_mod_relative	
+magisk	ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/161-magisk-ash-env_mod_root	
+magisk	ksu-ash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/162-magisk-ksu-ash-normal_up	
+magisk	ksu-ash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/163-magisk-ksu-ash-normal_down	
+magisk	ksu-ash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/164-magisk-ksu-ash-fresh_up	
+magisk	ksu-ash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/165-magisk-ksu-ash-upgrade_threshold	
+magisk	ksu-ash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/166-magisk-ksu-ash-dir_conflict	
+magisk	ksu-ash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/167-magisk-ksu-ash-dir_denied	
+magisk	ksu-ash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/168-magisk-ksu-ash-dir_exists_unwritable	
+magisk	ksu-ash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/169-magisk-ksu-ash-upgrade_readonly_config	
+magisk	ksu-ash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/170-magisk-ksu-ash-threshold_is_dir	
+magisk	ksu-ash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/171-magisk-ksu-ash-existing_dir_mkdir_error	
+magisk	ksu-ash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/172-magisk-ksu-ash-tmp_missing_initial	
+magisk	ksu-ash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/173-magisk-ksu-ash-tmp_denied	
+magisk	ksu-ash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/174-magisk-ksu-ash-env_tmp_empty	
+magisk	ksu-ash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/175-magisk-ksu-ash-env_tmp_invalid	
+magisk	ksu-ash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/176-magisk-ksu-ash-env_api_empty	
+magisk	ksu-ash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/177-magisk-ksu-ash-env_api_invalid	
+magisk	ksu-ash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/178-magisk-ksu-ash-env_api_old	
+magisk	ksu-ash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/179-magisk-ksu-ash-env_ksu_empty	
+magisk	ksu-ash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/180-magisk-ksu-ash-abort_mid	
+magisk	ksu-ash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/181-magisk-ksu-ash-root_einval	
+magisk	ksu-ash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/182-magisk-ksu-ash-env_mod_empty	
+magisk	ksu-ash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/183-magisk-ksu-ash-env_mod_relative	
+magisk	ksu-ash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/184-magisk-ksu-ash-env_mod_root	
+magisk	dash	normal_up	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/185-magisk-dash-normal_up	
+magisk	dash	normal_down	0	-80	0	yes	no	yes	yes	no	700	600	True	build/installer-lab/after-c/results/186-magisk-dash-normal_down	
+magisk	dash	fresh_up	0	-80	1	yes	no	no	yes	yes	700	600	True	build/installer-lab/after-c/results/187-magisk-dash-fresh_up	
+magisk	dash	upgrade_threshold	0	-85	1	yes	no	yes	yes	yes	755	644	True	build/installer-lab/after-c/results/188-magisk-dash-upgrade_threshold	
+magisk	dash	dir_conflict	1	missing	missing	no	no	yes	no	no	644		True	build/installer-lab/after-c/results/189-magisk-dash-dir_conflict	
+magisk	dash	dir_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/190-magisk-dash-dir_denied	
+magisk	dash	dir_exists_unwritable	1	missing	missing	no	no	yes	no	no	555		True	build/installer-lab/after-c/results/191-magisk-dash-dir_exists_unwritable	
+magisk	dash	upgrade_readonly_config	0	-88	1	yes	no	yes	yes	yes	555	444	True	build/installer-lab/after-c/results/192-magisk-dash-upgrade_readonly_config	
+magisk	dash	threshold_is_dir	1	missing	missing	no	no	yes	no	no	755	755	True	build/installer-lab/after-c/results/193-magisk-dash-threshold_is_dir	
+magisk	dash	existing_dir_mkdir_error	0	-80	1	yes	no	yes	yes	yes	755	600	True	build/installer-lab/after-c/results/194-magisk-dash-existing_dir_mkdir_error	
+magisk	dash	tmp_missing_initial	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/195-magisk-dash-tmp_missing_initial	
+magisk	dash	tmp_denied	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/196-magisk-dash-tmp_denied	
+magisk	dash	env_tmp_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/197-magisk-dash-env_tmp_empty	
+magisk	dash	env_tmp_invalid	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/198-magisk-dash-env_tmp_invalid	
+magisk	dash	env_api_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/199-magisk-dash-env_api_empty	
+magisk	dash	env_api_invalid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/200-magisk-dash-env_api_invalid	
+magisk	dash	env_api_old	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/201-magisk-dash-env_api_old	
+magisk	dash	env_ksu_empty	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/202-magisk-dash-env_ksu_empty	
+magisk	dash	abort_mid	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/203-magisk-dash-abort_mid	
+magisk	dash	root_einval	0	-80	1	yes	no	yes	yes	yes	700	600	True	build/installer-lab/after-c/results/204-magisk-dash-root_einval	
+magisk	dash	env_mod_empty	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/205-magisk-dash-env_mod_empty	
+magisk	dash	env_mod_relative	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/206-magisk-dash-env_mod_relative	
+magisk	dash	env_mod_root	1	missing	missing	no	no	yes	no	no			True	build/installer-lab/after-c/results/207-magisk-dash-env_mod_root	

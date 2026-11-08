@@ -8,6 +8,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Process;
+import android.os.PowerManager;
+import android.hardware.display.DisplayManager;
 import android.os.SystemClock;
 import android.service.notification.StatusBarNotification;
 import android.system.Os;
@@ -27,6 +29,13 @@ public final class WifiFluidSession {
     private static final int ID = 19074;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Context context;
+    private final PowerManager power;
+    private DisplayManager display;
+    private final DisplayManager.DisplayListener displayListener = new DisplayManager.DisplayListener() {
+        public void onDisplayAdded(int id) { }
+        public void onDisplayRemoved(int id) { }
+        public void onDisplayChanged(int id) { if (!power.isInteractive()) finish(); }
+    };
     private final String token;
     private final boolean demo;
     private final int rssi;
@@ -73,6 +82,7 @@ public final class WifiFluidSession {
         Object thread = at.getMethod("systemMain").invoke(null);
         Context system = (Context) at.getMethod("getSystemContext").invoke(thread);
         context = system.createPackageContext("android", Context.CONTEXT_IGNORE_SECURITY);
+        power = context.getSystemService(PowerManager.class);
         activityManagerType = Class.forName("android.app.IActivityManager");
         activityManager = Class.forName("android.app.ActivityManager").getMethod("getService").invoke(null);
         Object holder = activityManagerType.getMethod("getContentProviderExternal", String.class,
@@ -84,6 +94,9 @@ public final class WifiFluidSession {
     }
 
     private void run() throws Exception {
+        if (!power.isInteractive()) { finish(); return; }
+        display = context.getSystemService(DisplayManager.class);
+        display.registerDisplayListener(displayListener, handler);
         String action = "com.nvmex.wifisense.IMMEDIATE." + token;
         // Sending a one-shot PendingIntent cancels it. Its Binder cancellation callback works
         // without an installed APK or an AMS-managed process for a BroadcastReceiver.
@@ -125,6 +138,7 @@ public final class WifiFluidSession {
 
     private void tick(boolean first) {
         if (finished || terminal) return;
+        if (!power.isInteractive()) { finish(); return; }
         long remaining = Math.max(0, deadline - SystemClock.elapsedRealtime());
         try {
             send("sendLiveAlert", build(remaining, first));
@@ -181,6 +195,7 @@ public final class WifiFluidSession {
 
     private void command(String command) {
         if (finished) return;
+        if (!power.isInteractive()) { finish(); return; }
         if ("cancel".equals(command)) { finish(); return; }
         if (!"working".equals(command) && !command.startsWith("result ")) return;
         terminal = true;
@@ -219,7 +234,10 @@ public final class WifiFluidSession {
         if (finished) return;
         finished = true;
         handler.removeCallbacksAndMessages(null);
-        try { send("cancelLiveAlert", new Notification()); } catch (Exception ignored) { }
+        if (display != null) display.unregisterDisplayListener(displayListener);
+        boolean cleanupFailed = false;
+        try { send("cancelLiveAlert", new Notification()); }
+        catch (Exception error) { cleanupFailed = true; error.printStackTrace(System.err); }
         if (immediate != null) {
             try { PendingIntent.class.getMethod("removeCancelListener", cancelListenerType).invoke(immediate, cancelListener); }
             catch (Exception ignored) { }
@@ -229,7 +247,7 @@ public final class WifiFluidSession {
             activityManagerType.getMethod("removeContentProviderExternalAsUser", String.class, IBinder.class,
                 int.class).invoke(activityManager, AUTHORITY, providerToken, 0);
         } catch (Exception ignored) { }
-        System.exit(0);
+        System.exit(cleanupFailed ? 1 : 0);
     }
 
     private void send(String method, Notification notification) throws Exception {

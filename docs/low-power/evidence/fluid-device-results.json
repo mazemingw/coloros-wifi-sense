@@ -1,0 +1,18 @@
+[
+  {
+    "case": "real screen off closes native fluid renderer",
+    "exit": 0,
+    "elapsed_seconds": 1.057,
+    "lines": [
+      "WIFI_SENSE ready screen_probe"
+    ]
+  },
+  {
+    "case": "native result retained 15 seconds",
+    "exit": 0,
+    "elapsed_seconds": 15.062,
+    "lines": [
+      "WIFI_SENSE ready retention_probe"
+    ]
+  }
+]

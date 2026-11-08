@@ -5,3 +5,6 @@
 .idea/
 .vscode/
 local.properties
+/test/installer/upstream/
+__pycache__/
+*.pyc

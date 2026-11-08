@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "version": "v1.2.0",
+  "versionCode": 4,
+  "entries": 19,
+  "bytes": 69062,
+  "sha256": "15f3b5abdefa17b844f948cc9b8b32112710f8117ef2767a65c48dd8f223630e",
+  "checks": [
+    "safe ZIP paths/limits",
+    "UTF-8/LF source identity",
+    "metadata",
+    "executable scripts",
+    "separate production DEX",
+    "no test/mock payload",
+    "legacy entry scripts unchanged"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "callback_delivered": false,
+  "action_in_registered_section": false,
+  "registration_returned_null": true,
+  "log": [
+    "interactive=true",
+    "PROBE_PID=13324",
+    "android.os.OplusPowerManager public void android.os.OplusPowerManager.disableScreenStayAwakeOfApp(boolean,int)",
+    "android.os.OplusPowerManager public int android.os.OplusPowerManager.getDefaultScreenBrightnessSetting()",
+    "android.os.OplusPowerManager public int android.os.OplusPowerManager.getMaximumScreenBrightnessSetting()",
+    "android.os.OplusPowerManager public long android.os.OplusPowerManager.getMinScreenOffTimeout()",
+    "android.os.OplusPowerManager public int android.os.OplusPowerManager.getMinimumScreenBrightnessSetting()",
+    "android.os.OplusPowerManager public boolean android.os.OplusPowerManager.isScreenStayAwake()",
+    "android.os.OplusPowerManager public void android.os.OplusPowerManager.registerScreenStatusListener(com.oplus.os.IOplusScreenStatusListener)",
+    "android.os.OplusPowerManager public boolean android.os.OplusPowerManager.setMinScreenOffTimeout(long)",
+    "android.os.OplusPowerManager public void android.os.OplusPowerManager.unregisterScreenStatusListener(com.oplus.os.IOplusScreenStatusListener)",
+    "android.os.IOplusPowerManager public abstract void android.os.IOplusPowerManager.disableScreenStayAwakeOfApp(boolean,int) throws android.os.RemoteException",
+    "android.os.IOplusPowerManager public abstract int android.os.IOplusPowerManager.getDefaultScreenBrightnessSetting() throws android.os.RemoteException",
+    "android.os.IOplusPowerManager public abstract int android.os.IOplusPowerManager.getMaximumScreenBrightnessSetting() throws android.os.RemoteException",
+    "android.os.IOplusPowerManager public abstract long android.os.IOplusPowerManager.getMinScreenOffTimeout() throws android.os.RemoteException",
+    "android.os.IOplusPowerManager public abstract int android.os.IOplusPowerManager.getMinimumScreenBrightnessSetting() throws android.os.RemoteException",
+    "android.os.IOplusPowerManager public abstract boolean android.os.IOplusPowerManager.isScreenStayAwake() throws android.os.RemoteException",
+    "android.os.IOplusPowerManager public abstract void android.os.IOplusPowerManager.registerScreenStatusListener(com.oplus.os.IOplusScreenStatusListener) throws android.os.RemoteException",
+    "android.os.IOplusPowerManager public abstract boolean android.os.IOplusPowerManager.setMinScreenOffTimeout(long) throws android.os.RemoteException",
+    "android.os.IOplusPowerManager public abstract void android.os.IOplusPowerManager.unregisterScreenStatusListener(com.oplus.os.IOplusScreenStatusListener) throws android.os.RemoteException",
+    "REGISTER=null",
+    "PROBE_READY"
+  ]
+}

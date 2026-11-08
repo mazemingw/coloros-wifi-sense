@@ -1,0 +1,7 @@
+{
+  "removed_bytes": 1151296404,
+  "removed_gib": 1.072,
+  "vm_installed_service": false,
+  "kept": "source, small logs, evidence, user SDK/JDK/JADX",
+  "android_private_fixture": "ADB disconnected at final cleanup; private test files remain; production module/config unchanged"
+}

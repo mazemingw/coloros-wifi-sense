@@ -1,0 +1,38 @@
+{
+  "strace-6.19-r1.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+    "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+  ],
+  "musl-1.2.6-r3.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+    "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+  ],
+  "libdw-0.195-r0.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+    "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+  ],
+  "libelf-0.195-r0.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+    "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+  ],
+  "libbz2-1.0.8-r6.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+    "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+  ],
+  "musl-fts-1.2.7-r7.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+    "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+  ],
+  "xz-libs-5.8.4-r0.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+    "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+  ],
+  "zlib-1.4-r0.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+    "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+  ],
+  "zstd-libs-1.5.7-r2.apk": [
+    "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+    "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+  ]
+}

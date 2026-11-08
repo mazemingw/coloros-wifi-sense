@@ -5,3 +5,11 @@
 *.yaml text eol=lf
 *.prop text eol=lf
 *.ps1 text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.cjs text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+# Captured output and empty final TSV fields retain their original whitespace.
+docs/**/*.log -whitespace
+docs/**/*.tsv -whitespace

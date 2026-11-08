@@ -1,0 +1,6 @@
+execve("/ksu/bin/busybox", ["/ksu/bin/busybox", "mkdir", "-p", "/dev/tmp"], 0x7ffe43df4088 /* 19 vars */) = 0
+mkdirat(AT_FDCWD, "/", 0777)            = -1 EINVAL (Invalid argument) (INJECTED)
+execve("/ksu/bin/busybox", ["/ksu/bin/busybox", "mkdir", "-p", "/data/adb/modules_update/coloros"...], 0x7ffec2b69d08 /* 19 vars */) = 0
+mkdirat(AT_FDCWD, "/", 0777)            = -1 EINVAL (Invalid argument) (INJECTED)
+execve("/ksu/bin/busybox", ["/ksu/bin/busybox", "mkdir", "-p", "/data/adb/coloros_wifi_sense"], 0x7fff02d2e9b8 /* 19 vars */) = 0
+mkdirat(AT_FDCWD, "/", 0777)            = -1 EINVAL (Invalid argument) (INJECTED)

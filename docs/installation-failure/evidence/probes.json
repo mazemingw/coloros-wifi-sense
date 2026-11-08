@@ -1,0 +1,247 @@
+{
+  "passed": 12,
+  "total": 12,
+  "results": [
+    {
+      "phase": "before",
+      "case": "root_einval",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "root_einval",
+        "rc": "1",
+        "threshold": "missing",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "no",
+        "old_module": "yes",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "",
+        "file_mode": ""
+      }
+    },
+    {
+      "phase": "before",
+      "case": "root_einval_merged",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "root_einval_merged",
+        "rc": "1",
+        "threshold": "missing",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "no",
+        "old_module": "yes",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "",
+        "file_mode": ""
+      }
+    },
+    {
+      "phase": "before",
+      "case": "root_einval_fresh",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "root_einval_fresh",
+        "rc": "1",
+        "threshold": "missing",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "no",
+        "old_module": "no",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "",
+        "file_mode": ""
+      }
+    },
+    {
+      "phase": "before",
+      "case": "contract_success",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "contract_success",
+        "rc": "0",
+        "threshold": "-80",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "yes",
+        "old_module": "yes",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "700",
+        "file_mode": "600"
+      }
+    },
+    {
+      "phase": "before",
+      "case": "contract_abort",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "contract_abort",
+        "rc": "1",
+        "threshold": "missing",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "no",
+        "old_module": "yes",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "",
+        "file_mode": ""
+      }
+    },
+    {
+      "phase": "before",
+      "case": "contract_abort_subshell",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "contract_abort_subshell",
+        "rc": "0",
+        "threshold": "missing",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "no",
+        "old_module": "yes",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "",
+        "file_mode": ""
+      }
+    },
+    {
+      "phase": "after",
+      "case": "root_einval",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "root_einval",
+        "rc": "0",
+        "threshold": "-80",
+        "fluid": "1",
+        "staging": "yes",
+        "tmp": "no",
+        "old_module": "yes",
+        "update": "yes",
+        "fluid_dex": "yes",
+        "dir_mode": "700",
+        "file_mode": "600"
+      }
+    },
+    {
+      "phase": "after",
+      "case": "root_einval_merged",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "root_einval_merged",
+        "rc": "0",
+        "threshold": "-80",
+        "fluid": "1",
+        "staging": "yes",
+        "tmp": "no",
+        "old_module": "yes",
+        "update": "yes",
+        "fluid_dex": "yes",
+        "dir_mode": "700",
+        "file_mode": "600"
+      }
+    },
+    {
+      "phase": "after",
+      "case": "root_einval_fresh",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "root_einval_fresh",
+        "rc": "0",
+        "threshold": "-80",
+        "fluid": "1",
+        "staging": "yes",
+        "tmp": "no",
+        "old_module": "no",
+        "update": "no",
+        "fluid_dex": "yes",
+        "dir_mode": "700",
+        "file_mode": "600"
+      }
+    },
+    {
+      "phase": "after",
+      "case": "contract_success",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "contract_success",
+        "rc": "0",
+        "threshold": "-80",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "yes",
+        "old_module": "yes",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "700",
+        "file_mode": "600"
+      }
+    },
+    {
+      "phase": "after",
+      "case": "contract_abort",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "contract_abort",
+        "rc": "1",
+        "threshold": "missing",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "no",
+        "old_module": "yes",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "",
+        "file_mode": ""
+      }
+    },
+    {
+      "phase": "after",
+      "case": "contract_abort_subshell",
+      "passed": true,
+      "observed": {
+        "installer": "fina",
+        "shell": "ksu-ash",
+        "case": "contract_abort_subshell",
+        "rc": "0",
+        "threshold": "missing",
+        "fluid": "missing",
+        "staging": "no",
+        "tmp": "no",
+        "old_module": "yes",
+        "update": "no",
+        "fluid_dex": "no",
+        "dir_mode": "",
+        "file_mode": ""
+      }
+    }
+  ],
+  "scope": "Shell/errno/UI-rendering model only; no Android ksud, manager APK or device kernel executed"
+}

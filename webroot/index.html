@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>WIFI 感知</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header><div><p class="eyebrow">ColorOS WIFI Sense</p><h1>WIFI 感知</h1><p class="subtitle">亮屏处理弱信号，息屏安静暂停。</p></div><span class="mark" aria-hidden="true">◉</span></header>
+  <section class="card overview" aria-labelledby="status-title">
+    <div class="row"><h2 id="status-title">当前状态</h2><span id="state" class="badge">等待连接</span></div>
+    <div class="signal"><strong id="rssi">—</strong><span>dBm</span></div>
+    <p id="state-detail">请从支持 WebUI 的模块管理器打开。</p>
+    <div class="row muted"><span id="updated">尚未读取</span><button id="refresh" class="secondary" type="button">刷新状态</button></div>
+  </section>
+  <section class="card" aria-labelledby="threshold-title">
+    <div class="row"><h2 id="threshold-title">弱信号阈值</h2><output id="threshold-value" for="threshold">−80 dBm</output></div>
+    <p class="muted">信号持续低于或等于阈值时，倒计时 7 秒后断开当前接入点。</p>
+    <label class="sr-only" for="threshold">RSSI 阈值</label><input id="threshold" type="range" min="-100" max="-20" step="1" value="-80">
+    <div class="row scale"><span>−100 · 更弱才断</span><span>−20 · 更早断开</span></div>
+    <div class="presets" aria-label="常用阈值"><button type="button" data-threshold="-75">−75</button><button type="button" data-threshold="-80">−80</button><button type="button" data-threshold="-85">−85</button><button type="button" data-threshold="-90">−90</button></div>
+    <button id="save" class="primary" type="button">保存阈值</button>
+    <p class="hint">保存后立即生效，正在进行的倒计时会重新判断。</p>
+  </section>
+  <section class="card" aria-labelledby="fluid-title">
+    <div class="row"><div><h2 id="fluid-title">流体云提醒</h2><p id="fluid-help" class="muted">提醒中关闭开关，可立即断开。</p></div><input id="fluid" type="checkbox" role="switch" aria-label="开启流体云提醒"></div>
+    <p class="hint">开启设置从下一次提醒生效；息屏时撤回提醒。</p>
+  </section>
+  <details class="card"><summary>运行诊断 <span class="muted">本次进程累计</span></summary>
+    <dl id="metrics"></dl>
+    <p class="hint">数据仅在打开或点击刷新时读取。CPU 计数和读取次数不能直接换算为电量。</p>
+  </details>
+  <p id="message" role="status" aria-live="polite"></p>
+  <footer>仅断开当前接入点 · 保留 Wi-Fi 开关与已保存网络</footer>
+</main><script src="app.js"></script>
+</body></html>

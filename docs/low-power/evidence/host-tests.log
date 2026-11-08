@@ -1,0 +1,40 @@
+PASS: countdown, recovery, AP change, threshold change, cooldown and stale actions
+PASS awake normal, fallback bounded
+PASS gradual drop with events
+PASS sudden drop without any RSSI broadcast
+PASS recover during countdown
+PASS screen off cancels countdown, UI and every task
+PASS off RSSI/network events do no business I/O
+PASS wake weak: new full countdown and new AP
+PASS BSSID changes during verification
+PASS disconnect then reconnect, cooldown retained
+PASS weak same AP reconnect counted without rapid redisconnect
+PASS no Wi-Fi has zero recurring work
+PASS mobile data only has zero Wi-Fi reads
+PASS threshold change invalidates countdown
+PASS manual disconnect requires current weak AP
+PASS manual rejects recovered RSSI
+PASS screen-off races read
+PASS screen-off races last Binder gate
+PASS new event invalidates in-flight RSSI
+PASS new event races final gate, no cooldown consumed
+PASS final fresh RSSI/BSSID recheck
+PASS invalid connection info cannot disconnect
+PASS core-only never creates UI
+PASS repeated RSSI events coalesce, one child per countdown
+PASS late disconnect confirmation after screen-off creates no UI
+PASS wake during cooldown reads once but never disconnects
+PASS stop removes all work and notifications
+METRIC stable Wi-Fi 1h, interactive 15m: old=515, new=129, off=0
+PASS one-hour operation-count comparison
+PASS invalid configuration quiesces instead of retrying every second
+TOTAL 28 monitor scenarios passed
+PASS initial status only, no background polling
+PASS preset saves validated threshold then refreshes
+PASS invalid threshold cannot reach root bridge
+PASS notification toggle uses fixed numeric argument
+PASS core-only installation prevents enabling missing DEX
+PASS screen-off status shows pause
+PASS manager errors render as text and unlock controls
+PASS ordinary browser fails clearly without invented data
+TOTAL 8 WebUI tests passed

@@ -1,7 +1,7 @@
 id=coloros_wifi_sense
 name=colorOSWIFI感知
-version=v1.1.0
-versionCode=2
+version=v1.2.0
+versionCode=4
 author=酷安@NVMEX夜莺
-description=安装时音量键选择核心/核心及流体云；弱信号倒计时7秒断开，关闭卡片开关立即断开，结果保留15秒。默认-80dBm，点击操作切换阈值。
+description=亮屏处理弱WiFi黏连，息屏暂停；7秒弱信号验证、60秒冷却、可选流体云及Web管理。默认-80dBm，点击操作切换阈值。
 updateJson=https://modules.kernelsu.org/api/v1/modules/coloros_wifi_sense/update.json

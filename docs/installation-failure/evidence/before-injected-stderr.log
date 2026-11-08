@@ -1,0 +1,23 @@
+mkdir: can't create directory '/': Invalid argument
+chcon: /dev/tmp: No such file or directory
+sh: cd: line 360: can't cd to /dev/tmp: No such file or directory
+Archive:  /module.zip
+  inflating: module.prop
+mkdir: can't create directory '/': Invalid argument
+Archive:  /module.zip
+  inflating: customize.sh
+Archive:  /module.zip
+  inflating: module.prop
+  inflating: customize.sh
+  inflating: service.sh
+  inflating: action.sh
+  inflating: settings.sh
+  inflating: demo.sh
+  inflating: README.md
+  inflating: src/ColorOsWifiSense.java
+  inflating: src/WifiDisconnectPolicy.java
+  inflating: src/WifiFluidSession.java
+  inflating: LICENSE
+  inflating: wifi-sense.dex
+  inflating: wifi-fluid.dex
+mkdir: can't create directory '/': Invalid argument

@@ -10,379 +10,434 @@ import android.os.FileObserver;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.Process;
 import android.os.SystemClock;
+import android.system.Os;
 import android.util.Log;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.channels.FileLock;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ConcurrentHashMap;
+import org.json.JSONObject;
 
 public final class ColorOsWifiSense {
-    private static final String TAG = "ColorOsWifiSense";
-    private static final String ROOT_PACKAGE = "root";
-    private static final int DEFAULT_THRESHOLD = -80;
-    private static final long SAMPLE_MS = 7_000;
-
-    private final File moduleDir;
-    private final File thresholdFile;
-    private final boolean fluidEnabled;
+    private static final String TAG = "ColorOsWifiSense", ROOT_PACKAGE = "root";
+    private final File moduleDir, stateDir, thresholdFile;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Set<Network> connections = new HashSet<>();
-    private final Runnable sampleTask = this::sample;
+    private final AtomicLong epoch = new AtomicLong();
+    private final Context context;
+    private final PowerManager power;
+    private final ConnectivityManager connectivity;
     private final Object wifi;
-    private final Method connectionInfo;
-    private final Method disconnect;
-
-    private final WifiDisconnectPolicy policy = new WifiDisconnectPolicy();
+    private final Method connectionInfo, disconnect;
+    private final WifiMonitor monitor;
+    private volatile boolean screenOff, stopRequested, configDirty = true;
+    private boolean closed, fluidEnabled;
+    private long wifiBinderReads, fluidStarts, fluidErrors, powerChecks;
+    private final AtomicLong ignoredCapabilityEvents = new AtomicLong();
+    private WifiSystemEvents events;
     private String fluidToken;
     private BufferedWriter fluidInput;
-    private boolean fluidResult;
-    private boolean demo;
-    private boolean demoActionSeen;
-    private Network disconnectRequested;
-    private String disconnectReason;
+    private java.lang.Process fluidChild;
+    private boolean fluidResult, demo, demoActionSeen;
+    private Warning pendingWarning;
+    private static final class StopLoop extends RuntimeException {
+        StopLoop() { super(null, null, false, false); }
+    }
+
+    private static final class Warning {
+        final int rssi, threshold; final long deadline;
+        Warning(int rssi, int threshold, long deadline) { this.rssi=rssi; this.threshold=threshold; this.deadline=deadline; }
+    }
 
     private ColorOsWifiSense(File moduleDir, File stateDir) throws ReflectiveOperationException {
-        this.moduleDir = moduleDir;
+        this.moduleDir = moduleDir; this.stateDir = stateDir;
         thresholdFile = new File(stateDir, "threshold");
-        fluidEnabled = readFluidEnabled(moduleDir);
+        context = rootContext();
+        power = context.getSystemService(PowerManager.class);
+        Class<?> connectivityInterface = Class.forName("android.net.IConnectivityManager");
+        connectivity = ConnectivityManager.class.getConstructor(Context.class, connectivityInterface)
+            .newInstance(context, systemInterface("connectivity", connectivityInterface));
         Class<?> wifiInterface = Class.forName("android.net.wifi.IWifiManager");
         wifi = systemInterface("wifi", wifiInterface);
         connectionInfo = findConnectionInfo(wifiInterface);
         disconnect = wifiInterface.getMethod("disconnect", String.class);
+        monitor = new WifiMonitor(new AndroidPort());
+        fluidEnabled = readFluidEnabled(moduleDir);
     }
 
     @SuppressWarnings("deprecation")
     public static void main(String[] args) {
         try {
             if (Process.myUid() != 0 || args.length != 2) throw new IllegalArgumentException("Root and module paths required");
+            Looper.prepareMainLooper();
             if ("--demo".equals(args[0])) {
-                Looper.prepareMainLooper();
-                new ColorOsWifiSense(new File(args[1]), new File(args[1])).runDemo();
-                return;
+                new ColorOsWifiSense(new File(args[1]), new File(args[1])).runDemo(); return;
             }
-            File moduleDir = new File(args[0]);
-            File stateDir = new File(args[1]);
+            File moduleDir = new File(args[0]), stateDir = new File(args[1]);
             if (!stateDir.isDirectory()) throw new IOException("Module state directory is missing");
-            try (RandomAccessFile lockFile = new RandomAccessFile(new File(stateDir, "watcher.lock"), "rw");
-                 FileLock lock = lockFile.getChannel().tryLock()) {
+            try (RandomAccessFile file = new RandomAccessFile(new File(stateDir, "watcher.lock"), "rw");
+                 FileLock lock = file.getChannel().tryLock()) {
                 if (lock == null) return;
-                Looper.prepareMainLooper();
                 new ColorOsWifiSense(moduleDir, stateDir).listen();
             }
+            System.exit(0);
         } catch (Exception e) {
-            Log.e(TAG, "Wi-Fi watcher stopped", unwrap(e));
-            System.exit(1);
+            Log.e(TAG, "Wi-Fi watcher stopped", unwrap(e)); System.exit(1);
         }
     }
 
-    private void listen() throws ReflectiveOperationException {
-        if (disabled()) return;
-        Runtime.getRuntime().addShutdownHook(new Thread(this::stopFluid, "wifi-sense-cleanup"));
-        ConnectivityManager connectivity = connectivityManager();
-        NetworkRequest request = new NetworkRequest.Builder()
-            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build();
-        ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
-            @Override public void onAvailable(Network network) {
-                if (connections.add(network)) updateSampling();
-            }
+    private boolean interactive() {
+        if (stopRequested || screenOff) return false;
+        powerChecks++;
+        return power.isInteractive();
+    }
 
-            @Override public void onLost(Network network) {
-                if (network.equals(disconnectRequested)) {
-                    Log.i(TAG, "Wi-Fi network lost after AP disconnect request");
-                    showFluidResult(disconnectReason);
-                    disconnectRequested = null;
+    private final class AndroidPort implements WifiMonitor.Port {
+        public long now() { return SystemClock.elapsedRealtime(); }
+        public long epoch() { return epoch.get(); }
+        public boolean interactive() { return ColorOsWifiSense.this.interactive(); }
+        public boolean singleWifi() { return connections.size() == 1; }
+        public void schedule(Runnable task, long delay) { handler.postDelayed(task, delay); }
+        public void cancel(Runnable task) { handler.removeCallbacks(task); }
+        public WifiMonitor.Snapshot readWifi() throws Exception {
+            if (stopRequested || screenOff || connections.size() != 1) return null;
+            Network network = connections.iterator().next();
+            WifiInfo info = readConnectionInfo();
+            if (info.getSupplicantState() != SupplicantState.COMPLETED) return null;
+            return new WifiMonitor.Snapshot(network, info.getBSSID(), info.getRssi());
+        }
+        public WifiMonitor.Attempt disconnect(WifiMonitor.Snapshot expected, long generation) {
+            if (!interactive()) return WifiMonitor.Attempt.ASLEEP;
+            // Rare final preflight only: close the FileObserver delivery window
+            // without re-reading configuration on every periodic sample.
+            if (disabled()) { stopRequested=true; handler.post(() -> closeLoop()); return WifiMonitor.Attempt.STALE; }
+            try {
+                if (readThresholdValue() != monitor.threshold()) {
+                    configDirty=true; epoch.incrementAndGet(); handler.post(() -> reloadConfig());
+                    return WifiMonitor.Attempt.STALE;
                 }
-                if (connections.remove(network)) updateSampling();
+            } catch (IOException e) { monitor.invalidConfiguration(); return WifiMonitor.Attempt.STALE; }
+            if (closed || stopRequested || epoch.get() != generation || connections.size() != 1
+                    || !connections.contains(expected.network)) return WifiMonitor.Attempt.STALE;
+            NetworkCapabilities caps = connectivity.getNetworkCapabilities((Network) expected.network);
+            if (caps == null || !caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return WifiMonitor.Attempt.STALE;
+            // Last checks immediately before the disconnect Binder call.
+            if (!interactive()) return WifiMonitor.Attempt.ASLEEP;
+            if (epoch.get() != generation || stopRequested) return WifiMonitor.Attempt.STALE;
+            try {
+                boolean accepted = Boolean.TRUE.equals(disconnect.invoke(wifi, ROOT_PACKAGE));
+                if (accepted) {
+                    fluidResult = fluidInput != null; sendFluid("working");
+                    Log.i(TAG, "AP disconnect requested; screen and AP preflight passed");
+                }
+                return accepted ? WifiMonitor.Attempt.ACCEPTED : WifiMonitor.Attempt.REJECTED;
+            } catch (Exception e) {
+                Log.w(TAG, "Android rejected AP disconnect", unwrap(e)); return WifiMonitor.Attempt.REJECTED;
+            }
+        }
+        public void warn(WifiMonitor.Snapshot info, int threshold, long deadline) { startFluid(info.rssi, threshold, deadline); }
+        public void cancelWarning() { if (!fluidResult) stopFluid(); }
+        public void clearFeedback() { stopFluid(); }
+        public void result(String reason) { showFluidResult(reason); }
+    }
+
+    private void listen() throws Exception {
+        if (disabled()) return;
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            stopFluid(); java.lang.Process child = fluidChild; if (child != null) child.destroy();
+        }, "wifi-sense-cleanup"));
+        ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
+            private final ConcurrentHashMap<Network,String> signals = new ConcurrentHashMap<>();
+            private void enqueue(Network n, int kind) {
+                epoch.incrementAndGet();
+                handler.post(() -> {
+                    if (closed) return;
+                    boolean changed = false;
+                    if (kind == 1) changed = connections.add(n);
+                    if (kind == -1) changed = connections.remove(n);
+                    monitor.network(kind == -1 ? n : null, changed);
+                });
+            }
+            @Override public void onAvailable(Network n) { enqueue(n, 1); }
+            @Override public void onLost(Network n) { signals.remove(n); enqueue(n, -1); }
+            @Override public void onCapabilitiesChanged(Network n, NetworkCapabilities caps) {
+                Object info=caps.getTransportInfo();
+                String bssid=info instanceof WifiInfo?((WifiInfo)info).getBSSID():null;
+                String signal=caps.getSignalStrength()+":"+bssid;
+                if (signal.equals(signals.put(n,signal))) { ignoredCapabilityEvents.incrementAndGet(); return; }
+                enqueue(n, 0);
             }
         };
-        FileObserver moduleObserver = new FileObserver(moduleDir,
-            FileObserver.CREATE | FileObserver.MOVED_TO | FileObserver.DELETE_SELF | FileObserver.MOVE_SELF) {
+        FileObserver moduleObserver = new FileObserver(moduleDir, FileObserver.CREATE | FileObserver.CLOSE_WRITE
+            | FileObserver.MOVED_TO | FileObserver.DELETE | FileObserver.DELETE_SELF | FileObserver.MOVE_SELF) {
             @Override public void onEvent(int event, String path) {
-                if ((event & (FileObserver.DELETE_SELF | FileObserver.MOVE_SELF)) != 0) {
-                    handler.post(() -> System.exit(0));
-                } else if ("disable".equals(path) || "remove".equals(path)) {
+                if ((event & (FileObserver.DELETE_SELF | FileObserver.MOVE_SELF)) != 0
+                        || "disable".equals(path) || "remove".equals(path)) {
+                    if (disabled()) { stopRequested = true; epoch.incrementAndGet(); handler.post(() -> closeLoop()); }
+                } else if ("fluid_enabled".equals(path)) {
+                    configDirty = true; handler.post(() -> { if (interactive()) reloadConfig(); });
+                }
+            }
+        };
+        FileObserver stateObserver = new FileObserver(stateDir, FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO | FileObserver.DELETE) {
+            @Override public void onEvent(int event, String path) {
+                if ("threshold".equals(path)) {
+                    configDirty = true; epoch.incrementAndGet();
+                    handler.post(() -> { if (interactive()) reloadConfig(); });
+                } else if ("ui_request".equals(path)) {
                     handler.post(() -> {
-                        if (disabled()) System.exit(0);
+                        if (closed) return;
+                        if (interactive()) { reloadConfig(); monitor.refresh(); }
+                        handler.post(() -> writeStatus(readLine(new File(stateDir, "ui_request"), "")));
                     });
                 }
             }
         };
-        moduleObserver.startWatching();
-        if (disabled()) return;
-        connectivity.registerNetworkCallback(request, callback, handler);
-        Log.i(TAG, "Waiting for Wi-Fi connection events");
+        events = new WifiSystemEvents(context, handler, power, new WifiSystemEvents.Listener() {
+            public void screen(boolean on) {
+                screenOff = !on; epoch.incrementAndGet();
+                handler.post(() -> {
+                    if (closed) return;
+                    if (on && interactive()) { configDirty = true; reloadConfig(); refreshConnections(); }
+                    monitor.screen(on);
+                });
+            }
+            public void wifi(String action) {
+                epoch.incrementAndGet();
+                handler.post(() -> { if (!closed) monitor.rssiEvent(); });
+            }
+        });
+        moduleObserver.startWatching(); stateObserver.startWatching();
+        NetworkRequest request = new NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build();
+        connectivity.registerNetworkCallback(request, callback);
         try {
+            events.start();
+            writeStatus("");
+            Log.i(TAG, "Interactive-only Wi-Fi monitor ready; 7s awake fallback, no wake lock");
             Looper.loop();
+        } catch (StopLoop done) {
+            // Android's main Looper deliberately rejects quit()/quitSafely().
+            // Unwind it through this owner so finally can unregister every listener.
         } finally {
-            stopFluid();
-            moduleObserver.stopWatching();
+            closed = true; monitor.stop(); events.close();
+            moduleObserver.stopWatching(); stateObserver.stopWatching();
             connectivity.unregisterNetworkCallback(callback);
+            java.lang.Process child = fluidChild; if (child != null) child.destroy();
         }
     }
 
+    private void closeLoop() { if (!closed) { closed=true; monitor.stop(); throw new StopLoop(); } }
     private boolean disabled() {
-        return !moduleDir.isDirectory() || new File(moduleDir, "disable").exists() || new File(moduleDir, "remove").exists();
+        return !moduleDir.isDirectory() || new File(moduleDir,"disable").exists() || new File(moduleDir,"remove").exists();
     }
-
-    private void updateSampling() {
-        handler.removeCallbacks(sampleTask);
-        policy.clear();
-        stopCountdown();
-        if (connections.size() == 1) {
-            handler.post(sampleTask);
-        } else {
-            Log.i(TAG, "RSSI sampling paused (Wi-Fi network count: " + connections.size() + ")");
+    @SuppressWarnings("deprecation")
+    private void refreshConnections() {
+        connections.clear();
+        for (Network n : connectivity.getAllNetworks()) {
+            NetworkCapabilities c = connectivity.getNetworkCapabilities(n);
+            if (c != null && c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    && c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) connections.add(n);
         }
     }
-
-    private void sample() {
-        handler.removeCallbacks(sampleTask);
-        if (disabled()) System.exit(0);
-        if (connections.size() != 1) return;
+    private void reloadConfig() {
+        if (!configDirty) return;
+        configDirty = false;
         try {
-            int threshold = readThreshold();
-            WifiInfo info = readConnectionInfo();
-            int rssi = info.getRssi();
-            String bssid = info.getBSSID();
-            if (info.getSupplicantState() != SupplicantState.COMPLETED || bssid == null
-                    || "02:00:00:00:00:00".equals(bssid) || rssi < -126 || rssi >= 0) {
-                policy.clear();
-                stopCountdown();
-                return;
-            }
-            WifiDisconnectPolicy.Decision decision = policy.sample(bssid, rssi, threshold, SystemClock.elapsedRealtime());
-            Log.d(TAG, "RSSI=" + rssi + " threshold=" + threshold + " decision=" + decision);
-            if (decision == WifiDisconnectPolicy.Decision.WARN) {
-                startFluid(rssi, threshold);
-            } else if (decision == WifiDisconnectPolicy.Decision.DISCONNECT) {
-                disconnectAp(rssi, "countdown");
-            } else if (!policy.pending()) {
-                stopCountdown();
-            }
-        } catch (Exception e) {
-            policy.clear();
-            stopCountdown();
-            Log.w(TAG, "Unable to process the Wi-Fi sample", unwrap(e));
-        } finally {
-            handler.postDelayed(sampleTask, policy.pending() && fluidEnabled ? 1_000 : SAMPLE_MS);
+            monitor.threshold(readThresholdValue());
+        } catch (IOException e) {
+            monitor.invalidConfiguration(); Log.w(TAG, "Invalid threshold; monitoring paused until repaired");
         }
+        boolean enabled = readFluidEnabled(moduleDir);
+        if (!enabled) stopFluid();
+        fluidEnabled = enabled;
     }
 
-    private void disconnectAp(int rssi, String reason) throws ReflectiveOperationException {
-        fluidResult = fluidEnabled && fluidInput != null;
-        sendFluid("working");
-        if (Boolean.TRUE.equals(disconnect.invoke(wifi, ROOT_PACKAGE))) {
-            disconnectRequested = connections.iterator().next();
-            disconnectReason = "user switch".equals(reason) ? "manual" : "auto";
-            Log.i(TAG, "AP disconnect requested at " + rssi + " dBm (" + reason + ")");
-            Network requested = disconnectRequested;
-            handler.postDelayed(() -> {
-                if (requested.equals(disconnectRequested)) {
-                    Log.w(TAG, "AP disconnect confirmation timed out");
-                    disconnectRequested = null;
-                    showFluidResult("failed");
-                }
-            }, 4_000);
-        } else {
-            Log.w(TAG, "Android rejected the AP disconnect");
-            showFluidResult("failed");
-        }
+    private void startFluid(int rssi, int threshold, long deadline) {
+        if (!fluidEnabled || !interactive()) return;
+        pendingWarning = new Warning(rssi, threshold, deadline);
+        if (fluidChild != null) { stopChild(); return; }
+        launchPendingWarning();
     }
-
-    private void showFluidResult(String reason) {
-        if (!fluidEnabled || fluidInput == null) return;
-        fluidResult = true;
-        sendFluid("result " + (reason == null ? "failed" : reason));
-        Log.i(TAG, "Fluid result retained for 15 seconds: " + reason);
-    }
-
-    private void stopCountdown() {
-        if (!fluidResult) stopFluid();
-    }
-
-    private void sendFluid(String command) {
-        BufferedWriter input = fluidInput;
-        if (input == null) return;
-        try { input.write(command); input.write('\n'); input.flush(); }
-        catch (IOException error) { Log.w(TAG, "Fluid session command failed", error); }
-    }
-
-    private void startFluid(int rssi, int threshold) {
-        if (!fluidEnabled) return;
-        stopFluid();
-        String sessionToken = UUID.randomUUID().toString();
+    private void launchPendingWarning() {
+        Warning warning = pendingWarning;
+        if (warning == null || fluidChild != null || !fluidEnabled || !interactive()) return;
+        pendingWarning = null;
+        if (!demo && (monitor.deadline() != warning.deadline || warning.deadline <= SystemClock.elapsedRealtime())) return;
+        String token = UUID.randomUUID().toString();
         try {
             ProcessBuilder builder = new ProcessBuilder("/system/bin/app_process", "/system/bin",
-                "--nice-name=coloros-wifi-fluid", "WifiFluidSession", demo ? "demo" : "watch", sessionToken,
-                String.valueOf(rssi), String.valueOf(threshold), String.valueOf(WifiDisconnectPolicy.COUNTDOWN_MS),
-                String.valueOf(policy.deadline()));
-            builder.environment().put("CLASSPATH", new File(moduleDir, "wifi-fluid.dex").getAbsolutePath());
+                "--nice-name=coloros-wifi-fluid", "WifiFluidSession", demo ? "demo" : "watch", token,
+                String.valueOf(warning.rssi), String.valueOf(warning.threshold),
+                String.valueOf(WifiDisconnectPolicy.COUNTDOWN_MS), String.valueOf(warning.deadline));
+            builder.environment().put("CLASSPATH", new File(moduleDir,"wifi-fluid.dex").getAbsolutePath());
             builder.redirectErrorStream(true);
-            java.lang.Process child = builder.start();
-            fluidToken = sessionToken;
+            java.lang.Process child = builder.start(); fluidStarts++;
+            fluidChild = child; fluidToken = token; fluidResult = false;
             fluidInput = new BufferedWriter(new OutputStreamWriter(child.getOutputStream(), "UTF-8"));
             Thread reader = new Thread(() -> {
                 try (BufferedReader output = new BufferedReader(new InputStreamReader(child.getInputStream(), "UTF-8"))) {
                     String line;
-                    while ((line = output.readLine()) != null) {
-                        String[] parts = line.split(" ");
-                        if (parts.length == 3 && "WIFI_SENSE".equals(parts[0]) && sessionToken.equals(parts[2])) {
-                            String event = parts[1];
-                            handler.post(() -> onFluidEvent(sessionToken, event));
-                        } else {
-                            Log.d(TAG, "Fluid UI: " + line);
+                    while ((line=output.readLine()) != null) {
+                        String[] parts=line.split(" ");
+                        if (parts.length==3 && "WIFI_SENSE".equals(parts[0]) && token.equals(parts[2])) {
+                            String event=parts[1]; handler.post(() -> onFluidEvent(token,event));
                         }
                     }
-                } catch (IOException error) {
-                    Log.w(TAG, "Fluid session output closed", error);
-                } finally {
+                } catch (IOException ignored) { }
+                finally {
+                    try {
+                        if (!child.waitFor(1000,TimeUnit.MILLISECONDS)) {
+                            child.destroy();
+                            if (!child.waitFor(500,TimeUnit.MILLISECONDS)) { child.destroyForcibly(); child.waitFor(500,TimeUnit.MILLISECONDS); }
+                        }
+                    }
+                    catch (InterruptedException e) { Thread.currentThread().interrupt(); child.destroy(); }
                     handler.post(() -> {
-                        if (sessionToken.equals(fluidToken)) stopFluid();
+                        if (fluidChild != child) return;
+                        if (child.isAlive()) return;
+                        if (child.exitValue()!=0) { fluidErrors++; Log.w(TAG,"Fluid session exited: "+child.exitValue()); }
+                        fluidChild=null;
+                        if (token.equals(fluidToken)) {
+                            BufferedWriter oldInput=fluidInput;
+                            fluidToken=null; fluidInput=null; fluidResult=false;
+                            if(oldInput!=null) try { oldInput.close(); } catch(IOException ignored) { }
+                        }
+                        launchPendingWarning();
                     });
                 }
             }, "wifi-fluid-events");
-            reader.setDaemon(true);
-            reader.start();
-        } catch (IOException error) {
-            Log.w(TAG, "Unable to start fluid alert; AP policy remains active", error);
-        }
+            reader.setDaemon(true); reader.start();
+        } catch (IOException error) { fluidErrors++; Log.w(TAG,"Fluid UI unavailable; core remains active",error); }
     }
-
-    private void onFluidEvent(String sessionToken, String event) {
-        if (!sessionToken.equals(fluidToken)) return;
-        if ("ready".equals(event)) {
-            Log.i(TAG, "Fluid alert ready");
-            return;
-        }
+    private void onFluidEvent(String token,String event) {
+        if (!token.equals(fluidToken) || "ready".equals(event)) return;
         if (!"immediate".equals(event) && !"expired".equals(event)) return;
         if (demo) {
             if (demoActionSeen) return;
-            demoActionSeen = true;
-            System.out.println("Demo action=" + event + "; no Wi-Fi disconnect executed");
-            policy.clear();
-            showFluidResult("immediate".equals(event) ? "manual" : "auto");
-            handler.postDelayed(() -> { stopFluid(); System.exit(0); }, 15_500);
-            return;
+            demoActionSeen=true;
+            System.out.println("Demo action="+event+"; no Wi-Fi disconnect executed");
+            showFluidResult("immediate".equals(event)?"manual":"auto");
+            handler.postDelayed(() -> { stopFluid(); System.exit(0); },15500); return;
         }
-        if (disabled() || connections.size() != 1 || !policy.pending()) return;
-        if ("expired".equals(event)) {
-            sample();
-            return;
-        }
-        try {
-            WifiInfo info = readConnectionInfo();
-            int threshold = readThreshold();
-            int rssi = info.getRssi();
-            if (info.getSupplicantState() == SupplicantState.COMPLETED && rssi >= -126 && rssi < 0
-                    && policy.immediate(info.getBSSID(), rssi, threshold, SystemClock.elapsedRealtime())) {
-                disconnectAp(rssi, "user switch");
-            } else {
-                sample();
-            }
-        } catch (Exception error) {
-            Log.w(TAG, "Unable to handle immediate disconnect", unwrap(error));
-            policy.clear();
-            stopFluid();
-        }
+        if (!interactive()) { monitor.screen(false); return; }
+        if ("immediate".equals(event)) monitor.immediate(); else monitor.refresh();
     }
-
-    private synchronized void stopFluid() {
-        fluidToken = null;
-        fluidResult = false;
-        BufferedWriter input = fluidInput;
-        fluidInput = null;
-        if (input == null) return;
-        try { input.write("cancel\n"); input.flush(); input.close(); }
-        catch (IOException ignored) { }
+    private void showFluidResult(String reason) {
+        if (!fluidEnabled || fluidInput==null || !interactive()) return;
+        fluidResult=true; sendFluid("result "+(reason==null?"failed":reason));
     }
+    private void sendFluid(String command) {
+        BufferedWriter input=fluidInput;
+        if (input==null) return;
+        try { input.write(command); input.write('\n'); input.flush(); }
+        catch(IOException e) { fluidErrors++; }
+    }
+    private synchronized void stopChild() {
+        fluidToken=null; fluidResult=false;
+        BufferedWriter input=fluidInput; fluidInput=null;
+        if(input!=null) {
+            try { input.write("cancel\n"); input.flush(); } catch(IOException ignored) { }
+            finally { try { input.close(); } catch(IOException ignored) { } }
+        }
+        java.lang.Process child=fluidChild;
+        if(child!=null) handler.postDelayed(() -> { if(child.isAlive()) child.destroy(); },500);
+    }
+    private void stopFluid() { pendingWarning=null; stopChild(); }
 
     private void runDemo() {
-        if (!fluidEnabled) {
-            System.out.println("当前为仅核心模式，请重新安装并选择流体云通知。");
-            System.exit(1);
-        }
-        System.out.println("演示模式：不会断开WIFI，仅测试流体云和开关回调。");
-        demo = true;
-        policy.sample("demo", -84, -80, SystemClock.elapsedRealtime());
-        startFluid(-84, -80);
-        handler.postDelayed(() -> {
-            if (demoActionSeen) return;
-            stopFluid();
-            System.out.println("Demo finished; no Wi-Fi disconnect executed");
-            System.exit(0);
-        }, 10_000);
+        if(!fluidEnabled) { System.out.println("当前为仅核心模式，请重新安装并选择流体云通知。"); System.exit(1); }
+        demo=true; System.out.println("演示模式：不会断开WIFI，仅测试流体云和开关回调。");
+        startFluid(-84,-80,SystemClock.elapsedRealtime()+7000);
+        handler.postDelayed(() -> { if(!demoActionSeen) { stopFluid(); System.exit(0); } },10000);
         Looper.loop();
     }
 
-    private static boolean readFluidEnabled(File moduleDir) {
-        if (!new File(moduleDir, "wifi-fluid.dex").isFile()) return false;
-        try (BufferedReader input = new BufferedReader(new FileReader(new File(moduleDir, "fluid_enabled")))) {
-            return "1".equals(input.readLine());
-        } catch (IOException ignored) { return false; }
-    }
-
-    private int readThreshold() throws IOException {
-        if (!thresholdFile.isFile()) return DEFAULT_THRESHOLD;
-        try (BufferedReader input = new BufferedReader(new FileReader(thresholdFile))) {
-            String value = input.readLine();
-            int threshold = Integer.parseInt(value == null ? "" : value.trim());
-            if (threshold < -100 || threshold > -20) throw new IOException("RSSI threshold outside -100 to -20 dBm");
-            return threshold;
-        }
-    }
-
-    private WifiInfo readConnectionInfo() throws ReflectiveOperationException {
-        return (WifiInfo) (connectionInfo.getParameterTypes().length == 1
-            ? connectionInfo.invoke(wifi, ROOT_PACKAGE)
-            : connectionInfo.invoke(wifi, ROOT_PACKAGE, null));
-    }
-
-    private static Method findConnectionInfo(Class<?> wifiInterface) throws NoSuchMethodException {
+    private void writeStatus(String request) {
         try {
-            return wifiInterface.getMethod("getConnectionInfo", String.class, String.class);
-        } catch (NoSuchMethodException e) {
-            return wifiInterface.getMethod("getConnectionInfo", String.class);
-        }
+            WifiMonitor.Metrics m=monitor.metrics; WifiMonitor.Snapshot last=monitor.last();
+            JSONObject j=new JSONObject().put("request",request).put("pid",Process.myPid())
+                .put("updated_ms",System.currentTimeMillis()).put("state",monitor.state().name())
+                .put("interactive",interactive()).put("wifi_connections",connections.size())
+                .put("threshold",monitor.threshold()).put("fluid_enabled",fluidEnabled)
+                .put("fluid_installed",new File(moduleDir,"wifi-fluid.dex").isFile())
+                .put("rssi",last==null?JSONObject.NULL:last.rssi).put("sample_scheduled",monitor.hasSampleTask())
+                .put("countdown_ms",Math.max(0,monitor.deadline()-SystemClock.elapsedRealtime()))
+                .put("cooldown_ms",Math.max(0,monitor.cooldownUntil()-SystemClock.elapsedRealtime()))
+                .put("rssi_events",m.rssiEvents).put("network_events",m.networkEvents).put("screen_events",m.screenEvents)
+                .put("rssi_reads",wifiBinderReads).put("read_attempts",m.rssiReads)
+                .put("periodic_runs",m.periodicRuns).put("task_runs",m.scheduledRuns)
+                .put("countdown_starts",m.countdownStarts).put("countdown_cancels",m.countdownCancels)
+                .put("disconnect_attempts",m.disconnectAttempts).put("disconnect_accepted",m.disconnectAccepted)
+                .put("weak_reconnects",m.weakReconnects).put("stale_suppressed",m.staleSuppressed)
+                .put("late_tasks_suppressed",m.lateTasksSuppressed).put("read_errors",m.readErrors)
+                .put("last_cancel",m.lastCancel).put("last_disconnect",m.lastDisconnect)
+                .put("fluid_starts",fluidStarts).put("fluid_errors",fluidErrors).put("power_checks",powerChecks)
+                .put("ignored_capability_events",ignoredCapabilityEvents.get())
+                .put("screen_channel",events!=null&&events.oplusRegistered?"ColorOS + display":"display")
+                .put("broadcast_deliveries",events==null?0:events.broadcastDeliveries)
+                .put("cpu_ticks",cpuTicks());
+            File temp=new File(stateDir,"status.tmp"), target=new File(stateDir,"status.json");
+            try(FileOutputStream out=new FileOutputStream(temp)) { out.write(j.toString().getBytes("UTF-8")); }
+            Os.chmod(temp.getAbsolutePath(),0600); Os.rename(temp.getAbsolutePath(),target.getAbsolutePath());
+        } catch(Exception e) { Log.w(TAG,"Unable to write requested diagnostics",e); }
     }
-
-    private static ConnectivityManager connectivityManager() throws ReflectiveOperationException {
-        // app_process has no APK context. Use the framework context with the UID 0 Binder identity.
-        Class<?> activityThread = Class.forName("android.app.ActivityThread");
-        Object thread = activityThread.getMethod("systemMain").invoke(null);
-        Context system = (Context) activityThread.getMethod("getSystemContext").invoke(thread);
-        Context rootContext = new ContextWrapper(system) {
+    private static long cpuTicks() {
+        try {
+            String stat=readLine(new File("/proc/self/stat"),"");
+            String[] f=stat.substring(stat.lastIndexOf(')')+2).split(" ");
+            return Long.parseLong(f[11])+Long.parseLong(f[12]);
+        } catch(Exception e) { return -1; }
+    }
+    private static boolean readFluidEnabled(File dir) {
+        return new File(dir,"wifi-fluid.dex").isFile() && "1".equals(readLine(new File(dir,"fluid_enabled"),"0"));
+    }
+    private static String readLine(File file,String fallback) {
+        try(BufferedReader r=new BufferedReader(new FileReader(file))) { String value=r.readLine(); return value==null?fallback:value; }
+        catch(IOException e) { return fallback; }
+    }
+    private int readThresholdValue() throws IOException {
+        if (!thresholdFile.exists()) return -80;
+        if (!thresholdFile.isFile() || thresholdFile.length()>32) throw new IOException("Invalid threshold file");
+        try(BufferedReader input=new BufferedReader(new FileReader(thresholdFile))) {
+            String text=input.readLine();
+            int value=Integer.parseInt(text==null?"":text.trim());
+            if(value < -100 || value > -20) throw new IOException("Invalid threshold range");
+            return value;
+        } catch(NumberFormatException e) { throw new IOException("Invalid threshold number",e); }
+    }
+    private WifiInfo readConnectionInfo() throws ReflectiveOperationException {
+        wifiBinderReads++;
+        return (WifiInfo)(connectionInfo.getParameterCount()==1?connectionInfo.invoke(wifi,ROOT_PACKAGE)
+            :connectionInfo.invoke(wifi,ROOT_PACKAGE,null));
+    }
+    private static Method findConnectionInfo(Class<?> type) throws NoSuchMethodException {
+        try { return type.getMethod("getConnectionInfo",String.class,String.class); }
+        catch(NoSuchMethodException e) { return type.getMethod("getConnectionInfo",String.class); }
+    }
+    private static Context rootContext() throws ReflectiveOperationException {
+        Class<?> at=Class.forName("android.app.ActivityThread"); Object thread=at.getMethod("systemMain").invoke(null);
+        Context system=(Context)at.getMethod("getSystemContext").invoke(thread);
+        return new ContextWrapper(system) {
             @Override public String getPackageName() { return ROOT_PACKAGE; }
             @Override public String getOpPackageName() { return ROOT_PACKAGE; }
         };
-        Class<?> connectivityInterface = Class.forName("android.net.IConnectivityManager");
-        return ConnectivityManager.class.getConstructor(Context.class, connectivityInterface)
-            .newInstance(rootContext, systemInterface("connectivity", connectivityInterface));
     }
-
-    private static Object systemInterface(String name, Class<?> iface) throws ReflectiveOperationException {
-        IBinder binder = (IBinder) Class.forName("android.os.ServiceManager")
-            .getMethod("getService", String.class).invoke(null, name);
-        if (binder == null) throw new IllegalStateException("Android service unavailable: " + name);
-        return Class.forName(iface.getName() + "$Stub").getMethod("asInterface", IBinder.class).invoke(null, binder);
+    private static Object systemInterface(String name,Class<?> iface) throws ReflectiveOperationException {
+        IBinder b=(IBinder)Class.forName("android.os.ServiceManager").getMethod("getService",String.class).invoke(null,name);
+        if(b==null) throw new IllegalStateException("Android service unavailable: "+name);
+        return Class.forName(iface.getName()+"$Stub").getMethod("asInterface",IBinder.class).invoke(null,b);
     }
-
     private static Throwable unwrap(Exception error) {
-        if (error instanceof InvocationTargetException && error.getCause() != null) return error.getCause();
-        return error;
+        return error instanceof InvocationTargetException && error.getCause()!=null?error.getCause():error;
     }
 }

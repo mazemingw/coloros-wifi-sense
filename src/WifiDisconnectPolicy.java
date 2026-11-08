@@ -24,25 +24,28 @@ final class WifiDisconnectPolicy {
             return Decision.WARN;
         }
         if (now >= deadline) {
-            commit(now);
             return Decision.DISCONNECT;
         }
         return Decision.WAIT;
     }
 
     boolean immediate(String currentBssid, int rssi, int currentThreshold, long now) {
-        if (!pending() || !Objects.equals(bssid, currentBssid) || threshold != currentThreshold
-                || rssi > currentThreshold || now < nextDisconnectAt) return false;
-        commit(now);
-        return true;
+        return eligible(currentBssid, rssi, currentThreshold, now, true);
     }
 
-    private void commit(long now) {
+    boolean eligible(String currentBssid, int rssi, int currentThreshold, long now, boolean immediate) {
+        return pending() && Objects.equals(bssid, currentBssid) && threshold == currentThreshold
+            && rssi <= currentThreshold && now >= nextDisconnectAt && (immediate || now >= deadline);
+    }
+
+    void commit(long now) {
         nextDisconnectAt = now + COOLDOWN_MS;
         clear();
     }
 
     boolean pending() { return bssid != null; }
     long deadline() { return deadline; }
+    long cooldownUntil() { return nextDisconnectAt; }
+    boolean coolingDown(long now) { return now < nextDisconnectAt; }
     void clear() { bssid = null; deadline = 0; }
 }

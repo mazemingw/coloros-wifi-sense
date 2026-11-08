@@ -1,0 +1,43 @@
+mkdir: can't create directory '/': Invalid argument
+chcon: /dev/tmp: No such file or directory
+sh: cd: line 360: can't cd to /dev/tmp: No such file or directory
+Archive:  /module.zip
+  inflating: module.prop
+mkdir: can't create directory '/': Invalid argument
+***********************
+ colorOSWIFI感知 
+ by 酷安@NVMEX夜莺 
+***********************
+*********************
+ Powered by KernelSU 
+*********************
+Archive:  /module.zip
+  inflating: customize.sh
+- Extracting module files
+Archive:  /module.zip
+  inflating: module.prop
+  inflating: customize.sh
+  inflating: service.sh
+  inflating: action.sh
+  inflating: settings.sh
+  inflating: demo.sh
+  inflating: README.md
+  inflating: src/ColorOsWifiSense.java
+  inflating: src/WifiDisconnectPolicy.java
+  inflating: src/WifiFluidSession.java
+  inflating: LICENSE
+  inflating: wifi-sense.dex
+  inflating: wifi-fluid.dex
+欢迎使用ColorOS WIFI感知模块！
+=====
+本模块的功能是处理弱信号不会自动断开WIFI的问题
+WIFI未连接时不会检测，降低耗电
+作者：酷安@NVMEX夜莺
+版本：v1.1.0
+=====
+模块功能选择：按音量上下键选择
+音量+：开启核心及流体云通知（推荐）
+音量-：仅开启核心
+已选择：核心及流体云通知
+mkdir: can't create directory '/': Invalid argument
+无法创建阈值配置目录

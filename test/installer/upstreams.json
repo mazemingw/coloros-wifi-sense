@@ -1,0 +1,196 @@
+[
+  {
+    "label": "kernelsu",
+    "repo": "tiann/KernelSU",
+    "ref": "main",
+    "commit": "730f644615969cfd4a84b45d7f62a667b7b95a50",
+    "files": [
+      {
+        "path": "manager/app/build.gradle.kts",
+        "local": "kernelsu/manager__app__build.gradle.kts",
+        "sha256": "1066605b498c377e38ad9e416da1223d1c3104daa90bce69ae287c016e0d7a73"
+      },
+      {
+        "path": "userspace/ksud/src/installer.sh",
+        "local": "kernelsu/userspace__ksud__src__installer.sh",
+        "sha256": "7edc6ec924e9a2ff4cf803816256bdcc6d0fd5e367cb2b9df8f47825ddb6a569"
+      },
+      {
+        "path": "userspace/ksud/src/module.rs",
+        "local": "kernelsu/userspace__ksud__src__module.rs",
+        "sha256": "b498b66a7725ce4bd08da33071409ab80badd12865c8a283f4353dcdd0cc22d3"
+      },
+      {
+        "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/util/KsuCli.kt",
+        "local": "kernelsu/manager__app__src__main__java__me__weishu__kernelsu__ui__util__KsuCli.kt",
+        "sha256": "644f75cd78fa9e5a1e64ed278cba2e2f5dda78428dc16f0e59ae79e9b2a06662"
+      },
+      {
+        "path": "manager/gradle.properties",
+        "local": "kernelsu/manager__gradle.properties",
+        "sha256": "7487d713cae0fd18c03fc271c3367a2f4dbac6d792094e212103cf0e9d466ab9"
+      }
+    ]
+  },
+  {
+    "label": "next",
+    "repo": "KernelSU-Next/KernelSU-Next",
+    "ref": "dev",
+    "commit": "eed26da24665bfe68ff9f7858fa6cfeea84fa345",
+    "files": [
+      {
+        "path": "manager/app/build.gradle.kts",
+        "local": "next/manager__app__build.gradle.kts",
+        "sha256": "6411995483652d525d9ab8411daa1ff79f256b5505f666fe8d1699a849d7da93"
+      },
+      {
+        "path": "userspace/ksud/src/installer.sh",
+        "local": "next/userspace__ksud__src__installer.sh",
+        "sha256": "bb4e88fcc9f97d6e3f17e98b63b5a2a64ed6a47b42f530d2ea1e2f45dbe4ae13"
+      },
+      {
+        "path": "userspace/ksud/src/module.rs",
+        "local": "next/userspace__ksud__src__module.rs",
+        "sha256": "c42a8eb78b4df16ee61c0e0cece77dba624c9ce40725aee511f12abdd758205a"
+      }
+    ]
+  },
+  {
+    "label": "sukisu",
+    "repo": "SukiSU-Ultra/SukiSU-Ultra",
+    "ref": "main",
+    "commit": "c49129a4866cd4ec0cda7a16bf853413af91d540",
+    "files": [
+      {
+        "path": "manager/app/build.gradle.kts",
+        "local": "sukisu/manager__app__build.gradle.kts",
+        "sha256": "12bf8681cc8ec359a9593865614700661dc794c9086fbdbc4f1994d0055593cd"
+      },
+      {
+        "path": "userspace/ksud/src/installer.sh",
+        "local": "sukisu/userspace__ksud__src__installer.sh",
+        "sha256": "7edc6ec924e9a2ff4cf803816256bdcc6d0fd5e367cb2b9df8f47825ddb6a569"
+      },
+      {
+        "path": "userspace/ksud/src/module.rs",
+        "local": "sukisu/userspace__ksud__src__module.rs",
+        "sha256": "2b5cd0f2d85f8289b84fa19b0ed280bf33f7837bc4741df991240a9a8333ab1d"
+      },
+      {
+        "path": "userspace/ksud/src/susfs_config/module.rs",
+        "local": "sukisu/userspace__ksud__src__susfs_config__module.rs",
+        "sha256": "c234685514a73a273d654b149b43dcdfff5eb08bac2bfeb2744daa920138eace"
+      }
+    ]
+  },
+  {
+    "label": "fina",
+    "repo": "LyraVoid/FinaSU",
+    "ref": "master",
+    "commit": "fbf8e003d902c43213d435632a22e4fb1a219aeb",
+    "files": [
+      {
+        "path": "manager/app/build.gradle.kts",
+        "local": "fina/manager__app__build.gradle.kts",
+        "sha256": "b4ae9c26803742f0952d7d06d74cbae7806a2c1ca3d8685ade919a4ecb78159f"
+      },
+      {
+        "path": "userspace/ksud/src/installer.sh",
+        "local": "fina/userspace__ksud__src__installer.sh",
+        "sha256": "7edc6ec924e9a2ff4cf803816256bdcc6d0fd5e367cb2b9df8f47825ddb6a569"
+      },
+      {
+        "path": "userspace/ksud/src/module.rs",
+        "local": "fina/userspace__ksud__src__module.rs",
+        "sha256": "eb0f2dfbf5ba76847b09f8f2682e39f80a08017b1c9cad07ce94791d0ba729c8"
+      },
+      {
+        "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/util/KsuCli.kt",
+        "local": "fina/manager__app__src__main__java__me__weishu__kernelsu__ui__util__KsuCli.kt",
+        "sha256": "62ecfc40fcdace27bb6921fd8945140d90e15a3f733da8d87ca54ccdd057e434"
+      },
+      {
+        "path": "manager/gradle.properties",
+        "local": "fina/manager__gradle.properties",
+        "sha256": "7487d713cae0fd18c03fc271c3367a2f4dbac6d792094e212103cf0e9d466ab9"
+      },
+      {
+        "path": "userspace/sui/api/gradle.properties",
+        "local": "fina/userspace__sui__api__gradle.properties",
+        "sha256": "5bbabb135dd7d699df189838aad39f54ec0ed29ab817cecc6f111491193956f3"
+      },
+      {
+        "path": "userspace/sui/gradle.properties",
+        "local": "fina/userspace__sui__gradle.properties",
+        "sha256": "430e08b2472bb230bbb73b31f3357e96294adc6bfd5a051aed23cd835799eff1"
+      }
+    ]
+  },
+  {
+    "label": "magisk",
+    "repo": "topjohnwu/Magisk",
+    "ref": "master",
+    "commit": "33bfff7ce750c27f157ddb4580e36bf842d6d95b",
+    "files": [
+      {
+        "path": "scripts/util_functions.sh",
+        "local": "magisk/scripts__util_functions.sh",
+        "sha256": "ff79472a0012ca0f477ed8403b93da86d436a663aa710f32b07085175a8b23bd"
+      }
+    ]
+  },
+  {
+    "label": "kernelsu-v1.0.5",
+    "repo": "tiann/KernelSU",
+    "ref": "v1.0.5",
+    "commit": "61c0f7f849aaca299fb42516bc8fc516cefe0d59",
+    "files": [
+      {
+        "path": "userspace/ksud/src/installer.sh",
+        "local": "kernelsu-v1.0.5/userspace__ksud__src__installer.sh",
+        "sha256": "6829b98675252b181c143f28cef5c7c1c1096f4513de2af8dbb7d444bdf0d27f"
+      },
+      {
+        "path": "userspace/ksud/src/module.rs",
+        "local": "kernelsu-v1.0.5/userspace__ksud__src__module.rs",
+        "sha256": "fa3ab36e83e8648f0e824a39cbd9ddb0a66c0ca3c6f2b4a10126aa2f27ca0e81"
+      }
+    ]
+  },
+  {
+    "label": "fina-v1.3.0",
+    "repo": "LyraVoid/FinaSU",
+    "ref": "v1.3.0",
+    "commit": "9a57ccb0500344de7ee6fc53168b441ee860ade6",
+    "files": [
+      {
+        "path": "userspace/ksud/src/installer.sh",
+        "local": "fina-v1.3.0/userspace__ksud__src__installer.sh",
+        "sha256": "7edc6ec924e9a2ff4cf803816256bdcc6d0fd5e367cb2b9df8f47825ddb6a569"
+      },
+      {
+        "path": "userspace/sui/template/magisk_module/util_functions.sh",
+        "local": "fina-v1.3.0/userspace__sui__template__magisk_module__util_functions.sh",
+        "sha256": "bcaffd37dd488a2ffa5844da4e3735b73198fac9456f38c0e52b78ad7b736c69"
+      }
+    ]
+  },
+  {
+    "label": "next-v1.0.9",
+    "repo": "KernelSU-Next/KernelSU-Next",
+    "ref": "v1.0.9",
+    "commit": "2241696498ce9dd742ce80b52c3ed6cca26e03ea",
+    "files": [
+      {
+        "path": "userspace/ksud_magic/src/installer.sh",
+        "local": "next-v1.0.9/userspace__ksud_magic__src__installer.sh",
+        "sha256": "af81264a38c80947308dd2299a5da1b1cd97439029edda559e9ea1743c95c8aa"
+      },
+      {
+        "path": "userspace/ksud_overlayfs/src/installer.sh",
+        "local": "next-v1.0.9/userspace__ksud_overlayfs__src__installer.sh",
+        "sha256": "82a0a73fcbc4bcfa95c96026e8dfd78c7e7e1f0a2338bed0232f8230081e140c"
+      }
+    ]
+  }
+]

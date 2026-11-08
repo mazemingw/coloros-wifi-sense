@@ -1,0 +1,7 @@
+TMPDIR=/dev/tmp
+MODPATH=/stage
+BOOTMODE=true
+KSU=true
+API=36
+/dev/tmp
+0022

@@ -4,6 +4,8 @@ public final class WifiDisconnectPolicyTest {
         expect(p.sample("ap-a", -84, -80, 0), "WARN");
         expect(p.sample("ap-a", -85, -80, 6999), "WAIT");
         expect(p.sample("ap-a", -85, -80, 7000), "DISCONNECT");
+        if (!p.pending()) fail("Proposal prematurely committed cooldown");
+        p.commit(7000);
         expect(p.sample("ap-a", -90, -80, 66999), "NONE");
         expect(p.sample("ap-a", -90, -80, 67000), "WARN");
         expect(p.sample("ap-a", -70, -80, 68000), "CANCEL");
@@ -17,6 +19,7 @@ public final class WifiDisconnectPolicyTest {
         if (p.immediate("ap-b", -70, -80, 8000)) fail("Recovered signal action accepted");
         if (p.immediate("ap-b", -90, -85, 8000)) fail("Stale threshold action accepted");
         if (!p.immediate("ap-b", -90, -80, 8000)) fail("Current immediate action rejected");
+        p.commit(8000);
         if (p.immediate("ap-b", -90, -80, 8001)) fail("Duplicate action accepted");
         expect(p.sample("ap-b", -90, -80, 9000), "NONE");
 
@@ -25,6 +28,7 @@ public final class WifiDisconnectPolicyTest {
         expect(p.sample("ap-a", -90, -85, 6000), "WARN");
         expect(p.sample("ap-a", -90, -85, 7000), "WAIT");
         expect(p.sample("ap-a", -90, -85, 13000), "DISCONNECT");
+        p.commit(13000);
         p.clear();
         expect(p.sample("ap-a", -90, -85, 14000), "NONE");
 

@@ -1,0 +1,12 @@
+{
+  "result": "PASS",
+  "command": "build.ps1 -AndroidSdk D:/Android/SDK -Jdk JDK17",
+  "jdk": 17,
+  "android_platform": 36,
+  "build_tools": "36.0.0",
+  "java_release": 8,
+  "dex_min_api": 29,
+  "exit_code": 0,
+  "diagnostics": "WifiFluidSession uses deprecated APIs; no compilation errors",
+  "artifact": "coloros-wifi-sense-v1.2.0.zip"
+}

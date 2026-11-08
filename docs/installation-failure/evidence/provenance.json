@@ -1,0 +1,542 @@
+{
+  "before": [
+    {
+      "phase": "before",
+      "profiles": [
+        "kernelsu",
+        "kernelsu-v1.0.5",
+        "next"
+      ],
+      "customize_sha256": "31fa245555b3b75829922f7f336afcd2f9380b040f702074757d768ed6c7d041",
+      "guest_sha256": "74468e96b072342c635d4b6823e25fb4275182315006ba46aab4fec3a15cfa6b",
+      "hooks_sha256": "4c93fa9240f1dd86638e60b938edef668896a54434719c0273257459ae3477d5",
+      "resources": {
+        "alpine-minirootfs-3.24.4-x86_64.tar.gz": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-minirootfs-3.24.4-x86_64.tar.gz",
+          "cdaa38cb8de3537967ee5b6c9b6cd00cc962da2b018e6eea48696bb274923012"
+        ],
+        "vmlinuz-virt": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/netboot-3.24.4/vmlinuz-virt",
+          "1e8ac7aebfab3f0fcb443eae94ad320efbbda51be91b928c32ca1740b44ebe9d"
+        ],
+        "dash-0.5.13.1-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/dash-0.5.13.1-r2.apk",
+          "d63e8453cd38a71269a8c5507c5eff936dfff19ed732839f3952e8e37aae5610"
+        ],
+        "kernelsu-busybox": [
+          "https://raw.githubusercontent.com/tiann/KernelSU/730f644615969cfd4a84b45d7f62a667b7b95a50/userspace/ksud/bin/x86_64/busybox",
+          "060844b0769f7a50262854af027c4d6076a212d160a51309b53057cfb7122900"
+        ],
+        "strace-6.19-r1.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+          "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+        ],
+        "musl-1.2.6-r3.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+          "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+        ],
+        "libdw-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+          "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+        ],
+        "libelf-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+          "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+        ],
+        "libbz2-1.0.8-r6.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+          "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+        ],
+        "musl-fts-1.2.7-r7.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+          "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+        ],
+        "xz-libs-5.8.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+          "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+        ],
+        "zlib-1.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+          "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+        ],
+        "zstd-libs-1.5.7-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+          "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+        ]
+      }
+    },
+    {
+      "phase": "before",
+      "profiles": [
+        "next-v1.0.9-magic",
+        "next-v1.0.9-overlayfs",
+        "sukisu"
+      ],
+      "customize_sha256": "31fa245555b3b75829922f7f336afcd2f9380b040f702074757d768ed6c7d041",
+      "guest_sha256": "74468e96b072342c635d4b6823e25fb4275182315006ba46aab4fec3a15cfa6b",
+      "hooks_sha256": "4c93fa9240f1dd86638e60b938edef668896a54434719c0273257459ae3477d5",
+      "resources": {
+        "alpine-minirootfs-3.24.4-x86_64.tar.gz": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-minirootfs-3.24.4-x86_64.tar.gz",
+          "cdaa38cb8de3537967ee5b6c9b6cd00cc962da2b018e6eea48696bb274923012"
+        ],
+        "vmlinuz-virt": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/netboot-3.24.4/vmlinuz-virt",
+          "1e8ac7aebfab3f0fcb443eae94ad320efbbda51be91b928c32ca1740b44ebe9d"
+        ],
+        "dash-0.5.13.1-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/dash-0.5.13.1-r2.apk",
+          "d63e8453cd38a71269a8c5507c5eff936dfff19ed732839f3952e8e37aae5610"
+        ],
+        "kernelsu-busybox": [
+          "https://raw.githubusercontent.com/tiann/KernelSU/730f644615969cfd4a84b45d7f62a667b7b95a50/userspace/ksud/bin/x86_64/busybox",
+          "060844b0769f7a50262854af027c4d6076a212d160a51309b53057cfb7122900"
+        ],
+        "strace-6.19-r1.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+          "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+        ],
+        "musl-1.2.6-r3.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+          "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+        ],
+        "libdw-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+          "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+        ],
+        "libelf-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+          "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+        ],
+        "libbz2-1.0.8-r6.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+          "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+        ],
+        "musl-fts-1.2.7-r7.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+          "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+        ],
+        "xz-libs-5.8.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+          "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+        ],
+        "zlib-1.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+          "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+        ],
+        "zstd-libs-1.5.7-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+          "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+        ]
+      }
+    },
+    {
+      "phase": "before",
+      "profiles": [
+        "fina",
+        "fina-v1.3.0",
+        "magisk"
+      ],
+      "customize_sha256": "31fa245555b3b75829922f7f336afcd2f9380b040f702074757d768ed6c7d041",
+      "guest_sha256": "74468e96b072342c635d4b6823e25fb4275182315006ba46aab4fec3a15cfa6b",
+      "hooks_sha256": "4c93fa9240f1dd86638e60b938edef668896a54434719c0273257459ae3477d5",
+      "resources": {
+        "alpine-minirootfs-3.24.4-x86_64.tar.gz": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-minirootfs-3.24.4-x86_64.tar.gz",
+          "cdaa38cb8de3537967ee5b6c9b6cd00cc962da2b018e6eea48696bb274923012"
+        ],
+        "vmlinuz-virt": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/netboot-3.24.4/vmlinuz-virt",
+          "1e8ac7aebfab3f0fcb443eae94ad320efbbda51be91b928c32ca1740b44ebe9d"
+        ],
+        "dash-0.5.13.1-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/dash-0.5.13.1-r2.apk",
+          "d63e8453cd38a71269a8c5507c5eff936dfff19ed732839f3952e8e37aae5610"
+        ],
+        "kernelsu-busybox": [
+          "https://raw.githubusercontent.com/tiann/KernelSU/730f644615969cfd4a84b45d7f62a667b7b95a50/userspace/ksud/bin/x86_64/busybox",
+          "060844b0769f7a50262854af027c4d6076a212d160a51309b53057cfb7122900"
+        ],
+        "strace-6.19-r1.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+          "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+        ],
+        "musl-1.2.6-r3.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+          "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+        ],
+        "libdw-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+          "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+        ],
+        "libelf-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+          "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+        ],
+        "libbz2-1.0.8-r6.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+          "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+        ],
+        "musl-fts-1.2.7-r7.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+          "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+        ],
+        "xz-libs-5.8.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+          "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+        ],
+        "zlib-1.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+          "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+        ],
+        "zstd-libs-1.5.7-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+          "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+        ]
+      }
+    }
+  ],
+  "after": [
+    {
+      "phase": "after",
+      "profiles": [
+        "kernelsu",
+        "kernelsu-v1.0.5",
+        "next"
+      ],
+      "customize_sha256": "bf8c16246ba3bb8807bd2d3d2e85afa922c329d6d090becff4f8a42128eb717e",
+      "guest_sha256": "74468e96b072342c635d4b6823e25fb4275182315006ba46aab4fec3a15cfa6b",
+      "hooks_sha256": "4c93fa9240f1dd86638e60b938edef668896a54434719c0273257459ae3477d5",
+      "resources": {
+        "alpine-minirootfs-3.24.4-x86_64.tar.gz": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-minirootfs-3.24.4-x86_64.tar.gz",
+          "cdaa38cb8de3537967ee5b6c9b6cd00cc962da2b018e6eea48696bb274923012"
+        ],
+        "vmlinuz-virt": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/netboot-3.24.4/vmlinuz-virt",
+          "1e8ac7aebfab3f0fcb443eae94ad320efbbda51be91b928c32ca1740b44ebe9d"
+        ],
+        "dash-0.5.13.1-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/dash-0.5.13.1-r2.apk",
+          "d63e8453cd38a71269a8c5507c5eff936dfff19ed732839f3952e8e37aae5610"
+        ],
+        "kernelsu-busybox": [
+          "https://raw.githubusercontent.com/tiann/KernelSU/730f644615969cfd4a84b45d7f62a667b7b95a50/userspace/ksud/bin/x86_64/busybox",
+          "060844b0769f7a50262854af027c4d6076a212d160a51309b53057cfb7122900"
+        ],
+        "strace-6.19-r1.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+          "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+        ],
+        "musl-1.2.6-r3.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+          "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+        ],
+        "libdw-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+          "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+        ],
+        "libelf-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+          "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+        ],
+        "libbz2-1.0.8-r6.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+          "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+        ],
+        "musl-fts-1.2.7-r7.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+          "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+        ],
+        "xz-libs-5.8.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+          "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+        ],
+        "zlib-1.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+          "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+        ],
+        "zstd-libs-1.5.7-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+          "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+        ]
+      }
+    },
+    {
+      "phase": "after",
+      "profiles": [
+        "next-v1.0.9-magic",
+        "next-v1.0.9-overlayfs",
+        "sukisu"
+      ],
+      "customize_sha256": "bf8c16246ba3bb8807bd2d3d2e85afa922c329d6d090becff4f8a42128eb717e",
+      "guest_sha256": "74468e96b072342c635d4b6823e25fb4275182315006ba46aab4fec3a15cfa6b",
+      "hooks_sha256": "4c93fa9240f1dd86638e60b938edef668896a54434719c0273257459ae3477d5",
+      "resources": {
+        "alpine-minirootfs-3.24.4-x86_64.tar.gz": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-minirootfs-3.24.4-x86_64.tar.gz",
+          "cdaa38cb8de3537967ee5b6c9b6cd00cc962da2b018e6eea48696bb274923012"
+        ],
+        "vmlinuz-virt": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/netboot-3.24.4/vmlinuz-virt",
+          "1e8ac7aebfab3f0fcb443eae94ad320efbbda51be91b928c32ca1740b44ebe9d"
+        ],
+        "dash-0.5.13.1-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/dash-0.5.13.1-r2.apk",
+          "d63e8453cd38a71269a8c5507c5eff936dfff19ed732839f3952e8e37aae5610"
+        ],
+        "kernelsu-busybox": [
+          "https://raw.githubusercontent.com/tiann/KernelSU/730f644615969cfd4a84b45d7f62a667b7b95a50/userspace/ksud/bin/x86_64/busybox",
+          "060844b0769f7a50262854af027c4d6076a212d160a51309b53057cfb7122900"
+        ],
+        "strace-6.19-r1.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+          "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+        ],
+        "musl-1.2.6-r3.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+          "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+        ],
+        "libdw-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+          "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+        ],
+        "libelf-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+          "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+        ],
+        "libbz2-1.0.8-r6.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+          "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+        ],
+        "musl-fts-1.2.7-r7.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+          "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+        ],
+        "xz-libs-5.8.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+          "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+        ],
+        "zlib-1.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+          "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+        ],
+        "zstd-libs-1.5.7-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+          "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+        ]
+      }
+    },
+    {
+      "phase": "after",
+      "profiles": [
+        "fina",
+        "fina-v1.3.0",
+        "magisk"
+      ],
+      "customize_sha256": "bf8c16246ba3bb8807bd2d3d2e85afa922c329d6d090becff4f8a42128eb717e",
+      "guest_sha256": "74468e96b072342c635d4b6823e25fb4275182315006ba46aab4fec3a15cfa6b",
+      "hooks_sha256": "4c93fa9240f1dd86638e60b938edef668896a54434719c0273257459ae3477d5",
+      "resources": {
+        "alpine-minirootfs-3.24.4-x86_64.tar.gz": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-minirootfs-3.24.4-x86_64.tar.gz",
+          "cdaa38cb8de3537967ee5b6c9b6cd00cc962da2b018e6eea48696bb274923012"
+        ],
+        "vmlinuz-virt": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/netboot-3.24.4/vmlinuz-virt",
+          "1e8ac7aebfab3f0fcb443eae94ad320efbbda51be91b928c32ca1740b44ebe9d"
+        ],
+        "dash-0.5.13.1-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/dash-0.5.13.1-r2.apk",
+          "d63e8453cd38a71269a8c5507c5eff936dfff19ed732839f3952e8e37aae5610"
+        ],
+        "kernelsu-busybox": [
+          "https://raw.githubusercontent.com/tiann/KernelSU/730f644615969cfd4a84b45d7f62a667b7b95a50/userspace/ksud/bin/x86_64/busybox",
+          "060844b0769f7a50262854af027c4d6076a212d160a51309b53057cfb7122900"
+        ],
+        "strace-6.19-r1.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+          "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+        ],
+        "musl-1.2.6-r3.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+          "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+        ],
+        "libdw-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+          "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+        ],
+        "libelf-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+          "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+        ],
+        "libbz2-1.0.8-r6.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+          "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+        ],
+        "musl-fts-1.2.7-r7.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+          "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+        ],
+        "xz-libs-5.8.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+          "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+        ],
+        "zlib-1.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+          "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+        ],
+        "zstd-libs-1.5.7-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+          "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+        ]
+      }
+    }
+  ],
+  "probe_runs": {
+    "before": {
+      "phase": "before",
+      "profiles": [
+        "kernelsu",
+        "next",
+        "sukisu",
+        "fina",
+        "magisk",
+        "kernelsu-v1.0.5",
+        "fina-v1.3.0",
+        "next-v1.0.9-magic",
+        "next-v1.0.9-overlayfs"
+      ],
+      "customize_sha256": "31fa245555b3b75829922f7f336afcd2f9380b040f702074757d768ed6c7d041",
+      "guest_sha256": "897fd45f20c3b8f4c5d9a5f2453914feea870d770feb7bda88a10bfdb0d3e944",
+      "hooks_sha256": "56d7b97643d7548c87848661c1752166eedc804d1a6012f6eaf7bea449f6f592",
+      "baseline_zip_sha256": "245f924bf0476430c242a9725a01e7ada81fb0c1812e32e2000cdc65197c0b54",
+      "resources": {
+        "alpine-minirootfs-3.24.4-x86_64.tar.gz": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-minirootfs-3.24.4-x86_64.tar.gz",
+          "cdaa38cb8de3537967ee5b6c9b6cd00cc962da2b018e6eea48696bb274923012"
+        ],
+        "vmlinuz-virt": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/netboot-3.24.4/vmlinuz-virt",
+          "1e8ac7aebfab3f0fcb443eae94ad320efbbda51be91b928c32ca1740b44ebe9d"
+        ],
+        "dash-0.5.13.1-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/dash-0.5.13.1-r2.apk",
+          "d63e8453cd38a71269a8c5507c5eff936dfff19ed732839f3952e8e37aae5610"
+        ],
+        "kernelsu-busybox": [
+          "https://raw.githubusercontent.com/tiann/KernelSU/730f644615969cfd4a84b45d7f62a667b7b95a50/userspace/ksud/bin/x86_64/busybox",
+          "060844b0769f7a50262854af027c4d6076a212d160a51309b53057cfb7122900"
+        ],
+        "strace-6.19-r1.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+          "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+        ],
+        "musl-1.2.6-r3.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+          "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+        ],
+        "libdw-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+          "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+        ],
+        "libelf-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+          "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+        ],
+        "libbz2-1.0.8-r6.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+          "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+        ],
+        "musl-fts-1.2.7-r7.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+          "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+        ],
+        "xz-libs-5.8.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+          "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+        ],
+        "zlib-1.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+          "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+        ],
+        "zstd-libs-1.5.7-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+          "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+        ]
+      }
+    },
+    "after": {
+      "phase": "after",
+      "profiles": [
+        "kernelsu",
+        "next",
+        "sukisu",
+        "fina",
+        "magisk",
+        "kernelsu-v1.0.5",
+        "fina-v1.3.0",
+        "next-v1.0.9-magic",
+        "next-v1.0.9-overlayfs"
+      ],
+      "customize_sha256": "bf8c16246ba3bb8807bd2d3d2e85afa922c329d6d090becff4f8a42128eb717e",
+      "guest_sha256": "897fd45f20c3b8f4c5d9a5f2453914feea870d770feb7bda88a10bfdb0d3e944",
+      "hooks_sha256": "56d7b97643d7548c87848661c1752166eedc804d1a6012f6eaf7bea449f6f592",
+      "baseline_zip_sha256": "245f924bf0476430c242a9725a01e7ada81fb0c1812e32e2000cdc65197c0b54",
+      "resources": {
+        "alpine-minirootfs-3.24.4-x86_64.tar.gz": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-minirootfs-3.24.4-x86_64.tar.gz",
+          "cdaa38cb8de3537967ee5b6c9b6cd00cc962da2b018e6eea48696bb274923012"
+        ],
+        "vmlinuz-virt": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/netboot-3.24.4/vmlinuz-virt",
+          "1e8ac7aebfab3f0fcb443eae94ad320efbbda51be91b928c32ca1740b44ebe9d"
+        ],
+        "dash-0.5.13.1-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/dash-0.5.13.1-r2.apk",
+          "d63e8453cd38a71269a8c5507c5eff936dfff19ed732839f3952e8e37aae5610"
+        ],
+        "kernelsu-busybox": [
+          "https://raw.githubusercontent.com/tiann/KernelSU/730f644615969cfd4a84b45d7f62a667b7b95a50/userspace/ksud/bin/x86_64/busybox",
+          "060844b0769f7a50262854af027c4d6076a212d160a51309b53057cfb7122900"
+        ],
+        "strace-6.19-r1.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/strace-6.19-r1.apk",
+          "d3baf0e901f9ef6d535dc3dbd8c464b8e70d047fc4e9ef04708f5c00733b5fbd"
+        ],
+        "musl-1.2.6-r3.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-1.2.6-r3.apk",
+          "e142255d0fa397f14318996bc10378093dcc069dc3dd1b6818c8f28a789c21da"
+        ],
+        "libdw-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libdw-0.195-r0.apk",
+          "e1cc3b757cf44a38f6b160cb714bf570bc28eca11cd1ba8e8b0b54eab4837ffb"
+        ],
+        "libelf-0.195-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libelf-0.195-r0.apk",
+          "78c5a1993342ab1bdcdce30639fd0937e8000f6d0d85cea171f573d31decd036"
+        ],
+        "libbz2-1.0.8-r6.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libbz2-1.0.8-r6.apk",
+          "2737e2b23ed08d4911ee62cd0163b5f4bf0379cacf4dc35b23a00209584c98fd"
+        ],
+        "musl-fts-1.2.7-r7.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/musl-fts-1.2.7-r7.apk",
+          "10563dc485f24f7cd987e0f3c68552e2c6417b61f5c8cb6b39cbf9af46ea09a7"
+        ],
+        "xz-libs-5.8.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/xz-libs-5.8.4-r0.apk",
+          "ab362dd515ead04c31a6c302163248da7aa4813e283c971e6dd3f789b453a1d9"
+        ],
+        "zlib-1.4-r0.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zlib-1.4-r0.apk",
+          "7b05bc778b8b25cd880835b40114182bd4d1581717504d0129c810c0a14291cb"
+        ],
+        "zstd-libs-1.5.7-r2.apk": [
+          "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/zstd-libs-1.5.7-r2.apk",
+          "23c6065b0049b2406441564bcf0032515a43f78e80d76fcb85535a3803ef5d4e"
+        ]
+      }
+    }
+  }
+}
