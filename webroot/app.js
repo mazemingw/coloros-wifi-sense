@@ -2,7 +2,7 @@
 (() => {
   const path = '/data/adb/modules/coloros_wifi_sense/webctl.sh';
   const $ = id => document.getElementById(id);
-  let busy = false, counter = 0, status = null;
+  let busy = false, counter = 0, status = null, band = null;
   const labels = {PAUSED:'息屏暂停',NO_WIFI:'未连接 Wi-Fi',IDLE:'正常监控',SUSPECT:'检查信号',VERIFY:'弱信号验证',COOLDOWN:'断开冷却',CONFIG_ERROR:'检查阈值配置',STOPPED:'已停止'};
   const metrics = {
     rssi_events:'RSSI 广播',network_events:'网络事件',screen_events:'屏幕事件',rssi_reads:'RSSI 主动读取',
@@ -16,7 +16,7 @@
     return new Promise((resolve,reject) => {
       if (!window.ksu || typeof window.ksu.exec !== 'function') return reject(new Error('请从支持 WebUI 的模块管理器打开。'));
       const callback = 'wifiSenseReply' + (++counter);
-      const timer = setTimeout(() => { delete window[callback]; reject(new Error('管理器未返回结果，请重试。')); },5000);
+      const timer = setTimeout(() => { delete window[callback]; reject(new Error('管理器未返回结果，请刷新状态确认。')); },args.startsWith('band') ? 30000 : 5000);
       window[callback] = (errno,stdout,stderr) => {
         clearTimeout(timer); delete window[callback];
         Number(errno) === 0 ? resolve(String(stdout)) : reject(new Error(String(stderr || stdout || '操作失败')));
@@ -27,8 +27,9 @@
   }
   function lock(value) {
     busy = value;
-    for (const id of ['refresh','save','threshold','fluid']) $(id).disabled=value;
+    for (const id of ['refresh','save','threshold','fluid','countdown','save-countdown','band5g']) $(id).disabled=value;
     if (!value && status && !status.fluid_installed) $('fluid').disabled=true;
+    if (!value && (!band || (!band.supported && !band.requested && !band.restore_pending))) $('band5g').disabled=true;
   }
   function threshold(value) {
     const n=Number(value);
@@ -44,12 +45,15 @@
     $('state').textContent=labels[data.state] || '状态未知';
     $('rssi').textContent=data.rssi == null ? '—' : String(data.rssi);
     $('threshold').value=threshold(data.threshold); showThreshold();
+    const seconds=Number(data.countdown_seconds ?? 7);
+    $('countdown').value=Number.isInteger(seconds)&&seconds>=1&&seconds<=300?seconds:7;
+    $('threshold-help').textContent='信号持续低于或等于阈值时，倒计时 '+$('countdown').value+' 秒后断开当前接入点。';
     $('fluid').checked=!!data.fluid_enabled;
     $('fluid').disabled=!data.fluid_installed;
     $('fluid-help').textContent=data.fluid_installed ? '提醒中关闭开关，可立即断开。' : '未安装流体云组件，重新安装时可选择开启。';
     $('updated').textContent='更新于 ' + new Date(data.updated_ms).toLocaleTimeString();
     $('state-detail').textContent=!data.interactive ? '设备未处于交互状态，监控与倒计时已暂停。'
-      : data.state === 'CONFIG_ERROR' ? '阈值文件无效，请保存有效阈值后恢复监控。'
+      : data.state === 'CONFIG_ERROR' ? '阈值或倒计时配置无效，请保存有效设置后恢复监控。'
       : data.state === 'VERIFY' ? Math.ceil(data.countdown_ms/1000) + ' 秒后再次确认信号并断开。'
       : data.state === 'COOLDOWN' ? '冷却剩余约 ' + Math.ceil(data.cooldown_ms/1000) + ' 秒。'
       : data.wifi_connections !== 1 ? '等待单一 Wi-Fi 连接，当前不进行信号采样。' : '监听网络变化，亮屏时保留 7 秒信号检查兜底。';
@@ -62,6 +66,14 @@
   async function refresh() {
     const nonce='ui_' + Date.now() + '_' + (++counter);
     render(JSON.parse(await exec('status ' + nonce)));
+    await refreshBand();
+  }
+  async function refreshBand() {
+    try {
+      band=JSON.parse(await exec('bandstatus'));
+      $('band5g').checked=!!band.requested;
+      $('band-help').textContent=band.message + (band.restore_pending && !band.requested?' 有待还原记录，请重试关闭。':'');
+    } catch(e) { band=null; $('band-help').textContent=e.message; }
   }
   async function action(work) {
     if (busy) return;
@@ -77,6 +89,15 @@
   $('save').addEventListener('click',() => action(async() => {
     const value=threshold($('threshold').value);
     await exec('threshold ' + value); await refresh(); message('阈值已保存。');
+  }));
+  $('save-countdown').addEventListener('click',() => action(async() => {
+    const raw=$('countdown').value, seconds=Number(raw);
+    if(!/^[1-9]\d{0,2}$/.test(raw)||!Number.isInteger(seconds)||seconds>300)throw new Error('倒计时必须是 1 至 300 秒的整数。');
+    await exec('countdown '+seconds); await refresh(); message('自动断开倒计时已保存。');
+  }));
+  $('band5g').addEventListener('change',() => action(async() => {
+    try { const response=await exec('band5g '+($('band5g').checked?'1':'0')); await refreshBand(); message(response.trim()); }
+    catch(e) { await refreshBand(); throw e; }
   }));
   $('fluid').addEventListener('change',() => action(async() => {
     try { await exec('fluid ' + ($('fluid').checked?'1':'0')); await refresh(); message('通知设置已保存，开启后从下一次提醒生效。'); }

@@ -17,12 +17,23 @@
   </section>
   <section class="card" aria-labelledby="threshold-title">
     <div class="row"><h2 id="threshold-title">弱信号阈值</h2><output id="threshold-value" for="threshold">−80 dBm</output></div>
-    <p class="muted">信号持续低于或等于阈值时，倒计时 7 秒后断开当前接入点。</p>
+    <p id="threshold-help" class="muted">信号持续低于或等于阈值时，完成倒计时后断开当前接入点。</p>
     <label class="sr-only" for="threshold">RSSI 阈值</label><input id="threshold" type="range" min="-100" max="-20" step="1" value="-80">
     <div class="row scale"><span>−100 · 更弱才断</span><span>−20 · 更早断开</span></div>
     <div class="presets" aria-label="常用阈值"><button type="button" data-threshold="-75">−75</button><button type="button" data-threshold="-80">−80</button><button type="button" data-threshold="-85">−85</button><button type="button" data-threshold="-90">−90</button></div>
     <button id="save" class="primary" type="button">保存阈值</button>
     <p class="hint">保存后立即生效，正在进行的倒计时会重新判断。</p>
+  </section>
+  <section class="card" aria-labelledby="countdown-title">
+    <h2 id="countdown-title">自动断开倒计时</h2>
+    <p class="muted">弱信号持续达到所设秒数后，再次确认信号并断开。默认 7 秒。</p>
+    <div class="row"><label for="countdown">等待时长（秒）</label><input id="countdown" class="seconds" type="number" min="1" max="300" step="1" value="7" inputmode="numeric"></div>
+    <button id="save-countdown" class="primary" type="button">保存倒计时</button>
+    <p class="hint">支持 1–300 秒，立即生效；正在进行的倒计时重新开始，流体云进度同步调整。</p>
+  </section>
+  <section class="card" aria-labelledby="band-title">
+    <div class="row"><div><h2 id="band-title">仅使用 5GHz</h2><p id="band-help" class="muted">正在检查驱动支持…</p></div><input id="band5g" type="checkbox" role="switch" aria-label="强制仅使用 5GHz" disabled></div>
+    <p class="hint">实时生效，可能重新连接；没有可用 5GHz 热点时将无法连接 Wi-Fi。关闭恢复开启前的频段设置，默认关闭。</p>
   </section>
   <section class="card" aria-labelledby="fluid-title">
     <div class="row"><div><h2 id="fluid-title">流体云提醒</h2><p id="fluid-help" class="muted">提醒中关闭开关，可立即断开。</p></div><input id="fluid" type="checkbox" role="switch" aria-label="开启流体云提醒"></div>

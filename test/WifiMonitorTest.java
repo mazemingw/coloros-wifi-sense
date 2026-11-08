@@ -175,6 +175,18 @@ public final class WifiMonitorTest {
             f.monitor.threshold(-80);f.advance(60000);check(f.monitor.deadline()==67000,"configuration recovery");
             f.advance(67000);check(f.attempts==1,"repaired config did not resume");
         });
+        test("custom one-second countdown",()->{
+            Fake f=new Fake();f.monitor.countdown(1);f.rssi=-90;f.start();f.advance(999);check(f.attempts==0,"too early");f.advance(1000);check(f.attempts==1,"one second");
+        });
+        test("custom five-minute countdown",()->{
+            Fake f=new Fake();f.monitor.countdown(300);f.rssi=-90;f.start();f.advance(299999);check(f.attempts==0,"too early");f.advance(300000);check(f.attempts==1,"five minutes");
+        });
+        test("changing duration cancels old deadline",()->{
+            Fake f=new Fake();f.rssi=-90;f.start();f.advance(4000);f.monitor.countdown(10);f.advance(4000);check(f.monitor.deadline()==14000,"new deadline");f.advance(10000);check(f.attempts==0,"old expired");f.advance(14000);check(f.attempts==1,"new expired");
+        });
+        test("custom duration remains paused off-screen",()->{
+            Fake f=new Fake();f.monitor.countdown(30);f.rssi=-90;f.start();f.advance(1000);f.screen(false);long reads=f.monitor.metrics.rssiReads;f.advance(60000);check(f.monitor.metrics.rssiReads==reads&&f.attempts==0,"off quiet");f.screen(true);f.advance(f.time);check(f.monitor.deadline()==f.time+30000,"restart full duration");
+        });
         System.out.println("TOTAL "+passed+" monitor scenarios passed");
     }
 }

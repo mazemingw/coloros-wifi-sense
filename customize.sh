@@ -81,5 +81,7 @@ set_perm "$MODPATH/action.sh" 0 0 0755
 set_perm "$MODPATH/settings.sh" 0 0 0755
 set_perm "$MODPATH/demo.sh" 0 0 0755
 set_perm "$MODPATH/webctl.sh" 0 0 0755
+set_perm "$MODPATH/uninstall.sh" 0 0 0755
+set_perm_recursive "$MODPATH/bin" 0 0 0755 0755
 set_perm "$MODPATH/fluid_enabled" 0 0 0600
 ui_print "安装完成，重启后开始监听 Wi-Fi。"

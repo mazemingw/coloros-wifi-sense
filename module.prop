@@ -1,7 +1,7 @@
 id=coloros_wifi_sense
 name=colorOSWIFI感知
-version=v1.2.0
-versionCode=4
+version=v1.3.0
+versionCode=5
 author=酷安@NVMEX夜莺
-description=亮屏处理弱WiFi黏连，息屏暂停；7秒弱信号验证、60秒冷却、可选流体云及Web管理。默认-80dBm，点击操作切换阈值。
+description=亮屏处理弱WiFi黏连，息屏暂停；自定义断开倒计时、可选流体云、Web管理及高通实时仅5GHz。默认-80dBm/7秒，点击操作切换阈值。
 updateJson=https://modules.kernelsu.org/api/v1/modules/coloros_wifi_sense/update.json

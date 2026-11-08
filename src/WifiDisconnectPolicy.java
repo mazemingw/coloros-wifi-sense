@@ -10,6 +10,13 @@ final class WifiDisconnectPolicy {
     private int threshold;
     private long deadline;
     private long nextDisconnectAt;
+    private long countdownMs = COUNTDOWN_MS;
+
+    void countdown(long millis) {
+        if (millis < 1_000 || millis > 300_000) throw new IllegalArgumentException("Countdown must be 1..300 seconds");
+        if (millis != countdownMs) { countdownMs = millis; clear(); }
+    }
+    long countdownMs() { return countdownMs; }
 
     Decision sample(String currentBssid, int rssi, int currentThreshold, long now) {
         boolean wasPending = pending();
@@ -20,7 +27,7 @@ final class WifiDisconnectPolicy {
         if (!pending() || !Objects.equals(bssid, currentBssid) || threshold != currentThreshold) {
             bssid = currentBssid;
             threshold = currentThreshold;
-            deadline = now + COUNTDOWN_MS;
+            deadline = now + countdownMs;
             return Decision.WARN;
         }
         if (now >= deadline) {

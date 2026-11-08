@@ -54,6 +54,7 @@ final class WifiMonitor {
     WifiMonitor(Port port) { this.port = port; }
     State state() { return state; }
     int threshold() { return threshold; }
+    long countdownMs() { return policy.countdownMs(); }
     Snapshot last() { return last; }
     long deadline() { return policy.deadline(); }
     long cooldownUntil() { return policy.cooldownUntil(); }
@@ -115,6 +116,14 @@ final class WifiMonitor {
         threshold = value;
         cancelPending("threshold change");
         if (awake && !stopped) request(0, true);
+    }
+
+    void countdown(int seconds) {
+        if (seconds < 1 || seconds > 300) throw new IllegalArgumentException("Countdown must be 1..300 seconds");
+        if (policy.countdownMs() == seconds * 1_000L) return;
+        cancelPending("countdown change");
+        policy.countdown(seconds * 1_000L);
+        if (awake && !stopped && configured) request(0, true);
     }
 
     private void event(String kind) {

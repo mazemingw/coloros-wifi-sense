@@ -41,6 +41,9 @@ public final class ColorOsWifiSense {
     private final WifiMonitor monitor;
     private volatile boolean screenOff, stopRequested, configDirty = true;
     private boolean closed, fluidEnabled;
+    private boolean force5gEnabled;
+    private volatile Thread bandWorker;
+    private final Runnable bandTask = this::reconcileBand;
     private long wifiBinderReads, fluidStarts, fluidErrors, powerChecks;
     private final AtomicLong ignoredCapabilityEvents = new AtomicLong();
     private WifiSystemEvents events;
@@ -54,8 +57,8 @@ public final class ColorOsWifiSense {
     }
 
     private static final class Warning {
-        final int rssi, threshold; final long deadline;
-        Warning(int rssi, int threshold, long deadline) { this.rssi=rssi; this.threshold=threshold; this.deadline=deadline; }
+        final int rssi, threshold; final long deadline, duration;
+        Warning(int rssi, int threshold, long deadline, long duration) { this.rssi=rssi; this.threshold=threshold; this.deadline=deadline; this.duration=duration; }
     }
 
     private ColorOsWifiSense(File moduleDir, File stateDir) throws ReflectiveOperationException {
@@ -121,7 +124,7 @@ public final class ColorOsWifiSense {
             // without re-reading configuration on every periodic sample.
             if (disabled()) { stopRequested=true; handler.post(() -> closeLoop()); return WifiMonitor.Attempt.STALE; }
             try {
-                if (readThresholdValue() != monitor.threshold()) {
+                if (readThresholdValue() != monitor.threshold() || readCountdownValue() * 1_000L != monitor.countdownMs()) {
                     configDirty=true; epoch.incrementAndGet(); handler.post(() -> reloadConfig());
                     return WifiMonitor.Attempt.STALE;
                 }
@@ -153,7 +156,9 @@ public final class ColorOsWifiSense {
     private void listen() throws Exception {
         if (disabled()) return;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            stopRequested=true;
             stopFluid(); java.lang.Process child = fluidChild; if (child != null) child.destroy();
+            releaseBand();
         }, "wifi-sense-cleanup"));
         ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
             private final ConcurrentHashMap<Network,String> signals = new ConcurrentHashMap<>();
@@ -165,6 +170,7 @@ public final class ColorOsWifiSense {
                     if (kind == 1) changed = connections.add(n);
                     if (kind == -1) changed = connections.remove(n);
                     monitor.network(kind == -1 ? n : null, changed);
+                    if (kind == 1 && changed) scheduleBand();
                 });
             }
             @Override public void onAvailable(Network n) { enqueue(n, 1); }
@@ -190,7 +196,7 @@ public final class ColorOsWifiSense {
         };
         FileObserver stateObserver = new FileObserver(stateDir, FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO | FileObserver.DELETE) {
             @Override public void onEvent(int event, String path) {
-                if ("threshold".equals(path)) {
+                if ("threshold".equals(path) || "countdown".equals(path) || "force5g".equals(path)) {
                     configDirty = true; epoch.incrementAndGet();
                     handler.post(() -> { if (interactive()) reloadConfig(); });
                 } else if ("ui_request".equals(path)) {
@@ -207,7 +213,8 @@ public final class ColorOsWifiSense {
                 screenOff = !on; epoch.incrementAndGet();
                 handler.post(() -> {
                     if (closed) return;
-                    if (on && interactive()) { configDirty = true; reloadConfig(); refreshConnections(); }
+                    if (on && interactive()) { configDirty = true; reloadConfig(); refreshConnections(); scheduleBand(); }
+                    else if (!on) handler.removeCallbacks(bandTask);
                     monitor.screen(on);
                 });
             }
@@ -229,10 +236,11 @@ public final class ColorOsWifiSense {
             // Android's main Looper deliberately rejects quit()/quitSafely().
             // Unwind it through this owner so finally can unregister every listener.
         } finally {
-            closed = true; monitor.stop(); events.close();
+            closed = true; stopRequested=true; handler.removeCallbacks(bandTask); monitor.stop(); events.close();
             moduleObserver.stopWatching(); stateObserver.stopWatching();
             connectivity.unregisterNetworkCallback(callback);
             java.lang.Process child = fluidChild; if (child != null) child.destroy();
+            releaseBand();
         }
     }
 
@@ -254,17 +262,40 @@ public final class ColorOsWifiSense {
         configDirty = false;
         try {
             monitor.threshold(readThresholdValue());
+            monitor.countdown(readCountdownValue());
         } catch (IOException e) {
-            monitor.invalidConfiguration(); Log.w(TAG, "Invalid threshold; monitoring paused until repaired");
+            monitor.invalidConfiguration(); Log.w(TAG, "Invalid threshold/countdown; monitoring paused until repaired");
         }
         boolean enabled = readFluidEnabled(moduleDir);
         if (!enabled) stopFluid();
         fluidEnabled = enabled;
+        force5gEnabled = "1".equals(readLine(new File(stateDir,"force5g"),"0"));
+    }
+
+    private void scheduleBand() {
+        if (!interactive() || (!force5gEnabled && !new File(stateDir,"band_original").isFile())) return;
+        handler.removeCallbacks(bandTask); handler.postDelayed(bandTask,250);
+    }
+    private void reconcileBand() {
+        if (!interactive() || (bandWorker!=null && bandWorker.isAlive())) return;
+        bandWorker=new Thread(() -> {
+            try { WifiBandControl.execute(moduleDir,stateDir,"reconcile",this::interactive); }
+            catch(Exception e) { Log.w(TAG,"Frequency policy not applied: "+e.getMessage()); }
+        },"wifi-band-on-demand");
+        bandWorker.setDaemon(true); bandWorker.start();
+    }
+    private synchronized void releaseBand() {
+        Thread worker=bandWorker;
+        if(worker!=null && worker!=Thread.currentThread())try { worker.join(15000); }
+        catch(InterruptedException e) { Thread.currentThread().interrupt(); }
+        if(!new File(stateDir,"band_original").isFile())return;
+        try { WifiBandControl.execute(moduleDir,stateDir,"release",() -> false); }
+        catch(Exception e) { Log.w(TAG,"Frequency restore pending: "+e.getMessage()); }
     }
 
     private void startFluid(int rssi, int threshold, long deadline) {
         if (!fluidEnabled || !interactive()) return;
-        pendingWarning = new Warning(rssi, threshold, deadline);
+        pendingWarning = new Warning(rssi, threshold, deadline, demo ? WifiDisconnectPolicy.COUNTDOWN_MS : monitor.countdownMs());
         if (fluidChild != null) { stopChild(); return; }
         launchPendingWarning();
     }
@@ -278,7 +309,7 @@ public final class ColorOsWifiSense {
             ProcessBuilder builder = new ProcessBuilder("/system/bin/app_process", "/system/bin",
                 "--nice-name=coloros-wifi-fluid", "WifiFluidSession", demo ? "demo" : "watch", token,
                 String.valueOf(warning.rssi), String.valueOf(warning.threshold),
-                String.valueOf(WifiDisconnectPolicy.COUNTDOWN_MS), String.valueOf(warning.deadline));
+                String.valueOf(warning.duration), String.valueOf(warning.deadline));
             builder.environment().put("CLASSPATH", new File(moduleDir,"wifi-fluid.dex").getAbsolutePath());
             builder.redirectErrorStream(true);
             java.lang.Process child = builder.start(); fluidStarts++;
@@ -369,6 +400,7 @@ public final class ColorOsWifiSense {
                 .put("updated_ms",System.currentTimeMillis()).put("state",monitor.state().name())
                 .put("interactive",interactive()).put("wifi_connections",connections.size())
                 .put("threshold",monitor.threshold()).put("fluid_enabled",fluidEnabled)
+                .put("countdown_seconds",monitor.countdownMs()/1000)
                 .put("fluid_installed",new File(moduleDir,"wifi-fluid.dex").isFile())
                 .put("rssi",last==null?JSONObject.NULL:last.rssi).put("sample_scheduled",monitor.hasSampleTask())
                 .put("countdown_ms",Math.max(0,monitor.deadline()-SystemClock.elapsedRealtime()))
@@ -414,6 +446,15 @@ public final class ColorOsWifiSense {
             if(value < -100 || value > -20) throw new IOException("Invalid threshold range");
             return value;
         } catch(NumberFormatException e) { throw new IOException("Invalid threshold number",e); }
+    }
+    private int readCountdownValue() throws IOException {
+        File file=new File(stateDir,"countdown");
+        if(!file.exists())return 7;
+        if(!file.isFile() || file.length()>32)throw new IOException("Invalid countdown file");
+        try(BufferedReader in=new BufferedReader(new FileReader(file))) {
+            String text=in.readLine();int n=Integer.parseInt(text==null?"":text.trim());
+            if(n<1||n>300)throw new IOException("Invalid countdown range");return n;
+        } catch(NumberFormatException e) { throw new IOException("Invalid countdown number",e); }
     }
     private WifiInfo readConnectionInfo() throws ReflectiveOperationException {
         wifiBinderReads++;

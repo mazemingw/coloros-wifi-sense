@@ -10,6 +10,7 @@
 *.cjs text eol=lf
 *.html text eol=lf
 *.css text eol=lf
+*.c text eol=lf
 # Captured output and empty final TSV fields retain their original whitespace.
 docs/**/*.log -whitespace
 docs/**/*.tsv -whitespace

@@ -34,3 +34,15 @@ trap - EXIT
 if sh "$M/webctl.sh" status stopped_test >/dev/null 2>&1; then exit 1; fi
 passed=$((passed+1))
 echo "PASS $passed Android shell/WebUI command checks (private fixture only)"
+for value in 1 2 7 30 60 300; do
+    sh "$M/webctl.sh" countdown "$value" >/dev/null
+    [ "$(cat "$S/countdown")" = "$value" ] || exit 1
+    [ "$(stat -c %a "$S/countdown")" = 600 ] || exit 1
+    passed=$((passed+1))
+done
+for value in 0 301 -1 1.5 07 '1; id' ''; do
+    if sh "$M/webctl.sh" countdown "$value" >/dev/null 2>&1; then exit 1; fi
+    passed=$((passed+1))
+done
+sh "$M/webctl.sh" countdown 7 >/dev/null
+echo "PASS $passed total Android shell checks including countdown bounds and mode 0600"

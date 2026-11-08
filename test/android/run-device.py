@@ -17,7 +17,9 @@ def main():
         text=(ROOT/name).read_text(encoding='utf-8').replace('/data/adb/coloros_wifi_sense',BASE+'/state')
         (fixture/'module'/name).write_bytes(text.replace('\r\n','\n').encode('utf-8'))
     (fixture/'module/fluid_enabled').write_bytes(b'0\n');(fixture/'state/threshold').write_bytes(b'-80\n')
-    with zipfile.ZipFile(ROOT/'build/coloros-wifi-sense-v1.2.0.zip') as z:(fixture/'module/wifi-fluid.dex').write_bytes(z.read('wifi-fluid.dex'))
+    (fixture/'state/countdown').write_bytes(b'7\n');(fixture/'state/force5g').write_bytes(b'0\n')
+    version=re.search(r'^version=(.+)$',(ROOT/'module.prop').read_text(encoding='utf-8'),re.M)[1].strip()
+    with zipfile.ZipFile(ROOT/f'build/coloros-wifi-sense-{version}.zip') as z:(fixture/'module/wifi-fluid.dex').write_bytes(z.read('wifi-fluid.dex'))
     shell('mkdir -p '+BASE)
     for local,target in [(fixture/'module',BASE+'/'),(fixture/'state',BASE+'/'),(out/'classes.dex',BASE+'/test.dex')]:
         subprocess.run([ADB,'push',str(local),target],check=True)

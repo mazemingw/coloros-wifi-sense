@@ -3,6 +3,19 @@
 MODDIR=${0%/*}
 STATE_DIR=/data/adb/coloros_wifi_sense
 case "$1" in
+    band5g|bandstatus)
+        case "$1:$#:${2-}" in band5g:2:0|band5g:2:1) cws_action=$2 ;; bandstatus:1:) cws_action=status ;; *) exit 1 ;; esac
+        export CLASSPATH="$MODDIR/wifi-sense.dex"
+        exec /system/bin/app_process /system/bin WifiBandControl "$MODDIR" "$STATE_DIR" "$cws_action" ;;
+    countdown)
+        [ "$#" -eq 2 ] || exit 1
+        case "$2" in [1-9]|[1-9][0-9]|[12][0-9][0-9]|300) ;; *) echo '倒计时必须是 1 至 300 秒的整数。' >&2; exit 1 ;; esac
+        [ -d "$STATE_DIR" ] || exit 1
+        umask 077
+        cws_tmp=$(mktemp "$STATE_DIR/countdown.XXXXXX") || exit 1
+        trap 'rm -f "$cws_tmp"' EXIT
+        printf '%s\n' "$2" > "$cws_tmp" && mv -f "$cws_tmp" "$STATE_DIR/countdown" || exit 1
+        echo '自动断开倒计时已保存，正在进行的倒计时会重新开始。' ;;
     threshold)
         [ "$#" -eq 2 ] || exit 1
         exec sh "$MODDIR/settings.sh" "$2" ;;
@@ -36,5 +49,5 @@ case "$1" in
         done
         echo '监控进程未响应，请确认模块已启用并重启手机。' >&2
         exit 1 ;;
-    *) echo '用法：webctl.sh status <请求标识> | threshold <-100..-20> | fluid <0|1>' >&2; exit 1 ;;
+    *) echo '用法：webctl.sh status <请求标识> | threshold <-100..-20> | countdown <1..300> | fluid <0|1> | band5g <0|1> | bandstatus' >&2; exit 1 ;;
 esac
