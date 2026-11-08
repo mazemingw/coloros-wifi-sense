@@ -2,6 +2,8 @@
 
 作者 **酷安@NVMEX夜莺**
 
+[酷安主页](https://www.coolapk.com/u/1060215)
+
 在 Magisk 或 KernelSU 管理器中从本地选择模块 ZIP，安装时按音量键选择功能，安装后重启。音量＋选择“核心及流体云通知（推荐）”，音量－选择“仅核心”；仅核心模式会移除流体云 DEX，不启动界面子进程。模块卡片的「操作」按钮继续用于切换阈值。
 
 模块需要 Android 10 或更新版本，守护进程在开机后独立运行。使用模块时可关闭欧加网络助手里的弱信号断开开关，避免两边重复触发。
@@ -59,3 +61,5 @@ su -c 'sh /data/adb/modules/coloros_wifi_sense/settings.sh -83'
 模块 ID：`coloros_wifi_sense`。许可证：Apache-2.0。
 
 问题反馈时请提供机型、系统版本、root 管理器版本、所选安装模式及 `ColorOsWifiSense` 日志；请隐藏 SSID、BSSID 等个人网络信息。
+
+<img src="https://github.com/user-attachments/assets/5148c4dd-3350-49ed-961d-e40bf722be2d" alt="提问请附日志和截图" width="480">
