@@ -1,0 +1,93 @@
+PASS: countdown, recovery, AP change, threshold change, cooldown and stale actions
+PASS awake normal, fallback bounded
+PASS gradual drop with events
+PASS sudden drop without any RSSI broadcast
+PASS recover during countdown
+PASS screen off cancels countdown, UI and every task
+PASS off RSSI/network events do no business I/O
+PASS wake weak: new full countdown and new AP
+PASS BSSID changes during verification
+PASS disconnect then reconnect, cooldown retained
+PASS weak same AP reconnect counted without rapid redisconnect
+PASS no Wi-Fi has zero recurring work
+PASS mobile data only has zero Wi-Fi reads
+PASS threshold change invalidates countdown
+PASS manual disconnect requires current weak AP
+PASS manual rejects recovered RSSI
+PASS screen-off races read
+PASS screen-off races last Binder gate
+PASS new event invalidates in-flight RSSI
+PASS new event races final gate, no cooldown consumed
+PASS final fresh RSSI/BSSID recheck
+PASS invalid connection info cannot disconnect
+PASS core-only never creates UI
+PASS repeated RSSI events coalesce, one child per countdown
+PASS late disconnect confirmation after screen-off creates no UI
+PASS wake during cooldown reads once but never disconnects
+PASS stop removes all work and notifications
+METRIC stable Wi-Fi 1h, interactive 15m: old=515, new=129, off=0
+PASS one-hour operation-count comparison
+PASS invalid configuration quiesces instead of retrying every second
+PASS custom one-second countdown
+PASS custom five-minute countdown
+PASS changing duration cancels old deadline
+PASS custom duration remains paused off-screen
+PASS offline confirmation disconnects strong signal and obeys cooldown
+PASS offline result from old AP cannot disconnect new AP
+PASS offline result cannot cut off-screen or after a new event
+PASS screen-off races offline final Binder preflight
+PASS offline confirmation uses same network-lost feedback path
+TOTAL 37 monitor scenarios passed
+PASS band enable saves original before applying
+PASS band off restores exactly the original mask
+PASS screen-off cannot enable band restriction
+PASS backup write failure performs no driver write
+PASS preference write failure rolls driver back
+PASS driver readback mismatch rolls back
+PASS restore failure retains recovery record
+PASS release restores while keeping requested preference
+PASS new boot never restores a stale mask
+PASS external band changes are not overwritten on release
+PASS reconnect rebases backup after driver reset
+PASS already restricted band preserves previous restriction
+PASS default off reconciliation has no driver I/O
+PASS off request persists when interface is unavailable, recovery record retained
+TOTAL 14 band transaction scenarios passed
+PASS defaults opt out of network requests and SSID mutation
+PASS invalid durations and probe URLs rejected
+PASS one successful request ends connection batch forever
+PASS two failures authorize exactly once and never poll again
+PASS success after one failure ends without disconnect
+PASS cancelled requests still count toward two-request limit
+PASS screen-off invalidates previous failure without increasing request budget
+PASS new connection resets completed batch, same connection does not
+PASS unrelated avoid duration change does not restart probe
+PASS all saved configs for same SSID held, other SSIDs untouched
+PASS expiry restores precisely modified entries
+PASS off switch restores before expiry
+PASS disk failure causes no Android mutation
+PASS rejected restriction rolls back and retains original config
+PASS ignored asynchronous mutation fails readback
+PASS stale final preflight lease can undo only new restrictions
+PASS network ID reuse never enables unrelated saved network
+PASS failed restore preserves journal and can retry
+PASS boot recovery handles reassigned network ID
+TOTAL 19 connection scenarios passed
+PASS initial status only, no background polling
+PASS preset saves validated threshold then refreshes
+PASS invalid threshold cannot reach root bridge
+PASS notification toggle uses fixed numeric argument
+PASS core-only installation prevents enabling missing DEX
+PASS screen-off status shows pause
+PASS manager errors render as text and unlock controls
+PASS ordinary browser fails clearly without invented data
+PASS countdown saves validated seconds
+PASS invalid countdown never reaches bridge
+PASS band toggle applies and reads back actual state
+PASS unsupported driver disables new restriction
+PASS an existing band request can still be turned off when probe fails
+PASS connection switches are independent and save a safe encoded payload
+PASS SSID duration persists while probe stays off
+PASS invalid duration and URL never reach root
+PASS manual restore uses fixed command
+TOTAL 17 WebUI tests passed

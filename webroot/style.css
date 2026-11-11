@@ -3,3 +3,4 @@
 @media(prefers-color-scheme:dark){:root{color:#e2ece5;background:#111a15;--card:#19251e;--muted:#9aaea0;--line:#2b3c31;--accent:#68c994;--soft:#253e2d}.primary{color:#10291b}.badge{color:#8ed7ad}}
 @media(max-width:360px){main{padding:22px 14px}.card{padding:18px}.presets{gap:5px}summary span{display:none}}
 .seconds{width:90px;min-height:42px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit;padding:8px;font:inherit;text-align:center}label[for=countdown]{font-size:13px}
+input[type=url]{display:block;width:100%;min-height:42px;margin:10px 0 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit;padding:10px;font:inherit;font-size:12px}label[for=probe-url],label[for=probe-interval],label[for=avoid-seconds]{font-size:12px}

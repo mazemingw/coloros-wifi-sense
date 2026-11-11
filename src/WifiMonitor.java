@@ -11,9 +11,16 @@ final class WifiMonitor {
         final Object network;
         final String bssid;
         final int rssi;
+        final String ssid;
+        final int networkId;
         Snapshot(Object network, String bssid, int rssi) {
-            this.network = network; this.bssid = bssid; this.rssi = rssi;
+            this(network,bssid,rssi,null,-1);
         }
+        Snapshot(Object network,String bssid,int rssi,String ssid,int networkId) {
+            this.network=network;this.bssid=bssid;this.rssi=rssi;this.ssid=ssid;this.networkId=networkId;
+        }
+        boolean sameAp(Snapshot other) {return other!=null&&Objects.equals(network,other.network)
+            &&Objects.equals(bssid,other.bssid)&&Objects.equals(ssid,other.ssid)&&networkId==other.networkId;}
         boolean valid() {
             return network != null && bssid != null && !"02:00:00:00:00:00".equals(bssid)
                 && rssi >= -126 && rssi < 0;
@@ -26,6 +33,7 @@ final class WifiMonitor {
         boolean singleWifi();
         Snapshot readWifi() throws Exception;
         Attempt disconnect(Snapshot expected, long epoch) throws Exception;
+        default Attempt disconnect(Snapshot expected,long epoch,String reason)throws Exception{return disconnect(expected,epoch);}
         void schedule(Runnable task, long delay);
         void cancel(Runnable task);
         void warn(Snapshot info, int threshold, long deadline);
@@ -221,33 +229,51 @@ final class WifiMonitor {
                     || !policy.eligible(fresh.bssid, fresh.rssi, threshold, port.now(), manual)) {
                 cancelPending("final state changed"); return false;
             }
-            Attempt result = port.disconnect(fresh, generation);
+            return submit(fresh,generation,manual?"manual":"auto");
+        } catch (Exception e) {
+            metrics.readErrors++; cancelPending("disconnect failure"); return false;
+        } finally { next(); }
+    }
+
+    boolean offlineConfirmed(Snapshot expected,long generation) {
+        if(stopped||!awake||!configured||!port.interactive())return false;
+        if(!port.singleWifi()||generation!=port.epoch()||policy.coolingDown(port.now()))return false;
+        try {
+            Snapshot fresh=read();
+            if(!port.interactive()){pause();return false;}
+            if(generation!=port.epoch()||fresh==null||!fresh.sameAp(expected)) {
+                metrics.staleSuppressed++;return false;
+            }
+            return submit(fresh,generation,"offline");
+        } catch(Exception e){metrics.readErrors++;return false;}
+        finally{next();}
+    }
+
+    private boolean submit(Snapshot fresh,long generation,String reason)throws Exception {
+            Attempt result = port.disconnect(fresh, generation,reason);
             if (result == Attempt.ASLEEP) { pause(); return false; }
             if (result == Attempt.STALE) { metrics.staleSuppressed++; return false; }
             // Commit only after an actual Binder attempt. Failed preflight never consumes cooldown.
             policy.commit(port.now());
             unschedule();
             metrics.disconnectAttempts++;
-            metrics.lastDisconnect = manual ? "manual" : "countdown";
+            metrics.lastDisconnect = "auto".equals(reason)?"countdown":reason;
             lastDisconnectedBssid = fresh.bssid;
             if (result == Attempt.ACCEPTED) {
                 metrics.disconnectAccepted++;
-                requested = fresh; requestedReason = manual ? "manual" : "auto";
+                requested = fresh; requestedReason = reason;
                 port.cancel(confirmationTask);
                 port.schedule(confirmationTask, 4_000);
             } else {
-                port.result("failed");
+                port.result("offline".equals(reason)?"offline-failed":"failed");
             }
             return result == Attempt.ACCEPTED;
-        } catch (Exception e) {
-            metrics.readErrors++; cancelPending("disconnect failure"); return false;
-        } finally { next(); }
     }
 
     private void confirmationTimeout() {
         if (requested == null) return;
         requested = null;
-        if (awake && port.interactive()) port.result("failed");
+        if (awake && port.interactive()) port.result("offline".equals(requestedReason)?"offline-failed":"failed");
     }
 
     private void next() {

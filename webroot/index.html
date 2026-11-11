@@ -35,6 +35,20 @@
     <div class="row"><div><h2 id="band-title">仅使用 5GHz</h2><p id="band-help" class="muted">正在检查驱动支持…</p></div><input id="band5g" type="checkbox" role="switch" aria-label="强制仅使用 5GHz" disabled></div>
     <p class="hint">实时生效，可能重新连接；没有可用 5GHz 热点时将无法连接 Wi-Fi。关闭恢复开启前的频段设置，默认关闭。</p>
   </section>
+  <section class="card" aria-labelledby="avoid-title">
+    <div class="row"><div><h2 id="avoid-title">断开后暂避此 SSID</h2><p class="muted">自动断开后，暂时禁止同名已保存网络自动连接。</p></div><input id="avoid" type="checkbox" role="switch" aria-label="断开后暂避此 SSID"></div>
+    <div class="row"><label for="avoid-seconds">暂避时长（秒）</label><input id="avoid-seconds" class="seconds" type="number" min="10" max="86400" step="1" value="300"></div>
+    <p class="hint">默认关闭，默认时长 300 秒；支持 10–86400 秒。会影响同名热点漫游，漫游用户建议关闭。到期、关闭功能或正常停用时恢复；手动连接可能覆盖限制。</p>
+    <button id="restore-autojoin" class="secondary" type="button">立即恢复自动连接</button>
+  </section>
+  <section class="card" aria-labelledby="probe-title">
+    <div class="row"><div><h2 id="probe-title">Wi-Fi 通网检测</h2><p class="muted">每次新连接最多检测两次，成功即停止；连续失败才断开。</p></div><input id="probe" type="checkbox" role="switch" aria-label="Wi-Fi 通网检测"></div>
+    <label for="probe-url">应返回 HTTP 204 的地址</label><input id="probe-url" type="url" value="http://connect.rom.miui.com/generate_204" maxlength="2048" aria-label="探测地址">
+    <div class="row"><label for="probe-interval">失败重试间隔（秒）</label><input id="probe-interval" class="seconds" type="number" min="15" max="3600" step="1" value="30"></div>
+    <p class="hint">默认关闭。只用当前 Wi-Fi 请求，息屏停止，完成后不再轮询；重试间隔 15–3600 秒。门户认证、目标故障或屏蔽此地址也可能触发断开。启用上方暂避时，共用暂避时长；开启流体云后会提示无法联网及断开结果。</p>
+    <button id="save-connection" class="primary" type="button">保存连接策略</button>
+    <p id="connection-help" class="hint">正在读取设置…</p>
+  </section>
   <section class="card" aria-labelledby="fluid-title">
     <div class="row"><div><h2 id="fluid-title">流体云提醒</h2><p id="fluid-help" class="muted">提醒中关闭开关，可立即断开。</p></div><input id="fluid" type="checkbox" role="switch" aria-label="开启流体云提醒"></div>
     <p class="hint">开启设置从下一次提醒生效；息屏时撤回提醒。</p>

@@ -187,6 +187,28 @@ public final class WifiMonitorTest {
         test("custom duration remains paused off-screen",()->{
             Fake f=new Fake();f.monitor.countdown(30);f.rssi=-90;f.start();f.advance(1000);f.screen(false);long reads=f.monitor.metrics.rssiReads;f.advance(60000);check(f.monitor.metrics.rssiReads==reads&&f.attempts==0,"off quiet");f.screen(true);f.advance(f.time);check(f.monitor.deadline()==f.time+30000,"restart full duration");
         });
+        test("offline confirmation disconnects strong signal and obeys cooldown",()->{
+            Fake f=new Fake();f.start();check(f.monitor.offlineConfirmed(f.monitor.last(),f.generation),"offline cut");
+            check(f.attempts==1&&"offline".equals(f.monitor.metrics.lastDisconnect),"reason");
+            check(!f.monitor.offlineConfirmed(f.monitor.last(),f.generation)&&f.attempts==1,"cooldown bypass");
+        });
+        test("offline result from old AP cannot disconnect new AP",()->{
+            Fake f=new Fake();f.start();WifiMonitor.Snapshot old=f.monitor.last();f.ap="ap-b";
+            check(!f.monitor.offlineConfirmed(old,f.generation)&&f.attempts==0,"old AP");
+        });
+        test("offline result cannot cut off-screen or after a new event",()->{
+            Fake f=new Fake();f.start();WifiMonitor.Snapshot old=f.monitor.last();long generation=f.generation;
+            f.event();check(!f.monitor.offlineConfirmed(old,generation)&&f.attempts==0,"epoch");
+            f.screen(false);check(!f.monitor.offlineConfirmed(old,f.generation)&&f.attempts==0,"off");
+        });
+        test("screen-off races offline final Binder preflight",()->{
+            Fake f=new Fake();f.start();f.beforeAttempt=()->f.on=false;
+            check(!f.monitor.offlineConfirmed(f.monitor.last(),f.generation)&&f.attempts==0&&f.monitor.cooldownUntil()==0,"race");
+        });
+        test("offline confirmation uses same network-lost feedback path",()->{
+            Fake f=new Fake();f.start();f.monitor.offlineConfirmed(f.monitor.last(),f.generation);f.topology(false);
+            check(f.results==1&&f.resultVisible,"offline notification");
+        });
         System.out.println("TOTAL "+passed+" monitor scenarios passed");
     }
 }

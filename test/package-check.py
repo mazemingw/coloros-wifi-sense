@@ -42,7 +42,7 @@ with zipfile.ZipFile(archive) as z:
     assert required <= set(names)
     core=z.read('wifi-sense.dex');fluid=z.read('wifi-fluid.dex')
     assert core.startswith(b'dex\n') and fluid.startswith(b'dex\n')
-    for cls in [b'LWifiMonitor;',b'LWifiSystemEvents;',b'LColorOsWifiSense;',b'LWifiBandControl;',b'LWifiBandPolicy;']:assert cls in core
+    for cls in [b'LWifiMonitor;',b'LWifiSystemEvents;',b'LColorOsWifiSense;',b'LWifiBandControl;',b'LWifiBandPolicy;',b'LWifiConnectionControl;',b'LWifiSsidGuard;',b'LWifiProbePolicy;']:assert cls in core
     assert b'LWifiFluidSession;' in fluid and b'LWifiFluidSession;' not in core
     for data in [core,fluid,z.read('webroot/app.js')]:
         for forbidden in [b'WifiDeviceHarness',b'test_control',b'PLATFORM_PROBE',b'cws-event-test',b'web-preview',b'__mock']:

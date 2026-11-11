@@ -2,14 +2,15 @@
 (() => {
   const path = '/data/adb/modules/coloros_wifi_sense/webctl.sh';
   const $ = id => document.getElementById(id);
-  let busy = false, counter = 0, status = null, band = null;
+  let busy = false, counter = 0, status = null, band = null, connection = null;
   const labels = {PAUSED:'息屏暂停',NO_WIFI:'未连接 Wi-Fi',IDLE:'正常监控',SUSPECT:'检查信号',VERIFY:'弱信号验证',COOLDOWN:'断开冷却',CONFIG_ERROR:'检查阈值配置',STOPPED:'已停止'};
   const metrics = {
     rssi_events:'RSSI 广播',network_events:'网络事件',screen_events:'屏幕事件',rssi_reads:'RSSI 主动读取',
     periodic_runs:'周期任务',countdown_starts:'倒计时启动',countdown_cancels:'倒计时取消',
     disconnect_attempts:'主动断开请求',disconnect_accepted:'系统接受请求',weak_reconnects:'原弱信号 AP 重连',
     fluid_starts:'流体云进程启动',stale_suppressed:'过期操作拦截',read_errors:'读取异常',
-    broadcast_deliveries:'独立进程广播接收',cpu_ticks:'进程 CPU 计数（ticks）'
+    broadcast_deliveries:'独立进程广播接收',cpu_ticks:'进程 CPU 计数（ticks）',
+    probe_requests:'通网请求',probe_successes:'通网成功',probe_failures:'通网失败',probe_discarded:'过期探测丢弃',held_networks:'暂避配置数'
   };
   function message(text, error = false) { $('message').textContent = text; $('message').classList.toggle('error',error); }
   function exec(args) {
@@ -27,7 +28,7 @@
   }
   function lock(value) {
     busy = value;
-    for (const id of ['refresh','save','threshold','fluid','countdown','save-countdown','band5g']) $(id).disabled=value;
+    for (const id of ['refresh','save','threshold','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-connection','restore-autojoin']) $(id).disabled=value;
     if (!value && status && !status.fluid_installed) $('fluid').disabled=true;
     if (!value && (!band || (!band.supported && !band.requested && !band.restore_pending))) $('band5g').disabled=true;
   }
@@ -67,6 +68,30 @@
     const nonce='ui_' + Date.now() + '_' + (++counter);
     render(JSON.parse(await exec('status ' + nonce)));
     await refreshBand();
+    await refreshConnection();
+  }
+  async function refreshConnection() {
+    connection=JSON.parse(await exec('connectionstatus'));
+    $('avoid').checked=!!connection.avoid_enabled;$('avoid-seconds').value=connection.avoid_seconds;
+    $('probe').checked=!!connection.probe_enabled;$('probe-url').value=connection.probe_url;$('probe-interval').value=connection.probe_interval;
+    $('connection-help').textContent=[connection.error,status?.connection_error,status?.probe_result,
+      status?.probe_complete?'本连接检测已结束':''].filter(Boolean).join(' · ') || '保存后生效。';
+  }
+  function connectionValues() {
+    const seconds=$('avoid-seconds').value, interval=$('probe-interval').value;
+    if(!/^[1-9]\d{1,4}$/.test(seconds)||Number(seconds)>86400)throw new Error('暂避时长必须是 10–86400 秒的整数。');
+    if(!/^[1-9]\d{1,3}$/.test(interval)||Number(interval)<15||Number(interval)>3600)throw new Error('重试间隔必须是 15–3600 秒的整数。');
+    const url=$('probe-url').value;let parsed;
+    try{parsed=new URL(url);}catch(e){throw new Error('请输入有效的 HTTP/HTTPS 探测地址。');}
+    if(!/^https?:$/.test(parsed.protocol)||parsed.username||parsed.password||parsed.hash||url.length>2048)throw new Error('探测地址无效，不能包含账号密码或片段。');
+    return {avoid_enabled:$('avoid').checked,avoid_seconds:Number(seconds),probe_enabled:$('probe').checked,probe_interval:Number(interval),probe_url:url};
+  }
+  async function saveConnection() {
+    const config=connectionValues();
+    try {
+      const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(config))));
+      const response=await exec('connectionconfig '+encoded);await refresh();message(response.trim());
+    }catch(e){try{await refreshConnection();}catch(ignored){}throw e;}
   }
   async function refreshBand() {
     try {
@@ -86,6 +111,9 @@
     if (busy) return; $('threshold').value=b.dataset.threshold; showThreshold();
   }));
   $('refresh').addEventListener('click',() => action(refresh));
+  $('save-connection').addEventListener('click',()=>action(saveConnection));
+  for(const id of ['avoid','probe'])$(id).addEventListener('change',()=>action(saveConnection));
+  $('restore-autojoin').addEventListener('click',()=>action(async()=>{const reply=await exec('restoreautojoin');await refresh();message(reply.trim());}));
   $('save').addEventListener('click',() => action(async() => {
     const value=threshold($('threshold').value);
     await exec('threshold ' + value); await refresh(); message('阈值已保存。');

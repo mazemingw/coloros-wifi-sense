@@ -38,6 +38,7 @@ public final class WifiFluidSession {
     };
     private final String token;
     private final boolean demo;
+    private final String initialResult;
     private final int rssi;
     private final int threshold;
     private final long deadline;
@@ -72,6 +73,7 @@ public final class WifiFluidSession {
 
     private WifiFluidSession(String[] args) throws Exception {
         demo = "demo".equals(args[0]);
+        initialResult=args[0].startsWith("offline")?args[0]:null;
         token = args[1];
         rssi = Integer.parseInt(args[2]);
         threshold = Integer.parseInt(args[3]);
@@ -132,7 +134,8 @@ public final class WifiFluidSession {
         }, "wifi-fluid-input");
         input.setDaemon(true);
         input.start();
-        tick(true);
+        if(initialResult==null)tick(true);
+        else {command("result "+initialResult);System.out.println("WIFI_SENSE ready "+token);}
         Looper.loop();
     }
 
@@ -204,16 +207,19 @@ public final class WifiFluidSession {
         String reason = command.startsWith("result ") ? command.substring(7) : "working";
         try { send("sendLiveAlert", buildResult(reason)); }
         catch (Exception error) { error.printStackTrace(System.err); finish(); return; }
-        handler.postDelayed(acknowledgementTimeout, "working".equals(reason) ? 5000 : 15000);
+        handler.postDelayed(acknowledgementTimeout, reason.endsWith("working") ? 5000 : 15000);
     }
 
     private Notification buildResult(String reason) throws Exception {
         String text = "manual".equals(reason) ? "WIFI信号弱，已手动断开。"
+            : "offline".equals(reason) ? "WIFI无法联网，已自动断开。"
+            : "offline-working".equals(reason) ? "WIFI无法联网，正在断开…"
+            : "offline-failed".equals(reason) ? "WIFI无法联网，未能确认断开。"
             : "auto".equals(reason) ? "WIFI信号弱，已自动断开。"
             : "working".equals(reason) ? "正在断开当前WIFI…" : "未能断开当前WIFI。";
         JSONObject primary = obj("type", "t_standard", "title", obj("text", text));
-        boolean disconnected = "manual".equals(reason) || "auto".equals(reason);
-        String status = disconnected ? "已断开" : "working".equals(reason) ? "正在断开" : "断开失败";
+        boolean disconnected = "manual".equals(reason) || "auto".equals(reason)||"offline".equals(reason);
+        String status = disconnected ? "已断开" : reason.endsWith("working") ? "正在断开" : "断开失败";
         JSONObject disabledSwitch = obj("style", "BUTTON", "checkedStyle", "SWITCH", "state", disconnected ? "DISABLE" : "ON|DISABLE",
             "type", "TEXT", "desc", status);
         JSONObject actionRow = obj("type", "t_actions", "btns", new JSONArray()
@@ -224,7 +230,7 @@ public final class WifiFluidSession {
         extras.putString("oplus.livealert.capsule", obj("capsuleData", obj("type", "t_sym",
             "firstTitle", obj("text", "WIFI"), "lastTitle", obj("text", status))).toString());
         extras.putString("oplusLiveAlertOptions", obj("id", TAG, "isMilestone", false,
-            "showHostMap", new JSONArray().put(8), "remindType", "working".equals(reason) ? 13 : 0,
+            "showHostMap", new JSONArray().put(8), "remindType", "working".equals(reason) || initialResult!=null&&reason.equals(initialResult) ? 13 : 0,
             "extensibleActionMap", obj("isDismissible", true)).toString());
         return new Notification.Builder(context, TAG).setSmallIcon(android.R.drawable.stat_sys_warning)
             .setContentTitle(text).setOngoing(true).setShowWhen(false).addExtras(extras).build();

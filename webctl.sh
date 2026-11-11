@@ -3,6 +3,21 @@
 MODDIR=${0%/*}
 STATE_DIR=/data/adb/coloros_wifi_sense
 case "$1" in
+    connectionconfig|connectionstatus|restoreautojoin)
+        case "$1:$#" in
+            connectionconfig:2)
+                case "$2" in ''|*[!a-zA-Z0-9+/=]*) exit 1 ;; esac
+                [ "${#2}" -le 12000 ] || exit 1
+                cws_action=configure ;;
+            connectionstatus:1) cws_action=status ;;
+            restoreautojoin:1) cws_action=restore ;;
+            *) exit 1 ;;
+        esac
+        export CLASSPATH="$MODDIR/wifi-sense.dex"
+        if [ "$cws_action" = configure ]; then
+            exec /system/bin/app_process /system/bin WifiConnectionControl "$STATE_DIR" "$cws_action" "$2"
+        fi
+        exec /system/bin/app_process /system/bin WifiConnectionControl "$STATE_DIR" "$cws_action" ;;
     band5g|bandstatus)
         case "$1:$#:${2-}" in band5g:2:0|band5g:2:1) cws_action=$2 ;; bandstatus:1:) cws_action=status ;; *) exit 1 ;; esac
         export CLASSPATH="$MODDIR/wifi-sense.dex"

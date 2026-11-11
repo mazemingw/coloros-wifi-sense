@@ -1,0 +1,18 @@
+{
+  "result": "PASS",
+  "version": "v1.4.0",
+  "versionCode": 6,
+  "entries": 31,
+  "bytes": 126840,
+  "sha256": "4eb83bb099d6a56c03dd9fce09aaeef4dcd8c2845d1338ce64599a20253d3ddb",
+  "checks": [
+    "safe ZIP paths/limits",
+    "UTF-8/LF source identity",
+    "metadata",
+    "executable scripts",
+    "separate production DEX",
+    "four executable ELF architectures",
+    "no test/mock payload",
+    "legacy entry scripts unchanged"
+  ]
+}

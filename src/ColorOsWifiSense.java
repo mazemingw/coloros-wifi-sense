@@ -19,6 +19,10 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.channels.FileLock;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.Proxy;
+import java.util.Objects;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -44,6 +48,16 @@ public final class ColorOsWifiSense {
     private boolean force5gEnabled;
     private volatile Thread bandWorker;
     private final Runnable bandTask = this::reconcileBand;
+    private WifiConnectionConfig connectionConfig=WifiConnectionConfig.defaults();
+    private final WifiProbePolicy probePolicy=new WifiProbePolicy();
+    private final Runnable probeTask=this::runProbe, restoreTask=()->restoreAutojoin(false);
+    private WifiConnectionControl.Autojoin autojoin;
+    private volatile long probeToken;
+    private volatile HttpURLConnection probeConnection;
+    private volatile Thread probeWorker;
+    private long probeRequests,probeSuccesses,probeFailures,probeDiscarded;
+    private int heldNetworks;
+    private String connectionError="",probeResult="尚未检测";
     private long wifiBinderReads, fluidStarts, fluidErrors, powerChecks;
     private final AtomicLong ignoredCapabilityEvents = new AtomicLong();
     private WifiSystemEvents events;
@@ -58,7 +72,9 @@ public final class ColorOsWifiSense {
 
     private static final class Warning {
         final int rssi, threshold; final long deadline, duration;
-        Warning(int rssi, int threshold, long deadline, long duration) { this.rssi=rssi; this.threshold=threshold; this.deadline=deadline; this.duration=duration; }
+        final String reason;
+        Warning(int rssi, int threshold, long deadline, long duration) { this.rssi=rssi; this.threshold=threshold; this.deadline=deadline; this.duration=duration;this.reason=null; }
+        Warning(String reason){this.rssi=0;this.threshold=0;this.deadline=0;this.duration=0;this.reason=reason;}
     }
 
     private ColorOsWifiSense(File moduleDir, File stateDir) throws ReflectiveOperationException {
@@ -116,9 +132,12 @@ public final class ColorOsWifiSense {
             Network network = connections.iterator().next();
             WifiInfo info = readConnectionInfo();
             if (info.getSupplicantState() != SupplicantState.COMPLETED) return null;
-            return new WifiMonitor.Snapshot(network, info.getBSSID(), info.getRssi());
+            return new WifiMonitor.Snapshot(network, info.getBSSID(), info.getRssi(),info.getSSID(),info.getNetworkId());
         }
         public WifiMonitor.Attempt disconnect(WifiMonitor.Snapshot expected, long generation) {
+            return disconnect(expected,generation,"auto");
+        }
+        public WifiMonitor.Attempt disconnect(WifiMonitor.Snapshot expected,long generation,String reason) {
             if (!interactive()) return WifiMonitor.Attempt.ASLEEP;
             // Rare final preflight only: close the FileObserver delivery window
             // without re-reading configuration on every periodic sample.
@@ -128,24 +147,52 @@ public final class ColorOsWifiSense {
                     configDirty=true; epoch.incrementAndGet(); handler.post(() -> reloadConfig());
                     return WifiMonitor.Attempt.STALE;
                 }
-            } catch (IOException e) { monitor.invalidConfiguration(); return WifiMonitor.Attempt.STALE; }
+                if(!connectionConfig.equals(WifiConnectionControl.load(stateDir))) {
+                    configDirty=true;epoch.incrementAndGet();handler.post(()->reloadConfig());return WifiMonitor.Attempt.STALE;
+                }
+            } catch (Exception e) { return WifiMonitor.Attempt.STALE; }
             if (closed || stopRequested || epoch.get() != generation || connections.size() != 1
                     || !connections.contains(expected.network)) return WifiMonitor.Attempt.STALE;
             NetworkCapabilities caps = connectivity.getNetworkCapabilities((Network) expected.network);
             if (caps == null || !caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return WifiMonitor.Attempt.STALE;
-            // Last checks immediately before the disconnect Binder call.
-            if (!interactive()) return WifiMonitor.Attempt.ASLEEP;
-            if (epoch.get() != generation || stopRequested) return WifiMonitor.Attempt.STALE;
             try {
-                boolean accepted = Boolean.TRUE.equals(disconnect.invoke(wifi, ROOT_PACKAGE));
-                if (accepted) {
-                    fluidResult = fluidInput != null; sendFluid("working");
-                    Log.i(TAG, "AP disconnect requested; screen and AP preflight passed");
+                if(connectionConfig.avoidEnabled&&!"manual".equals(reason)) {
+                    if(autojoin==null)try{autojoin=new WifiConnectionControl.Autojoin(stateDir);}
+                    catch(Exception e){connectionError="系统不支持 SSID 暂避："+WifiConnectionControl.message(e);return invokeDisconnect(expected,generation,reason);}
+                    return autojoin.locked(()->interactive()&&epoch.get()==generation,g->{
+                        WifiSsidGuard.Lease lease=null;
+                        try{lease=g.block(expected.ssid,connectionConfig.avoidSeconds);connectionError="";}
+                        catch(Exception e){connectionError="SSID 暂避未应用："+WifiConnectionControl.message(e);}
+                        WifiMonitor.Attempt result;
+                        try{result=invokeDisconnect(expected,generation,reason);}
+                        catch(Exception e){if(lease!=null)g.rollback(lease);throw e;}
+                        if(result!=WifiMonitor.Attempt.ACCEPTED&&lease!=null)g.rollback(lease);
+                        try{heldNetworks=g.size();scheduleRestore(g.nextExpiry());}catch(Exception e){connectionError=WifiConnectionControl.message(e);}
+                        return result;
+                    });
                 }
-                return accepted ? WifiMonitor.Attempt.ACCEPTED : WifiMonitor.Attempt.REJECTED;
+                return invokeDisconnect(expected,generation,reason);
             } catch (Exception e) {
-                Log.w(TAG, "Android rejected AP disconnect", unwrap(e)); return WifiMonitor.Attempt.REJECTED;
+                connectionError=WifiConnectionControl.message(e);
+                Log.w(TAG, "Disconnect/SSID policy failed: "+connectionError); return WifiMonitor.Attempt.REJECTED;
             }
+        }
+        private WifiMonitor.Attempt invokeDisconnect(WifiMonitor.Snapshot expected,long generation,String reason)throws Exception {
+            if(!interactive())return WifiMonitor.Attempt.ASLEEP;
+            if(disabled()||epoch.get()!=generation||stopRequested)return WifiMonitor.Attempt.STALE;
+            if(!connectionConfig.equals(WifiConnectionControl.load(stateDir))||readThresholdValue()!=monitor.threshold()
+                ||readCountdownValue()*1000L!=monitor.countdownMs())return WifiMonitor.Attempt.STALE;
+            WifiMonitor.Snapshot fresh=readWifi();
+            if(!expected.sameAp(fresh)||(!"offline".equals(reason)&&fresh.rssi>monitor.threshold()))return WifiMonitor.Attempt.STALE;
+            if(!interactive())return WifiMonitor.Attempt.ASLEEP;
+            if(epoch.get()!=generation||stopRequested)return WifiMonitor.Attempt.STALE;
+            boolean accepted=Boolean.TRUE.equals(disconnect.invoke(wifi,ROOT_PACKAGE));
+            if(accepted) {
+                if("offline".equals(reason))showOfflineWorking();
+                else{fluidResult=fluidInput!=null;sendFluid("working");}
+                Log.i(TAG,"AP disconnect requested: "+reason+"; final screen and AP checks passed");
+            }
+            return accepted?WifiMonitor.Attempt.ACCEPTED:WifiMonitor.Attempt.REJECTED;
         }
         public void warn(WifiMonitor.Snapshot info, int threshold, long deadline) { startFluid(info.rssi, threshold, deadline); }
         public void cancelWarning() { if (!fluidResult) stopFluid(); }
@@ -155,10 +202,12 @@ public final class ColorOsWifiSense {
 
     private void listen() throws Exception {
         if (disabled()) return;
+        restoreAutojoin(true); // Recover durable undo after an interrupted previous process/boot.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stopRequested=true;
             stopFluid(); java.lang.Process child = fluidChild; if (child != null) child.destroy();
             releaseBand();
+            cancelProbe();restoreAutojoin(true);
         }, "wifi-sense-cleanup"));
         ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
             private final ConcurrentHashMap<Network,String> signals = new ConcurrentHashMap<>();
@@ -171,6 +220,7 @@ public final class ColorOsWifiSense {
                     if (kind == -1) changed = connections.remove(n);
                     monitor.network(kind == -1 ? n : null, changed);
                     if (kind == 1 && changed) scheduleBand();
+                    if(changed){cancelProbe();probePolicy.reset();scheduleProbe();}
                 });
             }
             @Override public void onAvailable(Network n) { enqueue(n, 1); }
@@ -196,9 +246,9 @@ public final class ColorOsWifiSense {
         };
         FileObserver stateObserver = new FileObserver(stateDir, FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO | FileObserver.DELETE) {
             @Override public void onEvent(int event, String path) {
-                if ("threshold".equals(path) || "countdown".equals(path) || "force5g".equals(path)) {
+                if ("threshold".equals(path) || "countdown".equals(path) || "force5g".equals(path) || "connection.json".equals(path)) {
                     configDirty = true; epoch.incrementAndGet();
-                    handler.post(() -> { if (interactive()) reloadConfig(); });
+                    handler.post(() -> { if (interactive()||"connection.json".equals(path)) reloadConfig(); });
                 } else if ("ui_request".equals(path)) {
                     handler.post(() -> {
                         if (closed) return;
@@ -211,11 +261,13 @@ public final class ColorOsWifiSense {
         events = new WifiSystemEvents(context, handler, power, new WifiSystemEvents.Listener() {
             public void screen(boolean on) {
                 screenOff = !on; epoch.incrementAndGet();
+                if(!on)cancelProbe();
                 handler.post(() -> {
                     if (closed) return;
                     if (on && interactive()) { configDirty = true; reloadConfig(); refreshConnections(); scheduleBand(); }
                     else if (!on) handler.removeCallbacks(bandTask);
                     monitor.screen(on);
+                    if(on)scheduleProbe();else probePolicy.suspend();
                 });
             }
             public void wifi(String action) {
@@ -237,6 +289,7 @@ public final class ColorOsWifiSense {
             // Unwind it through this owner so finally can unregister every listener.
         } finally {
             closed = true; stopRequested=true; handler.removeCallbacks(bandTask); monitor.stop(); events.close();
+            cancelProbe();handler.removeCallbacks(restoreTask);restoreAutojoin(true);
             moduleObserver.stopWatching(); stateObserver.stopWatching();
             connectivity.unregisterNetworkCallback(callback);
             java.lang.Process child = fluidChild; if (child != null) child.destroy();
@@ -270,11 +323,79 @@ public final class ColorOsWifiSense {
         if (!enabled) stopFluid();
         fluidEnabled = enabled;
         force5gEnabled = "1".equals(readLine(new File(stateDir,"force5g"),"0"));
+        try {
+            WifiConnectionConfig next=WifiConnectionControl.load(stateDir);
+            if(!next.sameProbe(connectionConfig)){cancelProbe();probePolicy.reset();}
+            connectionConfig=next;
+            if(!next.avoidEnabled)restoreAutojoin(true);
+            scheduleProbe();
+        }catch(Exception e){connectionError="连接策略配置无效："+WifiConnectionControl.message(e);cancelProbe();connectionConfig=WifiConnectionConfig.defaults();restoreAutojoin(true);}
     }
 
     private void scheduleBand() {
         if (!interactive() || (!force5gEnabled && !new File(stateDir,"band_original").isFile())) return;
         handler.removeCallbacks(bandTask); handler.postDelayed(bandTask,250);
+    }
+
+    private void scheduleRestore(long expiry) {
+        handler.removeCallbacks(restoreTask);
+        if(expiry!=Long.MAX_VALUE&&!stopRequested)handler.postDelayed(restoreTask,Math.max(1000,expiry-System.currentTimeMillis()));
+    }
+    private synchronized void restoreAutojoin(boolean all) {
+        try {
+            File journal=new File(stateDir,"ssid_autojoin_restore.json");
+            if(!journal.isFile())return;
+            if(autojoin==null)autojoin=new WifiConnectionControl.Autojoin(stateDir);
+            autojoin.locked(()->false,g->{g.restore(all);heldNetworks=g.size();scheduleRestore(g.nextExpiry());return null;});
+        }catch(Exception e){connectionError="自动连接还原待重试："+WifiConnectionControl.message(e);
+            if(!stopRequested)handler.postDelayed(restoreTask,60000);}
+    }
+    private void cancelProbe() {
+        probeToken++;handler.removeCallbacks(probeTask);
+        HttpURLConnection c=probeConnection;if(c!=null)c.disconnect();
+    }
+    private void scheduleProbe() {
+        if(connections.size()==1&&!probePolicy.sameNetwork(connections.iterator().next()))probePolicy.reset();
+        if(!connectionConfig.probeEnabled||!interactive()||connections.size()!=1||probePolicy.complete()
+            ||(probeWorker!=null&&probeWorker.isAlive())||handler.hasCallbacks(probeTask))return;
+        long wait=probePolicy.failures()==0?3000:connectionConfig.probeInterval*1000L;
+        handler.postDelayed(probeTask,Math.max(wait,monitor.cooldownUntil()-SystemClock.elapsedRealtime()));
+    }
+    private void runProbe() {
+        if(!connectionConfig.probeEnabled||!interactive()||connections.size()!=1)return;
+        try {
+            WifiMonitor.Snapshot expected=new AndroidPort().readWifi();
+            if(expected==null||!expected.valid())return;
+            probePolicy.connection(expected.network,expected.ssid);
+            if(!probePolicy.begin())return;
+            final long token=probeToken;final WifiConnectionConfig config=connectionConfig;
+            probeRequests++;probeResult="检测中";
+            probeWorker=new Thread(()->{
+                boolean online=false;String result;HttpURLConnection c=null;
+                try {
+                    if(token!=probeToken||!interactive())throw new IOException("检测已取消");
+                    c=(HttpURLConnection)((Network)expected.network).openConnection(new URL(config.probeUrl),Proxy.NO_PROXY);
+                    c.setConnectTimeout(3000);c.setReadTimeout(3000);c.setInstanceFollowRedirects(false);c.setUseCaches(false);
+                    c.setRequestMethod("GET");probeConnection=c;
+                    if(token!=probeToken||!interactive())throw new IOException("检测已取消");
+                    int code=c.getResponseCode();online=code==204;result="HTTP "+code;
+                }catch(Exception e){result="探测失败（超时或目标不可达）";}
+                finally{if(c!=null)c.disconnect();probeConnection=null;}
+                final boolean success=online;final String detail=result;
+                handler.post(()->{
+                    probeWorker=null;
+                    if(token!=probeToken||!interactive()||!connectionConfig.sameProbe(config)){probeDiscarded++;scheduleProbe();return;}
+                    try {
+                        WifiMonitor.Snapshot fresh=new AndroidPort().readWifi();
+                        if(!expected.sameAp(fresh)){probeDiscarded++;probePolicy.finish();probeResult="接入点已变化，本轮已结束";return;}
+                        probeResult=detail;if(success)probeSuccesses++;else probeFailures++;
+                        if(probePolicy.result(expected.network,expected.ssid,success))monitor.offlineConfirmed(expected,epoch.get());
+                    }catch(Exception e){probePolicy.finish();probeResult="无法确认当前 Wi-Fi，本轮已结束";}
+                    scheduleProbe();
+                });
+            },"wifi-connectivity-on-demand");
+            probeWorker.setDaemon(true);probeWorker.start();
+        }catch(Exception e){probeResult="无法读取 Wi-Fi 状态，本轮未开始";}
     }
     private void reconcileBand() {
         if (!interactive() || (bandWorker!=null && bandWorker.isAlive())) return;
@@ -303,17 +424,17 @@ public final class ColorOsWifiSense {
         Warning warning = pendingWarning;
         if (warning == null || fluidChild != null || !fluidEnabled || !interactive()) return;
         pendingWarning = null;
-        if (!demo && (monitor.deadline() != warning.deadline || warning.deadline <= SystemClock.elapsedRealtime())) return;
+        if (warning.reason==null && !demo && (monitor.deadline() != warning.deadline || warning.deadline <= SystemClock.elapsedRealtime())) return;
         String token = UUID.randomUUID().toString();
         try {
             ProcessBuilder builder = new ProcessBuilder("/system/bin/app_process", "/system/bin",
-                "--nice-name=coloros-wifi-fluid", "WifiFluidSession", demo ? "demo" : "watch", token,
+                "--nice-name=coloros-wifi-fluid", "WifiFluidSession", warning.reason!=null?warning.reason:demo ? "demo" : "watch", token,
                 String.valueOf(warning.rssi), String.valueOf(warning.threshold),
                 String.valueOf(warning.duration), String.valueOf(warning.deadline));
             builder.environment().put("CLASSPATH", new File(moduleDir,"wifi-fluid.dex").getAbsolutePath());
             builder.redirectErrorStream(true);
             java.lang.Process child = builder.start(); fluidStarts++;
-            fluidChild = child; fluidToken = token; fluidResult = false;
+            fluidChild = child; fluidToken = token; fluidResult = warning.reason!=null;
             fluidInput = new BufferedWriter(new OutputStreamWriter(child.getOutputStream(), "UTF-8"));
             Thread reader = new Thread(() -> {
                 try (BufferedReader output = new BufferedReader(new InputStreamReader(child.getInputStream(), "UTF-8"))) {
@@ -364,8 +485,16 @@ public final class ColorOsWifiSense {
         if ("immediate".equals(event)) monitor.immediate(); else monitor.refresh();
     }
     private void showFluidResult(String reason) {
-        if (!fluidEnabled || fluidInput==null || !interactive()) return;
+        if (!fluidEnabled || !interactive()) return;
+        if(fluidInput==null&&reason!=null&&reason.startsWith("offline")){pendingWarning=new Warning(reason);launchPendingWarning();fluidResult=true;return;}
+        if(fluidInput==null)return;
         fluidResult=true; sendFluid("result "+(reason==null?"failed":reason));
+    }
+    private void showOfflineWorking() {
+        if(!fluidEnabled||!interactive())return;
+        fluidResult=true;
+        if(fluidInput!=null)sendFluid("result offline-working");
+        else{pendingWarning=new Warning("offline-working");launchPendingWarning();fluidResult=true;}
     }
     private void sendFluid(String command) {
         BufferedWriter input=fluidInput;
@@ -418,6 +547,9 @@ public final class ColorOsWifiSense {
                 .put("screen_channel",events!=null&&events.oplusRegistered?"ColorOS + display":"display")
                 .put("broadcast_deliveries",events==null?0:events.broadcastDeliveries)
                 .put("cpu_ticks",cpuTicks());
+            j.put("probe_requests",probeRequests).put("probe_successes",probeSuccesses).put("probe_failures",probeFailures)
+                .put("probe_discarded",probeDiscarded).put("probe_result",probeResult).put("probe_complete",probePolicy.complete())
+                .put("held_networks",heldNetworks).put("connection_error",connectionError);
             File temp=new File(stateDir,"status.tmp"), target=new File(stateDir,"status.json");
             try(FileOutputStream out=new FileOutputStream(temp)) { out.write(j.toString().getBytes("UTF-8")); }
             Os.chmod(temp.getAbsolutePath(),0600); Os.rename(temp.getAbsolutePath(),target.getAbsolutePath());
