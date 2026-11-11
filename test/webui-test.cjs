@@ -12,7 +12,7 @@ const initial={state:'IDLE',threshold:-80,rssi:-63,interactive:true,wifi_connect
 const drain=()=>new Promise(resolve=>setImmediate(resolve));
 async function fixture(options={}){
   const elements={},buttons=[-75,-80,-85,-90].map(n=>{const e=new Element();e.dataset.threshold=String(n);return e;});
-  const ids=['message','refresh','save','threshold','fluid','threshold-value','state','rssi','fluid-help','updated','state-detail','metrics','countdown','save-countdown','threshold-help','band5g','band-help','avoid','avoid-seconds','probe','probe-url','probe-interval','save-connection','restore-autojoin','connection-help'];
+  const ids=['message','refresh','save','threshold','fluid','threshold-value','state','rssi','fluid-help','updated','state-detail','metrics','countdown','save-countdown','threshold-help','band5g','band-help','avoid','avoid-seconds','probe','probe-url','probe-interval','save-probe','save-avoid','restore-autojoin','connection-help','avoid-help','probe-feedback','avoid-feedback'];
   for(const id of ids)elements[id]=new Element();elements.threshold.value='-80';
   let data={...initial,...options.data};let band={requested:false,supported:true,applied:false,mask:7,message:'当前允许系统选择频段。',...options.band};const config={avoid_enabled:false,avoid_seconds:300,probe_enabled:false,probe_interval:30,probe_url:'http://connect.rom.miui.com/generate_204'};const calls=[];let failure=null;
   const window={};
@@ -22,7 +22,7 @@ async function fixture(options={}){
     const args=command.split(' ').slice(2);
     queueMicrotask(()=>{
       if(failure)return window[callback](1,'',failure);
-      if(args[0]==='connectionconfig')Object.assign(config,JSON.parse(Buffer.from(args[1],'base64').toString('utf8')));
+      if(['probeconfig','avoidconfig'].includes(args[0]))Object.assign(config,JSON.parse(Buffer.from(args[1],'base64').toString('utf8')));
       if(args[0]==='threshold'){assert.match(args[1],/^-\d+$/);data.threshold=Number(args[1]);}
       if(args[0]==='countdown'){data.countdown_seconds=Number(args[1]);}
       if(args[0]==='band5g'){assert.match(args[1],/^[01]$/);band.requested=args[1]==='1';band.applied=band.requested;band.mask=band.requested?1:7;}
@@ -50,9 +50,29 @@ async function fixture(options={}){
   await test('band toggle applies and reads back actual state',async()=>{const f=await fixture();f.elements.band5g.checked=true;await f.elements.band5g.fire('change');assert.match(f.calls[3],/band5g 1$/);assert.equal(f.band.mask,1);assert.equal(f.elements.band5g.checked,true);});
   await test('unsupported driver disables new restriction',async()=>{const f=await fixture({band:{supported:false}});assert.equal(f.elements.band5g.disabled,true);});
   await test('an existing band request can still be turned off when probe fails',async()=>{const f=await fixture({band:{supported:false,requested:true}});assert.equal(f.elements.band5g.disabled,false);});
-  await test('connection switches are independent and save a safe encoded payload',async()=>{const f=await fixture();f.elements.probe.checked=true;await f.elements.probe.fire('change');assert.equal(f.config.probe_enabled,true);assert.equal(f.config.avoid_enabled,false);assert.match(f.calls[3],/connectionconfig [A-Za-z0-9+/=]+$/);});
+  await test('connection switches are independent and save a safe encoded payload',async()=>{const f=await fixture();f.elements.probe.checked=true;await f.elements.probe.fire('change');assert.equal(f.config.probe_enabled,true);assert.equal(f.config.avoid_enabled,false);assert.match(f.calls[3],/probeconfig [A-Za-z0-9+/=]+$/);});
   await test('SSID duration persists while probe stays off',async()=>{const f=await fixture();f.elements.avoid.checked=true;f.elements['avoid-seconds'].value='600';await f.elements.avoid.fire('change');assert.equal(f.config.avoid_seconds,600);assert.equal(f.config.avoid_enabled,true);assert.equal(f.config.probe_enabled,false);});
-  await test('invalid duration and URL never reach root',async()=>{for(const [id,value] of [['avoid-seconds','9'],['avoid-seconds','86401'],['probe-interval','14'],['probe-url','file:///data/test'],['probe-url','http://u:p@example.com/']]){const f=await fixture();f.elements[id].value=value;await f.elements['save-connection'].fire('click');assert.equal(f.calls.length,3);assert.ok(f.elements.message.classes.has('error'));}});
+  await test('short probe interval saves independently and reads back',async()=>{
+    const f=await fixture();
+    f.elements['avoid-seconds'].value='9';
+    f.elements['probe-interval'].value='5';
+    await f.elements['save-probe'].fire('click');
+    assert.equal(f.config.probe_interval,5);
+    assert.equal(f.config.avoid_seconds,300);
+    assert.equal(f.elements['avoid-seconds'].value,'9');
+    assert.equal(f.elements['probe-interval'].value,'5');
+    assert.match(f.elements['probe-feedback'].textContent,/5 秒/);
+    assert.equal(f.calls.length,5);
+  });
+  await test('invalid duration and URL are shown beside the corresponding save',async()=>{
+    for(const [section,id,value] of [['avoid','avoid-seconds','9'],['avoid','avoid-seconds','86401'],['probe','probe-interval','0'],['probe','probe-url','file:///data/test'],['probe','probe-url','http://u:p@example.com/']]){
+      const f=await fixture();
+      f.elements[id].value=value;
+      await f.elements['save-'+section].fire('click');
+      assert.equal(f.calls.length,3);
+      assert.ok(f.elements[section+'-feedback'].classes.has('error'));
+    }
+  });
   await test('manual restore uses fixed command',async()=>{const f=await fixture();await f.elements['restore-autojoin'].fire('click');assert.match(f.calls[3],/restoreautojoin$/);});
   console.log('TOTAL '+passed+' WebUI tests passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});

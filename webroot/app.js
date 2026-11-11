@@ -28,7 +28,7 @@
   }
   function lock(value) {
     busy = value;
-    for (const id of ['refresh','save','threshold','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-connection','restore-autojoin']) $(id).disabled=value;
+    for (const id of ['refresh','save','threshold','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-avoid','save-probe','restore-autojoin']) $(id).disabled=value;
     if (!value && status && !status.fluid_installed) $('fluid').disabled=true;
     if (!value && (!band || (!band.supported && !band.requested && !band.restore_pending))) $('band5g').disabled=true;
   }
@@ -70,28 +70,60 @@
     await refreshBand();
     await refreshConnection();
   }
-  async function refreshConnection() {
+  async function refreshConnection(section) {
     connection=JSON.parse(await exec('connectionstatus'));
-    $('avoid').checked=!!connection.avoid_enabled;$('avoid-seconds').value=connection.avoid_seconds;
-    $('probe').checked=!!connection.probe_enabled;$('probe-url').value=connection.probe_url;$('probe-interval').value=connection.probe_interval;
-    $('connection-help').textContent=[connection.error,status?.connection_error,status?.probe_result,
-      status?.probe_complete?'本连接检测已结束':''].filter(Boolean).join(' · ') || '保存后生效。';
+    if (section !== 'probe') {
+      $('avoid').checked=!!connection.avoid_enabled;
+      $('avoid-seconds').value=connection.avoid_seconds;
+      $('avoid-help').textContent=[connection.error,status?.connection_error].filter(Boolean).join(' · ');
+    }
+    if (section !== 'avoid') {
+      $('probe').checked=!!connection.probe_enabled;
+      $('probe-url').value=connection.probe_url;
+      $('probe-interval').value=connection.probe_interval;
+      $('connection-help').textContent=[status?.probe_result,
+        status?.probe_complete?'本连接检测已结束':''].filter(Boolean).join(' · ');
+    }
   }
-  function connectionValues() {
-    const seconds=$('avoid-seconds').value, interval=$('probe-interval').value;
-    if(!/^[1-9]\d{1,4}$/.test(seconds)||Number(seconds)>86400)throw new Error('暂避时长必须是 10–86400 秒的整数。');
-    if(!/^[1-9]\d{1,3}$/.test(interval)||Number(interval)<15||Number(interval)>3600)throw new Error('重试间隔必须是 15–3600 秒的整数。');
-    const url=$('probe-url').value;let parsed;
-    try{parsed=new URL(url);}catch(e){throw new Error('请输入有效的 HTTP/HTTPS 探测地址。');}
-    if(!/^https?:$/.test(parsed.protocol)||parsed.username||parsed.password||parsed.hash||url.length>2048)throw new Error('探测地址无效，不能包含账号密码或片段。');
-    return {avoid_enabled:$('avoid').checked,avoid_seconds:Number(seconds),probe_enabled:$('probe').checked,probe_interval:Number(interval),probe_url:url};
+  function readSeconds(id, min, max, name) {
+    const raw = $(id).value;
+    const seconds = Number(raw);
+    if (!/^\d+$/.test(raw) || !Number.isInteger(seconds) || seconds < min || seconds > max) {
+      throw new Error(`${name}必须是 ${min}–${max} 秒的整数。`);
+    }
+    return seconds;
   }
-  async function saveConnection() {
-    const config=connectionValues();
+  function connectionValues(section) {
+    if (section === 'avoid') return {
+      avoid_enabled: $('avoid').checked,
+      avoid_seconds: readSeconds('avoid-seconds', 10, 86400, '暂避时长')
+    };
+    const interval = readSeconds('probe-interval', 1, 3600, '重试间隔');
+    let url;
+    try { url = new URL($('probe-url').value.trim()); }
+    catch (error) { throw new Error('请输入有效的 HTTP/HTTPS 探测地址。'); }
+    if (!/^https?:$/.test(url.protocol) || url.username || url.password || url.href.includes('#') || url.href.length > 2048) {
+      throw new Error('探测地址无效，不能包含账号密码或片段。');
+    }
+    return {probe_enabled: $('probe').checked, probe_interval: interval, probe_url: url.href};
+  }
+  async function saveConnection(section, feedback) {
+    let config;
     try {
-      const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(config))));
-      const response=await exec('connectionconfig '+encoded);await refresh();message(response.trim());
-    }catch(e){try{await refreshConnection();}catch(ignored){}throw e;}
+      config = connectionValues(section);
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
+      await exec(section + 'config ' + encoded);
+    } catch (error) {
+      if (config) {
+        try { await refreshConnection(section); } catch (ignored) { }
+      }
+      if (connection) $(section).checked = !!connection[section + '_enabled'];
+      throw error;
+    }
+    try { await refreshConnection(section); }
+    catch (error) { throw new Error('设置已保存，暂时无法读回确认。'); }
+    feedback(section === 'probe' ? `已保存。首次失败后等待 ${connection.probe_interval} 秒重试。`
+      : `已保存。模块断开 Wi-Fi 后暂避 ${connection.avoid_seconds} 秒。`);
   }
   async function refreshBand() {
     try {
@@ -100,10 +132,10 @@
       $('band-help').textContent=band.message + (band.restore_pending && !band.requested?' 有待还原记录，请重试关闭。':'');
     } catch(e) { band=null; $('band-help').textContent=e.message; }
   }
-  async function action(work) {
+  async function action(work, feedback = message) {
     if (busy) return;
-    lock(true); message('');
-    try { await work(); } catch(e) { message(e.message,true); }
+    lock(true); feedback('');
+    try { await work(); } catch(e) { feedback(e.message,true); }
     finally { lock(false); }
   }
   $('threshold').addEventListener('input',showThreshold);
@@ -111,8 +143,16 @@
     if (busy) return; $('threshold').value=b.dataset.threshold; showThreshold();
   }));
   $('refresh').addEventListener('click',() => action(refresh));
-  $('save-connection').addEventListener('click',()=>action(saveConnection));
-  for(const id of ['avoid','probe'])$(id).addEventListener('change',()=>action(saveConnection));
+  for (const section of ['avoid', 'probe']) {
+    const feedback = (text, error = false) => {
+      const element = $(section + '-feedback');
+      element.textContent = text;
+      element.classList.toggle('error', error);
+    };
+    const save = () => action(() => saveConnection(section, feedback), feedback);
+    $('save-' + section).addEventListener('click', save);
+    $(section).addEventListener('change', save);
+  }
   $('restore-autojoin').addEventListener('click',()=>action(async()=>{const reply=await exec('restoreautojoin');await refresh();message(reply.trim());}));
   $('save').addEventListener('click',() => action(async() => {
     const value=threshold($('threshold').value);

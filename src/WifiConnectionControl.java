@@ -14,7 +14,9 @@ public final class WifiConnectionControl {
     static WifiConnectionConfig load(File dir)throws Exception {
         File file=new File(dir,"connection.json");
         if(!file.exists())return WifiConnectionConfig.defaults();
-        JSONObject j=new JSONObject(read(file,8192));
+        return parse(new JSONObject(read(file,8192)));
+    }
+    private static WifiConnectionConfig parse(JSONObject j)throws Exception {
         return new WifiConnectionConfig(j.getBoolean("avoid_enabled"),j.getInt("avoid_seconds"),
             j.getBoolean("probe_enabled"),j.getInt("probe_interval"),j.getString("probe_url"));
     }
@@ -110,15 +112,11 @@ public final class WifiConnectionControl {
             if(Process.myUid()!=0||args.length<2)throw new IllegalArgumentException("Root/state/action required");
             File dir=new File(args[0]);if(!dir.isDirectory())throw new IOException("模块配置目录不存在。");
             String action=args[1];
-            if("configure".equals(action)&&args.length==3) {
+            if(("configure".equals(action)||"probe".equals(action)||"avoid".equals(action))&&args.length==3) {
                 if(args[2].length()>12000||!args[2].matches("[A-Za-z0-9+/=]+"))throw new IOException("设置编码无效。");
                 JSONObject j=new JSONObject(new String(Base64.decode(args[2],Base64.DEFAULT),"UTF-8"));
-                WifiConnectionConfig c=new WifiConnectionConfig(j.getBoolean("avoid_enabled"),j.getInt("avoid_seconds"),
-                    j.getBoolean("probe_enabled"),j.getInt("probe_interval"),j.getString("probe_url"));
-                if(c.avoidEnabled)new Autojoin(dir); // Capability preflight, no mutation.
-                atomic(new File(dir,"connection.json"),json(c).toString());
-                if(!c.avoidEnabled)restoreIfNeeded(dir);
-                System.out.println("设置已保存。通网检测每次新连接最多两次，成功即停止。");
+                saveSettings(dir,action,j);
+                System.out.println("设置已保存。");
             } else if("restore".equals(action)&&args.length==2) {
                 restoreIfNeeded(dir);System.out.println("模块记录的自动连接设置已还原。");
             } else if("status".equals(action)&&args.length==2) {
@@ -127,6 +125,31 @@ public final class WifiConnectionControl {
                 System.out.println(j);
             } else throw new IllegalArgumentException("Unknown action");
         } catch(Exception e){System.err.println(message(e));System.exit(1);}
+    }
+    private static void saveSettings(File dir,String action,JSONObject values)throws Exception {
+        File lockFile = new File(dir,"connection.lock");
+        try (RandomAccessFile file = new RandomAccessFile(lockFile,"rw"); FileLock lock = file.getChannel().lock()) {
+            Os.chmod(lockFile.getAbsolutePath(),0600);
+            WifiConnectionConfig next;
+            if ("configure".equals(action)) {
+                next = parse(values);
+            } else {
+                WifiConnectionConfig saved = load(dir);
+                if ("probe".equals(action)) {
+                    next = new WifiConnectionConfig(saved.avoidEnabled,saved.avoidSeconds,
+                        values.getBoolean("probe_enabled"),values.getInt("probe_interval"),values.getString("probe_url"));
+                } else {
+                    next = new WifiConnectionConfig(values.getBoolean("avoid_enabled"),values.getInt("avoid_seconds"),
+                        saved.probeEnabled,saved.probeInterval,saved.probeUrl);
+                }
+            }
+            if (!"probe".equals(action) && next.avoidEnabled) new Autojoin(dir);
+            atomic(new File(dir,"connection.json"),json(next).toString());
+            if (!"probe".equals(action) && !next.avoidEnabled) {
+                try { restoreIfNeeded(dir); }
+                catch (Exception error) { throw new IOException("设置已保存，自动连接还原失败："+message(error)); }
+            }
+        }
     }
     static void restoreIfNeeded(File dir)throws Exception {
         File journal=new File(dir,"ssid_autojoin_restore.json");

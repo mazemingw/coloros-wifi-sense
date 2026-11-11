@@ -30,6 +30,18 @@ public final class WifiConnectionTest {
             for(int seconds:new int[]{0,9,86401})try{new WifiConnectionConfig(true,seconds,false,30,WifiConnectionConfig.DEFAULT_URL);}catch(IllegalArgumentException e){rejected++;}
             check(rejected==7,"validation");
         });
+        test("short probe retry intervals are valid",()->{
+            for(int interval:new int[]{1,5,10,3600}) {
+                WifiConnectionConfig config=new WifiConnectionConfig(false,300,true,interval,WifiConnectionConfig.DEFAULT_URL);
+                check(config.probeInterval==interval,"changed interval");
+            }
+            for(int interval:new int[]{0,3601}) {
+                try {
+                    new WifiConnectionConfig(false,300,true,interval,WifiConnectionConfig.DEFAULT_URL);
+                    throw new AssertionError("invalid interval accepted");
+                } catch(IllegalArgumentException expected) { }
+            }
+        });
         test("one successful request ends connection batch forever",()->{
             WifiProbePolicy p=new WifiProbePolicy();p.connection("net","ssid");check(p.begin(),"start");check(!p.result("net","ssid",true),"success cut");
             for(int i=0;i<100;i++)check(!p.begin(),"success restarted");

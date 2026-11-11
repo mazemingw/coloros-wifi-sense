@@ -9,7 +9,7 @@ final class WifiConnectionConfig {
     final String probeUrl;
     WifiConnectionConfig(boolean avoid,int seconds,boolean probe,int interval,String url) {
         if(seconds<10||seconds>86400)throw new IllegalArgumentException("SSID 暂避时间必须是 10–86400 秒。");
-        if(interval<15||interval>3600)throw new IllegalArgumentException("探测间隔必须是 15–3600 秒。");
+        if(interval<1||interval>3600)throw new IllegalArgumentException("探测间隔必须是 1–3600 秒。");
         try {
             URI u=new URI(url);
             if(url.length()>2048 || (!"http".equals(u.getScheme())&&!"https".equals(u.getScheme()))

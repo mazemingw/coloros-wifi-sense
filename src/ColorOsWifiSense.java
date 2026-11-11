@@ -156,7 +156,7 @@ public final class ColorOsWifiSense {
             NetworkCapabilities caps = connectivity.getNetworkCapabilities((Network) expected.network);
             if (caps == null || !caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return WifiMonitor.Attempt.STALE;
             try {
-                if(connectionConfig.avoidEnabled&&!"manual".equals(reason)) {
+                if(connectionConfig.avoidEnabled) {
                     if(autojoin==null)try{autojoin=new WifiConnectionControl.Autojoin(stateDir);}
                     catch(Exception e){connectionError="系统不支持 SSID 暂避："+WifiConnectionControl.message(e);return invokeDisconnect(expected,generation,reason);}
                     return autojoin.locked(()->interactive()&&epoch.get()==generation,g->{
