@@ -6,6 +6,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.FileObserver;
 import android.os.Handler;
 import android.os.IBinder;
@@ -48,7 +49,7 @@ public final class ColorOsWifiSense {
     private boolean force5gEnabled;
     private volatile Thread bandWorker;
     private final Runnable bandTask = this::reconcileBand;
-    private WifiConnectionConfig connectionConfig=WifiConnectionConfig.defaults();
+    private volatile WifiConnectionConfig connectionConfig=WifiConnectionConfig.defaults();
     private final WifiProbePolicy probePolicy=new WifiProbePolicy();
     private final Runnable probeTask=this::runProbe, restoreTask=()->restoreAutojoin(false);
     private WifiConnectionControl.Autojoin autojoin;
@@ -120,15 +121,19 @@ public final class ColorOsWifiSense {
         return power.isInteractive();
     }
 
+    private boolean monitoringAllowed() {
+        return !stopRequested && (connectionConfig.screenOffEnabled || interactive());
+    }
+
     private final class AndroidPort implements WifiMonitor.Port {
         public long now() { return SystemClock.elapsedRealtime(); }
         public long epoch() { return epoch.get(); }
-        public boolean interactive() { return ColorOsWifiSense.this.interactive(); }
+        public boolean monitoringAllowed() { return ColorOsWifiSense.this.monitoringAllowed(); }
         public boolean singleWifi() { return connections.size() == 1; }
         public void schedule(Runnable task, long delay) { handler.postDelayed(task, delay); }
         public void cancel(Runnable task) { handler.removeCallbacks(task); }
         public WifiMonitor.Snapshot readWifi() throws Exception {
-            if (stopRequested || screenOff || connections.size() != 1) return null;
+            if (stopRequested || (screenOff && !connectionConfig.screenOffEnabled) || connections.size() != 1) return null;
             Network network = connections.iterator().next();
             WifiInfo info = readConnectionInfo();
             if (info.getSupplicantState() != SupplicantState.COMPLETED) return null;
@@ -138,7 +143,7 @@ public final class ColorOsWifiSense {
             return disconnect(expected,generation,"auto");
         }
         public WifiMonitor.Attempt disconnect(WifiMonitor.Snapshot expected,long generation,String reason) {
-            if (!interactive()) return WifiMonitor.Attempt.ASLEEP;
+            if (!monitoringAllowed()) return WifiMonitor.Attempt.ASLEEP;
             // Rare final preflight only: close the FileObserver delivery window
             // without re-reading configuration on every periodic sample.
             if (disabled()) { stopRequested=true; handler.post(() -> closeLoop()); return WifiMonitor.Attempt.STALE; }
@@ -159,7 +164,7 @@ public final class ColorOsWifiSense {
                 if(connectionConfig.avoidEnabled) {
                     if(autojoin==null)try{autojoin=new WifiConnectionControl.Autojoin(stateDir);}
                     catch(Exception e){connectionError="系统不支持 SSID 暂避："+WifiConnectionControl.message(e);return invokeDisconnect(expected,generation,reason);}
-                    return autojoin.locked(()->interactive()&&epoch.get()==generation,g->{
+                    return autojoin.locked(()->monitoringAllowed()&&epoch.get()==generation,g->{
                         WifiSsidGuard.Lease lease=null;
                         try{lease=g.block(expected.ssid,connectionConfig.avoidSeconds);connectionError="";}
                         catch(Exception e){connectionError="SSID 暂避未应用："+WifiConnectionControl.message(e);}
@@ -178,18 +183,19 @@ public final class ColorOsWifiSense {
             }
         }
         private WifiMonitor.Attempt invokeDisconnect(WifiMonitor.Snapshot expected,long generation,String reason)throws Exception {
-            if(!interactive())return WifiMonitor.Attempt.ASLEEP;
+            if(!monitoringAllowed())return WifiMonitor.Attempt.ASLEEP;
             if(disabled()||epoch.get()!=generation||stopRequested)return WifiMonitor.Attempt.STALE;
             if(!connectionConfig.equals(WifiConnectionControl.load(stateDir))||readThresholdValue()!=monitor.threshold()
                 ||readCountdownValue()*1000L!=monitor.countdownMs())return WifiMonitor.Attempt.STALE;
             WifiMonitor.Snapshot fresh=readWifi();
-            if(!expected.sameAp(fresh)||(!"offline".equals(reason)&&fresh.rssi>monitor.threshold()))return WifiMonitor.Attempt.STALE;
-            if(!interactive())return WifiMonitor.Attempt.ASLEEP;
+            if (!expected.sameAp(fresh) || !fresh.valid()
+                    || (!"offline".equals(reason) && monitor.signalRecovered(fresh.rssi))) return WifiMonitor.Attempt.STALE;
+            if(!monitoringAllowed())return WifiMonitor.Attempt.ASLEEP;
             if(epoch.get()!=generation||stopRequested)return WifiMonitor.Attempt.STALE;
             boolean accepted=Boolean.TRUE.equals(disconnect.invoke(wifi,ROOT_PACKAGE));
             if(accepted) {
                 if("offline".equals(reason))showOfflineWorking();
-                else{fluidResult=fluidInput!=null;sendFluid("working");}
+                else if (interactive()) { fluidResult=fluidInput!=null;sendFluid("working"); }
                 Log.i(TAG,"AP disconnect requested: "+reason+"; final screen and AP checks passed");
             }
             return accepted?WifiMonitor.Attempt.ACCEPTED:WifiMonitor.Attempt.REJECTED;
@@ -212,7 +218,7 @@ public final class ColorOsWifiSense {
         ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
             private final ConcurrentHashMap<Network,String> signals = new ConcurrentHashMap<>();
             private void enqueue(Network n, int kind) {
-                epoch.incrementAndGet();
+                if (kind != 0) epoch.incrementAndGet();
                 handler.post(() -> {
                     if (closed) return;
                     boolean changed = false;
@@ -229,7 +235,10 @@ public final class ColorOsWifiSense {
                 Object info=caps.getTransportInfo();
                 String bssid=info instanceof WifiInfo?((WifiInfo)info).getBSSID():null;
                 String signal=caps.getSignalStrength()+":"+bssid;
-                if (signal.equals(signals.put(n,signal))) { ignoredCapabilityEvents.incrementAndGet(); return; }
+                String previous = signals.put(n,signal);
+                if (signal.equals(previous)) { ignoredCapabilityEvents.incrementAndGet(); return; }
+                // An RSSI update schedules a fresh sample. Only a known AP change invalidates an in-flight read.
+                if (bssid != null && previous != null && !previous.endsWith(":" + bssid)) epoch.incrementAndGet();
                 enqueue(n, 0);
             }
         };
@@ -248,7 +257,7 @@ public final class ColorOsWifiSense {
             @Override public void onEvent(int event, String path) {
                 if ("threshold".equals(path) || "countdown".equals(path) || "force5g".equals(path) || "connection.json".equals(path)) {
                     configDirty = true; epoch.incrementAndGet();
-                    handler.post(() -> { if (interactive()||"connection.json".equals(path)) reloadConfig(); });
+                    handler.post(() -> { if (monitoringAllowed()||"connection.json".equals(path)) reloadConfig(); });
                 } else if ("ui_request".equals(path)) {
                     handler.post(() -> {
                         if (closed) return;
@@ -261,17 +270,16 @@ public final class ColorOsWifiSense {
         events = new WifiSystemEvents(context, handler, power, new WifiSystemEvents.Listener() {
             public void screen(boolean on) {
                 screenOff = !on; epoch.incrementAndGet();
-                if(!on)cancelProbe();
                 handler.post(() -> {
                     if (closed) return;
-                    if (on && interactive()) { configDirty = true; reloadConfig(); refreshConnections(); scheduleBand(); }
+                    if (on && interactive()) { configDirty = true; refreshConnections(); reloadConfig(); scheduleBand(); }
                     else if (!on) handler.removeCallbacks(bandTask);
-                    monitor.screen(on);
-                    if(on)scheduleProbe();else probePolicy.suspend();
+                    monitor.screen(on, connectionConfig.screenOffEnabled);
+                    updateProbeSchedule();
                 });
             }
             public void wifi(String action) {
-                epoch.incrementAndGet();
+                if (!WifiManager.RSSI_CHANGED_ACTION.equals(action)) epoch.incrementAndGet();
                 handler.post(() -> { if (!closed) monitor.rssiEvent(); });
             }
         });
@@ -280,9 +288,10 @@ public final class ColorOsWifiSense {
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build();
         connectivity.registerNetworkCallback(request, callback);
         try {
+            reloadConfig();
             events.start();
             writeStatus("");
-            Log.i(TAG, "Interactive-only Wi-Fi monitor ready; 7s awake fallback, no wake lock");
+            Log.i(TAG, "Wi-Fi monitor ready; 7s fallback while enabled, no wake lock");
             Looper.loop();
         } catch (StopLoop done) {
             // Android's main Looper deliberately rejects quit()/quitSafely().
@@ -327,9 +336,11 @@ public final class ColorOsWifiSense {
             WifiConnectionConfig next=WifiConnectionControl.load(stateDir);
             if(!next.sameProbe(connectionConfig)){cancelProbe();probePolicy.reset();}
             connectionConfig=next;
+            monitor.recoveryDb(next.recoveryDb);
             if(!next.avoidEnabled)restoreAutojoin(true);
-            scheduleProbe();
         }catch(Exception e){connectionError="连接策略配置无效："+WifiConnectionControl.message(e);cancelProbe();connectionConfig=WifiConnectionConfig.defaults();restoreAutojoin(true);}
+        monitor.updateMonitoring();
+        updateProbeSchedule();
     }
 
     private void scheduleBand() {
@@ -354,15 +365,23 @@ public final class ColorOsWifiSense {
         probeToken++;handler.removeCallbacks(probeTask);
         HttpURLConnection c=probeConnection;if(c!=null)c.disconnect();
     }
+    private void updateProbeSchedule() {
+        if (monitoringAllowed()) {
+            scheduleProbe();
+        } else {
+            cancelProbe();
+            probePolicy.suspend();
+        }
+    }
     private void scheduleProbe() {
         if(connections.size()==1&&!probePolicy.sameNetwork(connections.iterator().next()))probePolicy.reset();
-        if(!connectionConfig.probeEnabled||!interactive()||connections.size()!=1||probePolicy.complete()
+        if(!connectionConfig.probeEnabled||!monitoringAllowed()||connections.size()!=1||probePolicy.complete()
             ||(probeWorker!=null&&probeWorker.isAlive())||handler.hasCallbacks(probeTask))return;
         long wait=probePolicy.failures()==0?3000:connectionConfig.probeInterval*1000L;
         handler.postDelayed(probeTask,Math.max(wait,monitor.cooldownUntil()-SystemClock.elapsedRealtime()));
     }
     private void runProbe() {
-        if(!connectionConfig.probeEnabled||!interactive()||connections.size()!=1)return;
+        if(!connectionConfig.probeEnabled||!monitoringAllowed()||connections.size()!=1)return;
         try {
             WifiMonitor.Snapshot expected=new AndroidPort().readWifi();
             if(expected==null||!expected.valid())return;
@@ -373,18 +392,18 @@ public final class ColorOsWifiSense {
             probeWorker=new Thread(()->{
                 boolean online=false;String result;HttpURLConnection c=null;
                 try {
-                    if(token!=probeToken||!interactive())throw new IOException("检测已取消");
+                    if(token!=probeToken||!monitoringAllowed())throw new IOException("检测已取消");
                     c=(HttpURLConnection)((Network)expected.network).openConnection(new URL(config.probeUrl),Proxy.NO_PROXY);
                     c.setConnectTimeout(3000);c.setReadTimeout(3000);c.setInstanceFollowRedirects(false);c.setUseCaches(false);
                     c.setRequestMethod("GET");probeConnection=c;
-                    if(token!=probeToken||!interactive())throw new IOException("检测已取消");
+                    if(token!=probeToken||!monitoringAllowed())throw new IOException("检测已取消");
                     int code=c.getResponseCode();online=code==204;result="HTTP "+code;
                 }catch(Exception e){result="探测失败（超时或目标不可达）";}
                 finally{if(c!=null)c.disconnect();probeConnection=null;}
                 final boolean success=online;final String detail=result;
                 handler.post(()->{
                     probeWorker=null;
-                    if(token!=probeToken||!interactive()||!connectionConfig.sameProbe(config)){probeDiscarded++;scheduleProbe();return;}
+                    if(token!=probeToken||!monitoringAllowed()||!connectionConfig.sameProbe(config)){probeDiscarded++;scheduleProbe();return;}
                     try {
                         WifiMonitor.Snapshot fresh=new AndroidPort().readWifi();
                         if(!expected.sameAp(fresh)){probeDiscarded++;probePolicy.finish();probeResult="接入点已变化，本轮已结束";return;}
@@ -481,7 +500,7 @@ public final class ColorOsWifiSense {
             showFluidResult("immediate".equals(event)?"manual":"auto");
             handler.postDelayed(() -> { stopFluid(); System.exit(0); },15500); return;
         }
-        if (!interactive()) { monitor.screen(false); return; }
+        if (!interactive()) return;
         if ("immediate".equals(event)) monitor.immediate(); else monitor.refresh();
     }
     private void showFluidResult(String reason) {
@@ -527,7 +546,8 @@ public final class ColorOsWifiSense {
             WifiMonitor.Metrics m=monitor.metrics; WifiMonitor.Snapshot last=monitor.last();
             JSONObject j=new JSONObject().put("request",request).put("pid",Process.myPid())
                 .put("updated_ms",System.currentTimeMillis()).put("state",monitor.state().name())
-                .put("interactive",interactive()).put("wifi_connections",connections.size())
+                .put("interactive",interactive()).put("screen_off_enabled",connectionConfig.screenOffEnabled)
+                .put("wifi_connections",connections.size())
                 .put("threshold",monitor.threshold()).put("fluid_enabled",fluidEnabled)
                 .put("countdown_seconds",monitor.countdownMs()/1000)
                 .put("fluid_installed",new File(moduleDir,"wifi-fluid.dex").isFile())

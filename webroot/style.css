@@ -15,6 +15,11 @@
 .seconds{width:90px;min-height:42px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit;padding:8px;font:inherit;text-align:center}label[for=countdown]{font-size:13px}
 input[type=url]{display:block;width:100%;min-height:42px;margin:10px 0 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit;padding:10px;font:inherit;font-size:12px}label[for=probe-url],label[for=probe-interval],label[for=avoid-seconds]{font-size:12px}
 .setting-feedback{margin:8px 0;font-size:12px;color:var(--accent)}.setting-feedback:empty,#avoid-help:empty{display:none}.setting-feedback.error{color:#b44839}#restore-autojoin{margin-top:10px}
+.setting-row{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.setting-row label{font-size:13px;font-weight:600}
+.setting-row .hint{margin-top:4px}
+.input-actions{gap:8px}
+.input-actions .seconds{width:60px}
 
 @media (prefers-color-scheme: dark) {
   :root {

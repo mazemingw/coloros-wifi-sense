@@ -3,6 +3,13 @@
 MODDIR=${0%/*}
 STATE_DIR=/data/adb/coloros_wifi_sense
 case "$1" in
+    screenoff|recovery)
+        case "$1:$#:${2-}" in
+            screenoff:2:0|screenoff:2:1|recovery:2:[1-9]|recovery:2:10) ;;
+            *) exit 1 ;;
+        esac
+        export CLASSPATH="$MODDIR/wifi-sense.dex"
+        exec /system/bin/app_process /system/bin WifiConnectionControl "$STATE_DIR" "$1" "$2" ;;
     connectionconfig|probeconfig|avoidconfig|connectionstatus|restoreautojoin)
         case "$1:$#" in
             connectionconfig:2|probeconfig:2|avoidconfig:2)

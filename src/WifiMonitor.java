@@ -29,7 +29,7 @@ final class WifiMonitor {
     interface Port {
         long now();
         long epoch();
-        boolean interactive();
+        boolean monitoringAllowed();
         boolean singleWifi();
         Snapshot readWifi() throws Exception;
         Attempt disconnect(Snapshot expected, long epoch) throws Exception;
@@ -53,7 +53,7 @@ final class WifiMonitor {
     private final Runnable sampleTask = this::runSample;
     private final Runnable confirmationTask = this::confirmationTimeout;
     private State state = State.PAUSED;
-    private boolean awake, stopped, scheduled, eventSample, observeConnection, forceRead, configured = true;
+    private boolean active, stopped, scheduled, eventSample, observeConnection, forceRead, configured = true;
     private long dueAt, lastReadAt = Long.MIN_VALUE;
     private int threshold = -80;
     private Snapshot last, requested;
@@ -68,16 +68,29 @@ final class WifiMonitor {
     long cooldownUntil() { return policy.cooldownUntil(); }
     boolean hasSampleTask() { return scheduled; }
 
-    void screen(boolean on) {
+    void screen(boolean on, boolean keepMonitoring) {
         metrics.screenEvents++;
         if (stopped) return;
-        // A screen-off event invalidates the complete session, including confirmation/UI.
-        if (!on || !port.interactive()) { pause(); return; }
-        if (awake) return;
-        awake = true;
+        if (!on && !keepMonitoring) { pause(); return; }
+        boolean wasActive = active;
+        if (!on) port.clearFeedback();
+        updateMonitoring();
+        if (on && wasActive && active && last != null && policy.deadline() > port.now()) {
+            port.warn(last, threshold, policy.deadline());
+        }
+    }
+
+    void updateMonitoring() {
+        if (stopped) return;
+        if (!port.monitoringAllowed()) {
+            if (active) pause();
+            return;
+        }
+        if (active) return;
+        active = true;
         forceRead = true;
         lastReadAt = Long.MIN_VALUE;
-        cancelPending("screen-on restart");
+        cancelPending("monitoring resumed");
         state = State.IDLE;
         if (!configured) { state = State.CONFIG_ERROR; return; }
         request(0, true);
@@ -85,8 +98,8 @@ final class WifiMonitor {
 
     void network(Object lostNetwork, boolean topologyChanged) {
         metrics.networkEvents++;
-        if (stopped || !awake) return;
-        if (!port.interactive()) { pause(); return; }
+        if (stopped || !active) return;
+        if (!port.monitoringAllowed()) { pause(); return; }
         if (requested != null && Objects.equals(requested.network, lostNetwork)) {
             requested = null;
             port.cancel(confirmationTask);
@@ -112,7 +125,7 @@ final class WifiMonitor {
     }
 
     void refresh() {
-        if (stopped || !awake || !configured) return;
+        if (stopped || !active || !configured) return;
         forceRead = true;
         request(0, true);
     }
@@ -120,10 +133,19 @@ final class WifiMonitor {
     void threshold(int value) {
         if (value < -100 || value > -20) throw new IllegalArgumentException("Invalid threshold");
         boolean wasInvalid = !configured; configured = true;
-        if (value == threshold) { if (wasInvalid && awake) request(0, true); return; }
+        if (value == threshold) { if (wasInvalid && active) request(0, true); return; }
         threshold = value;
         cancelPending("threshold change");
-        if (awake && !stopped) request(0, true);
+        if (active && !stopped) request(0, true);
+    }
+
+    boolean signalRecovered(int rssi) { return policy.recovered(rssi, threshold); }
+
+    void recoveryDb(int value) {
+        if (value == policy.recoveryDb()) return;
+        cancelPending("recovery margin change");
+        policy.recoveryDb(value);
+        if (active && !stopped && configured) request(0, true);
     }
 
     void countdown(int seconds) {
@@ -131,11 +153,11 @@ final class WifiMonitor {
         if (policy.countdownMs() == seconds * 1_000L) return;
         cancelPending("countdown change");
         policy.countdown(seconds * 1_000L);
-        if (awake && !stopped && configured) request(0, true);
+        if (active && !stopped && configured) request(0, true);
     }
 
     private void event(String kind) {
-        if (stopped || !awake || !configured || !port.singleWifi()) return;
+        if (stopped || !active || !configured || !port.singleWifi()) return;
         if (policy.coolingDown(port.now()) && !observeConnection) return;
         if (!policy.pending()) state = State.SUSPECT;
         long earliest = lastReadAt == Long.MIN_VALUE ? 0 : Math.max(0, lastReadAt + VERIFY_MS - port.now());
@@ -143,7 +165,7 @@ final class WifiMonitor {
     }
 
     private void request(long delay, boolean event) {
-        if (!awake || stopped) return;
+        if (!active || stopped) return;
         long target = port.now() + Math.max(0, delay);
         if (scheduled && dueAt <= target) return;
         unschedule();
@@ -168,7 +190,7 @@ final class WifiMonitor {
         scheduled = false;
         if (stopped) return;
         if (!configured) { state = State.CONFIG_ERROR; return; }
-        if (!awake || !port.interactive()) {
+        if (!active || !port.monitoringAllowed()) {
             metrics.lateTasksSuppressed++; pause(); return;
         }
         metrics.scheduledRuns++;
@@ -181,7 +203,7 @@ final class WifiMonitor {
             long generation = port.epoch();
             Snapshot info = read();
             forceRead = false;
-            if (!port.interactive()) { pause(); return; }
+            if (!port.monitoringAllowed()) { pause(); return; }
             if (generation != port.epoch()) {
                 metrics.staleSuppressed++; request(VERIFY_MS, true); return;
             }
@@ -206,24 +228,24 @@ final class WifiMonitor {
             }
         } catch (Exception error) {
             metrics.readErrors++; cancelPending("read failure");
-            if (!port.interactive()) { pause(); return; }
+            if (!port.monitoringAllowed()) { pause(); return; }
         }
         next();
     }
 
     boolean immediate() {
-        if (stopped || !awake || !configured || !policy.pending()) return false;
+        if (stopped || !active || !configured || !policy.pending()) return false;
         return attempt(true, port.epoch());
     }
 
     private boolean attempt(boolean manual, long generation) {
-        if (!awake || !port.interactive()) { pause(); return false; }
+        if (!active || !port.monitoringAllowed()) { pause(); return false; }
         if (!port.singleWifi() || generation != port.epoch()) {
             metrics.staleSuppressed++; return false;
         }
         try {
             Snapshot fresh = read();  // Re-read; broadcast extras and old samples are never an authorization.
-            if (!port.interactive()) { pause(); return false; }
+            if (!port.monitoringAllowed()) { pause(); return false; }
             if (generation != port.epoch()) { metrics.staleSuppressed++; return false; }
             if (fresh == null || last == null || !Objects.equals(last.network, fresh.network)
                     || !policy.eligible(fresh.bssid, fresh.rssi, threshold, port.now(), manual)) {
@@ -236,11 +258,11 @@ final class WifiMonitor {
     }
 
     boolean offlineConfirmed(Snapshot expected,long generation) {
-        if(stopped||!awake||!configured||!port.interactive())return false;
+        if(stopped||!active||!configured||!port.monitoringAllowed())return false;
         if(!port.singleWifi()||generation!=port.epoch()||policy.coolingDown(port.now()))return false;
         try {
             Snapshot fresh=read();
-            if(!port.interactive()){pause();return false;}
+            if(!port.monitoringAllowed()){pause();return false;}
             if(generation!=port.epoch()||fresh==null||!fresh.sameAp(expected)) {
                 metrics.staleSuppressed++;return false;
             }
@@ -273,11 +295,11 @@ final class WifiMonitor {
     private void confirmationTimeout() {
         if (requested == null) return;
         requested = null;
-        if (awake && port.interactive()) port.result("offline".equals(requestedReason)?"offline-failed":"failed");
+        if (active && port.monitoringAllowed()) port.result("offline".equals(requestedReason)?"offline-failed":"failed");
     }
 
     private void next() {
-        if (!awake || stopped || !configured) return;
+        if (!active || stopped || !configured) return;
         if (!port.singleWifi()) { unschedule(); state = State.NO_WIFI; return; }
         if (policy.coolingDown(port.now())) {
             state = State.COOLDOWN;
@@ -298,7 +320,7 @@ final class WifiMonitor {
     }
 
     private void pause() {
-        awake = false; unschedule(); cancelPending("screen off");
+        active = false; unschedule(); cancelPending("screen off");
         requested = null; port.cancel(confirmationTask); port.clearFeedback();
         last = null; observeConnection = false; forceRead = false; state = State.PAUSED;
     }
@@ -309,6 +331,6 @@ final class WifiMonitor {
 
     void invalidConfiguration() {
         configured = false; unschedule(); cancelPending("invalid threshold");
-        if (awake) state = State.CONFIG_ERROR;
+        if (active) state = State.CONFIG_ERROR;
     }
 }

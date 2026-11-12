@@ -1,7 +1,7 @@
 id=coloros_wifi_sense
 name=colorOSWIFI感知
-version=v1.4.1
-versionCode=7
+version=v1.5.0
+versionCode=8
 author=酷安@NVMEX夜莺
-description=亮屏处理弱WiFi黏连，息屏暂停；可选SSID限时暂避、每次连接最多两次通网检测及流体云断网提醒。Web管理、自定义倒计时与高通仅5GHz，默认-80dBm/7秒。
+description=弱 Wi-Fi 自动断开，可选息屏检测。WebUI 可调断开阈值、回升余量和倒计时，支持流体云、SSID 暂避、通网检测和仅 5GHz。
 updateJson=https://modules.kernelsu.org/api/v1/modules/coloros_wifi_sense/update.json

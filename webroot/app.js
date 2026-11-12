@@ -28,7 +28,7 @@
   }
   function lock(value) {
     busy = value;
-    for (const id of ['refresh','save','threshold','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-avoid','save-probe','restore-autojoin']) $(id).disabled=value;
+    for (const id of ['refresh','save','threshold','recovery','save-recovery','screenoff','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-avoid','save-probe','restore-autojoin']) $(id).disabled=value;
     if (!value && status && !status.fluid_installed) $('fluid').disabled=true;
     if (!value && (!band || (!band.supported && !band.requested && !band.restore_pending))) $('band5g').disabled=true;
   }
@@ -40,6 +40,13 @@
   function showThreshold() {
     $('threshold-value').textContent = $('threshold').value.replace('-','−') + ' dBm';
     document.querySelectorAll('[data-threshold]').forEach(b => b.classList.toggle('selected',b.dataset.threshold === $('threshold').value));
+    showRecovery();
+  }
+  function showRecovery() {
+    const margin = Number($('recovery').value);
+    const level = Number($('threshold').value) + margin;
+    $('recovery-help').textContent = Number.isInteger(margin) && margin >= 1 && margin <= 10
+      ? `信号回到 ${String(level).replace('-', '−')} dBm 就取消倒计时。` : '';
   }
   function render(data) {
     status=data;
@@ -48,16 +55,17 @@
     $('threshold').value=threshold(data.threshold); showThreshold();
     const seconds=Number(data.countdown_seconds ?? 7);
     $('countdown').value=Number.isInteger(seconds)&&seconds>=1&&seconds<=300?seconds:7;
-    $('threshold-help').textContent='信号持续低于或等于阈值时，倒计时 '+$('countdown').value+' 秒后断开当前接入点。';
+    $('threshold-help').textContent='信号降到阈值后，开始 '+$('countdown').value+' 秒倒计时。';
     $('fluid').checked=!!data.fluid_enabled;
     $('fluid').disabled=!data.fluid_installed;
-    $('fluid-help').textContent=data.fluid_installed ? '提醒中关闭开关，可立即断开。' : '未安装流体云组件，重新安装时可选择开启。';
+    $('fluid-help').textContent=data.fluid_installed ? '弱信号时提醒，可点「立即断开」。' : '安装模块时可选装流体云。';
     $('updated').textContent='更新于 ' + new Date(data.updated_ms).toLocaleTimeString();
-    $('state-detail').textContent=!data.interactive ? '设备未处于交互状态，监控与倒计时已暂停。'
-      : data.state === 'CONFIG_ERROR' ? '阈值或倒计时配置无效，请保存有效设置后恢复监控。'
-      : data.state === 'VERIFY' ? Math.ceil(data.countdown_ms/1000) + ' 秒后再次确认信号并断开。'
-      : data.state === 'COOLDOWN' ? '冷却剩余约 ' + Math.ceil(data.cooldown_ms/1000) + ' 秒。'
-      : data.wifi_connections !== 1 ? '等待单一 Wi-Fi 连接，当前不进行信号采样。' : '监听网络变化，亮屏时保留 7 秒信号检查兜底。';
+    $('state-detail').textContent=data.state === 'CONFIG_ERROR' ? '请重新保存阈值和倒计时。'
+      : data.state === 'VERIFY' ? Math.ceil(data.countdown_ms/1000) + ' 秒后检查是否断开。'
+      : data.state === 'COOLDOWN' ? '还需等 ' + Math.ceil(data.cooldown_ms/1000) + ' 秒才能再次断开。'
+      : data.state === 'PAUSED' ? '亮屏后继续检测。'
+      : data.wifi_connections !== 1 ? '连接 Wi-Fi 后开始检测。'
+      : !data.interactive && data.screen_off_enabled ? '正在息屏检测。' : '';
     const list=$('metrics'); list.replaceChildren();
     Object.entries(metrics).forEach(([key,label]) => {
       const dt=document.createElement('dt'), dd=document.createElement('dd');
@@ -72,17 +80,21 @@
   }
   async function refreshConnection(section) {
     connection=JSON.parse(await exec('connectionstatus'));
-    if (section !== 'probe') {
+    if (!section || section === 'screenoff') $('screenoff').checked = !!connection.screen_off_enabled;
+    if (!section || section === 'recovery') {
+      $('recovery').value = connection.recovery_db ?? 3;
+      showRecovery();
+    }
+    if (!section || section === 'avoid') {
       $('avoid').checked=!!connection.avoid_enabled;
       $('avoid-seconds').value=connection.avoid_seconds;
       $('avoid-help').textContent=[connection.error,status?.connection_error].filter(Boolean).join(' · ');
     }
-    if (section !== 'avoid') {
+    if (!section || section === 'probe') {
       $('probe').checked=!!connection.probe_enabled;
       $('probe-url').value=connection.probe_url;
       $('probe-interval').value=connection.probe_interval;
-      $('connection-help').textContent=[status?.probe_result,
-        status?.probe_complete?'本连接检测已结束':''].filter(Boolean).join(' · ');
+      $('connection-help').textContent=connection.probe_enabled ? status?.probe_result || '' : '';
     }
   }
   function readSeconds(id, min, max, name) {
@@ -122,8 +134,8 @@
     }
     try { await refreshConnection(section); }
     catch (error) { throw new Error('设置已保存，暂时无法读回确认。'); }
-    feedback(section === 'probe' ? `已保存。首次失败后等待 ${connection.probe_interval} 秒重试。`
-      : `已保存。模块断开 Wi-Fi 后暂避 ${connection.avoid_seconds} 秒。`);
+    feedback(section === 'probe' ? `已保存，${connection.probe_interval} 秒后重试。`
+      : `已保存，暂避 ${connection.avoid_seconds} 秒。`);
   }
   async function refreshBand() {
     try {
@@ -138,17 +150,34 @@
     try { await work(); } catch(e) { feedback(e.message,true); }
     finally { lock(false); }
   }
+  function settingFeedback(section, text, error = false) {
+    const element = $(section + '-feedback');
+    element.textContent = text;
+    element.classList.toggle('error', error);
+  }
   $('threshold').addEventListener('input',showThreshold);
+  $('recovery').addEventListener('input',showRecovery);
   document.querySelectorAll('[data-threshold]').forEach(b => b.addEventListener('click',() => {
     if (busy) return; $('threshold').value=b.dataset.threshold; showThreshold();
   }));
   $('refresh').addEventListener('click',() => action(refresh));
+  const screenFeedback = (text, error) => settingFeedback('screenoff', text, error);
+  $('screenoff').addEventListener('change', () => action(async () => {
+    const enabled = $('screenoff').checked;
+    try { await exec('screenoff ' + (enabled ? '1' : '0')); }
+    catch (error) { $('screenoff').checked = !!connection?.screen_off_enabled; throw error; }
+    await refreshConnection('screenoff');
+    screenFeedback(connection.screen_off_enabled ? '息屏检测已开启。' : '息屏时暂停检测。');
+  }, screenFeedback));
+  const recoveryFeedback = (text, error) => settingFeedback('recovery', text, error);
+  $('save-recovery').addEventListener('click', () => action(async () => {
+    const margin = readSeconds('recovery', 1, 10, '回升余量');
+    await exec('recovery ' + margin);
+    await refreshConnection('recovery');
+    recoveryFeedback('已保存。');
+  }, recoveryFeedback));
   for (const section of ['avoid', 'probe']) {
-    const feedback = (text, error = false) => {
-      const element = $(section + '-feedback');
-      element.textContent = text;
-      element.classList.toggle('error', error);
-    };
+    const feedback = (text, error) => settingFeedback(section, text, error);
     const save = () => action(() => saveConnection(section, feedback), feedback);
     $('save-' + section).addEventListener('click', save);
     $(section).addEventListener('change', save);
@@ -161,14 +190,14 @@
   $('save-countdown').addEventListener('click',() => action(async() => {
     const raw=$('countdown').value, seconds=Number(raw);
     if(!/^[1-9]\d{0,2}$/.test(raw)||!Number.isInteger(seconds)||seconds>300)throw new Error('倒计时必须是 1 至 300 秒的整数。');
-    await exec('countdown '+seconds); await refresh(); message('自动断开倒计时已保存。');
+    await exec('countdown '+seconds); await refresh(); message('倒计时已保存。');
   }));
   $('band5g').addEventListener('change',() => action(async() => {
     try { const response=await exec('band5g '+($('band5g').checked?'1':'0')); await refreshBand(); message(response.trim()); }
     catch(e) { await refreshBand(); throw e; }
   }));
   $('fluid').addEventListener('change',() => action(async() => {
-    try { await exec('fluid ' + ($('fluid').checked?'1':'0')); await refresh(); message('通知设置已保存，开启后从下一次提醒生效。'); }
+    try { await exec('fluid ' + ($('fluid').checked?'1':'0')); await refresh(); message('提醒设置已保存。'); }
     catch(e) { if(status) $('fluid').checked=!!status.fluid_enabled; throw e; }
   }));
   showThreshold(); action(refresh);

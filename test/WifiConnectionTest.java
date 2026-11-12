@@ -24,20 +24,20 @@ public final class WifiConnectionTest {
         boolean on(int id){for(WifiSsidGuard.Config c:configs)if(c.id==id)return c.autojoin;throw new AssertionError();}
     }
     public static void main(String[] args)throws Exception {
-        test("defaults opt out of network requests and SSID mutation",()->{WifiConnectionConfig c=WifiConnectionConfig.defaults();check(!c.probeEnabled&&!c.avoidEnabled&&c.avoidSeconds==300,"defaults");});
+        test("defaults opt out of network requests and SSID mutation",()->{WifiConnectionConfig c=WifiConnectionConfig.defaults();check(!c.probeEnabled&&!c.avoidEnabled&&!c.screenOffEnabled&&c.avoidSeconds==300&&c.recoveryDb==3,"defaults");});
         test("invalid durations and probe URLs rejected",()->{
-            int rejected=0;for(String url:new String[]{"file:///data/a","http://user:pass@example.com/","http://example.com/#x","garbage"})try{new WifiConnectionConfig(true,300,true,30,url);}catch(IllegalArgumentException e){rejected++;}
-            for(int seconds:new int[]{0,9,86401})try{new WifiConnectionConfig(true,seconds,false,30,WifiConnectionConfig.DEFAULT_URL);}catch(IllegalArgumentException e){rejected++;}
+            int rejected=0;for(String url:new String[]{"file:///data/a","http://user:pass@example.com/","http://example.com/#x","garbage"})try{new WifiConnectionConfig(true,300,true,30,url,false,3);}catch(IllegalArgumentException e){rejected++;}
+            for(int seconds:new int[]{0,9,86401})try{new WifiConnectionConfig(true,seconds,false,30,WifiConnectionConfig.DEFAULT_URL,false,3);}catch(IllegalArgumentException e){rejected++;}
             check(rejected==7,"validation");
         });
         test("short probe retry intervals are valid",()->{
             for(int interval:new int[]{1,5,10,3600}) {
-                WifiConnectionConfig config=new WifiConnectionConfig(false,300,true,interval,WifiConnectionConfig.DEFAULT_URL);
+                WifiConnectionConfig config=new WifiConnectionConfig(false,300,true,interval,WifiConnectionConfig.DEFAULT_URL,false,3);
                 check(config.probeInterval==interval,"changed interval");
             }
             for(int interval:new int[]{0,3601}) {
                 try {
-                    new WifiConnectionConfig(false,300,true,interval,WifiConnectionConfig.DEFAULT_URL);
+                    new WifiConnectionConfig(false,300,true,interval,WifiConnectionConfig.DEFAULT_URL,false,3);
                     throw new AssertionError("invalid interval accepted");
                 } catch(IllegalArgumentException expected) { }
             }
@@ -64,7 +64,7 @@ public final class WifiConnectionTest {
             WifiProbePolicy p=new WifiProbePolicy();p.connection("n","s");p.begin();p.result("n","s",true);p.connection("n","s");check(!p.begin(),"same restarted");p.connection("n2","s");check(p.begin(),"new not reset");
         });
         test("unrelated avoid duration change does not restart probe",()->{
-            WifiConnectionConfig a=WifiConnectionConfig.defaults(),b=new WifiConnectionConfig(true,600,false,30,a.probeUrl);check(a.sameProbe(b)&&!a.equals(b),"settings scope");
+            WifiConnectionConfig a=WifiConnectionConfig.defaults(),b=new WifiConnectionConfig(true,600,false,30,a.probeUrl,false,3);check(a.sameProbe(b)&&!a.equals(b),"settings scope");
         });
         test("all saved configs for same SSID held, other SSIDs untouched",()->{
             Fake f=new Fake();f.add(1,"campus",true);f.add(2,"campus",true);f.add(3,"home",true);f.guard.block("campus",300);

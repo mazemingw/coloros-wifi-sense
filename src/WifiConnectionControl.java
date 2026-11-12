@@ -18,11 +18,14 @@ public final class WifiConnectionControl {
     }
     private static WifiConnectionConfig parse(JSONObject j)throws Exception {
         return new WifiConnectionConfig(j.getBoolean("avoid_enabled"),j.getInt("avoid_seconds"),
-            j.getBoolean("probe_enabled"),j.getInt("probe_interval"),j.getString("probe_url"));
+            j.getBoolean("probe_enabled"),j.getInt("probe_interval"),j.getString("probe_url"),
+            j.has("screen_off_enabled") && j.getBoolean("screen_off_enabled"),
+            j.has("recovery_db") ? j.getInt("recovery_db") : WifiDisconnectPolicy.DEFAULT_RECOVERY_DB);
     }
     static JSONObject json(WifiConnectionConfig c)throws Exception {
         return new JSONObject().put("avoid_enabled",c.avoidEnabled).put("avoid_seconds",c.avoidSeconds)
-            .put("probe_enabled",c.probeEnabled).put("probe_interval",c.probeInterval).put("probe_url",c.probeUrl);
+            .put("probe_enabled",c.probeEnabled).put("probe_interval",c.probeInterval).put("probe_url",c.probeUrl)
+            .put("screen_off_enabled",c.screenOffEnabled).put("recovery_db",c.recoveryDb);
     }
     private static String read(File file,int max)throws IOException {
         if(!file.isFile()||file.length()>max)throw new IOException("配置/还原文件无效或过大："+file.getName());
@@ -117,6 +120,10 @@ public final class WifiConnectionControl {
                 JSONObject j=new JSONObject(new String(Base64.decode(args[2],Base64.DEFAULT),"UTF-8"));
                 saveSettings(dir,action,j);
                 System.out.println("设置已保存。");
+            } else if ("screenoff".equals(action) && args.length == 3 && args[2].matches("[01]")) {
+                saveSettings(dir,action,new JSONObject().put("screen_off_enabled","1".equals(args[2])));
+            } else if ("recovery".equals(action) && args.length == 3 && args[2].matches("[1-9]|10")) {
+                saveSettings(dir,action,new JSONObject().put("recovery_db",Integer.parseInt(args[2])));
             } else if("restore".equals(action)&&args.length==2) {
                 restoreIfNeeded(dir);System.out.println("模块记录的自动连接设置已还原。");
             } else if("status".equals(action)&&args.length==2) {
@@ -131,21 +138,22 @@ public final class WifiConnectionControl {
         try (RandomAccessFile file = new RandomAccessFile(lockFile,"rw"); FileLock lock = file.getChannel().lock()) {
             Os.chmod(lockFile.getAbsolutePath(),0600);
             WifiConnectionConfig next;
+            boolean changesAvoid = "configure".equals(action) || "avoid".equals(action);
             if ("configure".equals(action)) {
                 next = parse(values);
             } else {
-                WifiConnectionConfig saved = load(dir);
-                if ("probe".equals(action)) {
-                    next = new WifiConnectionConfig(saved.avoidEnabled,saved.avoidSeconds,
-                        values.getBoolean("probe_enabled"),values.getInt("probe_interval"),values.getString("probe_url"));
-                } else {
-                    next = new WifiConnectionConfig(values.getBoolean("avoid_enabled"),values.getInt("avoid_seconds"),
-                        saved.probeEnabled,saved.probeInterval,saved.probeUrl);
+                JSONObject saved = json(load(dir));
+                for (Iterator<String> keys = values.keys(); keys.hasNext();) {
+                    String key = keys.next();
+                    if ("probe".equals(action) && !key.startsWith("probe_")) continue;
+                    if ("avoid".equals(action) && !key.startsWith("avoid_")) continue;
+                    saved.put(key,values.get(key));
                 }
+                next = parse(saved);
             }
-            if (!"probe".equals(action) && next.avoidEnabled) new Autojoin(dir);
+            if (changesAvoid && next.avoidEnabled) new Autojoin(dir);
             atomic(new File(dir,"connection.json"),json(next).toString());
-            if (!"probe".equals(action) && !next.avoidEnabled) {
+            if (changesAvoid && !next.avoidEnabled) {
                 try { restoreIfNeeded(dir); }
                 catch (Exception error) { throw new IOException("设置已保存，自动连接还原失败："+message(error)); }
             }

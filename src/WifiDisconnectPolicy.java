@@ -4,6 +4,8 @@ import java.util.Objects;
 final class WifiDisconnectPolicy {
     static final long COUNTDOWN_MS = 7_000;
     static final long COOLDOWN_MS = 60_000;
+    static final int DEFAULT_RECOVERY_DB = 3;
+    static final int MAX_RECOVERY_DB = 10;
     enum Decision { NONE, WARN, WAIT, CANCEL, DISCONNECT }
 
     private String bssid;
@@ -11,6 +13,7 @@ final class WifiDisconnectPolicy {
     private long deadline;
     private long nextDisconnectAt;
     private long countdownMs = COUNTDOWN_MS;
+    private int recoveryDb = DEFAULT_RECOVERY_DB;
 
     void countdown(long millis) {
         if (millis < 1_000 || millis > 300_000) throw new IllegalArgumentException("Countdown must be 1..300 seconds");
@@ -18,13 +21,19 @@ final class WifiDisconnectPolicy {
     }
     long countdownMs() { return countdownMs; }
 
+    void recoveryDb(int value) { recoveryDb = value; }
+    int recoveryDb() { return recoveryDb; }
+    boolean recovered(int rssi, int currentThreshold) { return rssi >= currentThreshold + recoveryDb; }
+
     Decision sample(String currentBssid, int rssi, int currentThreshold, long now) {
         boolean wasPending = pending();
-        if (currentBssid == null || rssi > currentThreshold || now < nextDisconnectAt) {
+        boolean sameSession = wasPending && Objects.equals(bssid, currentBssid) && threshold == currentThreshold;
+        boolean strongEnough = sameSession ? recovered(rssi, currentThreshold) : rssi > currentThreshold;
+        if (currentBssid == null || strongEnough || now < nextDisconnectAt) {
             clear();
             return wasPending ? Decision.CANCEL : Decision.NONE;
         }
-        if (!pending() || !Objects.equals(bssid, currentBssid) || threshold != currentThreshold) {
+        if (!sameSession) {
             bssid = currentBssid;
             threshold = currentThreshold;
             deadline = now + countdownMs;
@@ -42,7 +51,7 @@ final class WifiDisconnectPolicy {
 
     boolean eligible(String currentBssid, int rssi, int currentThreshold, long now, boolean immediate) {
         return pending() && Objects.equals(bssid, currentBssid) && threshold == currentThreshold
-            && rssi <= currentThreshold && now >= nextDisconnectAt && (immediate || now >= deadline);
+            && !recovered(rssi, currentThreshold) && now >= nextDisconnectAt && (immediate || now >= deadline);
     }
 
     void commit(long now) {

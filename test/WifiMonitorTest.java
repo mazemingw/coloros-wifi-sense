@@ -4,7 +4,7 @@ public final class WifiMonitorTest {
     static int passed;
     static class Fake implements WifiMonitor.Port {
         long time, generation;
-        boolean on=true, wifi=true, valid=true, ui=true;
+        boolean on=true, wifi=true, valid=true, ui=true, screenOffEnabled;
         String ap="ap-a"; Object network="net-a";
         int rssi=-60, attempts, starts, stops, results;
         boolean feedback, resultVisible;
@@ -13,7 +13,7 @@ public final class WifiMonitorTest {
         final Map<Runnable,Long> tasks=new HashMap<>();
         final WifiMonitor monitor=new WifiMonitor(this);
         public long now(){return time;} public long epoch(){return generation;}
-        public boolean interactive(){return on;} public boolean singleWifi(){return wifi;}
+        public boolean monitoringAllowed(){return on||screenOffEnabled;} public boolean singleWifi(){return wifi;}
         public WifiMonitor.Snapshot readWifi(){
             WifiMonitor.Snapshot s=valid&&wifi?new WifiMonitor.Snapshot(network,ap,rssi):null;
             if(duringRead!=null){Runnable r=duringRead;duringRead=null;r.run();}
@@ -21,18 +21,18 @@ public final class WifiMonitorTest {
         }
         public WifiMonitor.Attempt disconnect(WifiMonitor.Snapshot s,long e){
             if(beforeAttempt!=null){Runnable r=beforeAttempt;beforeAttempt=null;r.run();}
-            if(!on)return WifiMonitor.Attempt.ASLEEP;
+            if(!monitoringAllowed())return WifiMonitor.Attempt.ASLEEP;
             if(e!=generation||!wifi)return WifiMonitor.Attempt.STALE;
             attempts++; resultVisible=false;
             return reply;
         }
         public void schedule(Runnable r,long delay){tasks.put(r,time+delay);}
         public void cancel(Runnable r){tasks.remove(r);}
-        public void warn(WifiMonitor.Snapshot s,int t,long deadline){if(ui){starts++;feedback=true;resultVisible=false;}}
+        public void warn(WifiMonitor.Snapshot s,int t,long deadline){if(ui&&on){starts++;feedback=true;resultVisible=false;}}
         public void cancelWarning(){if(!resultVisible)clearFeedback();}
         public void clearFeedback(){if(feedback)stops++;feedback=false;resultVisible=false;}
-        public void result(String reason){if(ui){results++;feedback=true;resultVisible=true;}}
-        void start(){monitor.screen(on);advance(0);}
+        public void result(String reason){if(ui&&on){results++;feedback=true;resultVisible=true;}}
+        void start(){monitor.screen(on,screenOffEnabled);advance(0);}
         void advance(long target){
             int limit=100000;
             while(true){
@@ -43,7 +43,7 @@ public final class WifiMonitorTest {
                 time=due;tasks.remove(next);next.run();
             }time=target;
         }
-        void screen(boolean value){on=value;generation++;monitor.screen(value);}
+        void screen(boolean value){on=value;generation++;monitor.screen(value,screenOffEnabled);}
         void topology(boolean connected){wifi=connected;generation++;monitor.network(connected?null:network,true);}
         void event(){generation++;monitor.rssiEvent();}
     }
@@ -66,6 +66,36 @@ public final class WifiMonitorTest {
         test("recover during countdown",()->{
             Fake f=new Fake();f.rssi=-90;f.start();f.advance(3000);f.rssi=-60;f.event();f.advance(20000);
             check(f.attempts==0&&f.monitor.metrics.countdownCancels==1&&!f.feedback,"recovery");
+        });
+        test("small RSSI changes neither blink the warning nor stall disconnect",()->{
+            Fake f=new Fake();f.rssi=-80;f.start();
+            f.rssi=-79;f.advance(2000);
+            f.rssi=-80;f.advance(4000);
+            f.rssi=-78;f.advance(7000);
+            check(f.starts==1&&f.monitor.metrics.countdownCancels==0&&f.attempts==1,"edge jitter");
+        });
+        test("adjustable recovery margin cancels at the new boundary",()->{
+            Fake f=new Fake();f.monitor.recoveryDb(5);f.rssi=-80;f.start();
+            f.rssi=-76;f.advance(1000);check(f.monitor.deadline()==7000,"cancelled before recovery");
+            f.rssi=-75;f.advance(2000);check(f.monitor.deadline()==0&&!f.feedback,"recovery boundary");
+            f.rssi=-79;f.advance(10000);check(f.starts==1&&f.attempts==0,"restarted above start threshold");
+        });
+        test("opted-in countdown survives screen off without fluid feedback",()->{
+            Fake f=new Fake();f.screenOffEnabled=true;f.rssi=-90;f.start();f.advance(2000);
+            f.screen(false);check(!f.feedback&&f.monitor.deadline()==7000,"off did not hide warning or reset timer");
+            f.advance(7000);check(f.attempts==1&&f.starts==1,"off cutoff");
+        });
+        test("enabling while off starts monitoring and disabling cancels it",()->{
+            Fake f=new Fake();f.on=false;f.rssi=-90;f.start();
+            f.screenOffEnabled=true;f.monitor.updateMonitoring();f.advance(1000);
+            check(f.monitor.state()==WifiMonitor.State.VERIFY&&f.starts==0,"no off verification");
+            f.screenOffEnabled=false;f.monitor.updateMonitoring();f.advance(20000);
+            check(f.monitor.state()==WifiMonitor.State.PAUSED&&f.attempts==0&&f.tasks.isEmpty(),"opt-out");
+        });
+        test("wake restores a warning with the original deadline",()->{
+            Fake f=new Fake();f.screenOffEnabled=true;f.rssi=-90;f.start();
+            f.advance(2000);f.screen(false);f.advance(3000);f.screen(true);
+            check(f.feedback&&f.monitor.deadline()==7000&&f.starts==2,"wake replaced countdown");
         });
         test("screen off cancels countdown, UI and every task",()->{
             Fake f=new Fake();f.rssi=-90;f.start();f.advance(3000);f.screen(false);
