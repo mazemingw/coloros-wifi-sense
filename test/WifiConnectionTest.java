@@ -42,6 +42,16 @@ public final class WifiConnectionTest {
                 } catch(IllegalArgumentException expected) { }
             }
         });
+        test("temporary pause settings validate and participate in configuration equality",()->{
+            WifiConnectionConfig original=WifiConnectionConfig.defaults();
+            check(original.weakPauseMinutes==30&&original.weakPauseUntil==0,"pause default");
+            WifiConnectionConfig paused=new WifiConnectionConfig(false,300,false,30,original.probeUrl,false,3,60,1234567890000L);
+            check(!paused.equals(original)&&paused.sameProbe(original),"pause is ignored or changes probe");
+            for(int minutes:new int[]{0,1441})try {
+                new WifiConnectionConfig(false,300,false,30,original.probeUrl,false,3,minutes,0);
+                throw new AssertionError("invalid pause accepted");
+            }catch(IllegalArgumentException expected){}
+        });
         test("one successful request ends connection batch forever",()->{
             WifiProbePolicy p=new WifiProbePolicy();p.connection("net","ssid");check(p.begin(),"start");check(!p.result("net","ssid",true),"success cut");
             for(int i=0;i<100;i++)check(!p.begin(),"success restarted");

@@ -239,6 +239,52 @@ public final class WifiMonitorTest {
             Fake f=new Fake();f.start();f.monitor.offlineConfirmed(f.monitor.last(),f.generation);f.topology(false);
             check(f.results==1&&f.resultVisible,"offline notification");
         });
+        test("temporary weak pause cancels the card and avoids RSSI polling",()->{
+            Fake f=new Fake();f.rssi=-90;f.start();f.advance(2000);
+            f.monitor.weakPauseUntil(62000);f.advance(2000);
+            long reads=f.monitor.metrics.rssiReads;
+            check(f.monitor.deadline()==0&&!f.feedback&&!f.monitor.immediate(),"pause did not cancel verification");
+            for(int t=3000;t<62000;t+=1000){f.advance(t);f.event();f.monitor.refresh();}
+            f.advance(61999);
+            check(f.monitor.metrics.rssiReads==reads&&f.attempts==0&&f.starts==1,"paused RSSI work");
+            f.advance(62000);
+            check(f.monitor.deadline()==69000&&f.starts==2,"expiry did not start fresh verification");
+            f.advance(69000);check(f.attempts==1,"expiry did not restore disconnect");
+        });
+        test("early resume starts a full new countdown",()->{
+            Fake f=new Fake();f.rssi=-90;f.start();f.advance(6000);
+            f.monitor.weakPauseUntil(66000);f.advance(10000);
+            f.monitor.weakPauseUntil(0);f.advance(10000);
+            check(f.monitor.deadline()==17000&&f.attempts==0,"old deadline resumed");
+            f.advance(17000);check(f.attempts==1,"early resume did not work");
+        });
+        test("extending the pause replaces its original expiry",()->{
+            Fake f=new Fake();f.rssi=-90;f.monitor.weakPauseUntil(10000);f.start();
+            f.advance(9000);f.monitor.weakPauseUntil(20000);f.advance(19999);
+            check(f.attempts==0&&f.starts==0,"old expiry escaped");
+            f.advance(20000);check(f.monitor.deadline()==27000,"new expiry missed");
+        });
+        test("pause restored at startup expires without WebUI refresh",()->{
+            Fake f=new Fake();f.rssi=-90;f.monitor.weakPauseUntil(60000);f.start();
+            f.advance(59999);check(f.starts==0&&f.monitor.metrics.rssiReads==0,"startup pause ignored");
+            f.advance(67000);check(f.attempts==1,"startup auto-resume");
+        });
+        test("pause expiration while screen off rechecks on wake",()->{
+            Fake f=new Fake();f.rssi=-90;f.monitor.weakPauseUntil(10000);f.start();
+            f.screen(false);f.advance(30000);check(f.attempts==0,"screen-off cut");
+            f.screen(true);f.advance(30000);check(f.monitor.deadline()==37000,"wake did not resume with fresh countdown");
+        });
+        test("pause does not stop offline verification",()->{
+            Fake f=new Fake();f.start();WifiMonitor.Snapshot expected=f.monitor.last();
+            f.monitor.weakPauseUntil(60000);f.advance(0);
+            check(f.monitor.offlineConfirmed(expected,f.generation)&&f.attempts==1,"offline detection was paused");
+            check("offline".equals(f.monitor.metrics.lastDisconnect),"offline reason");
+        });
+        test("pause racing final RSSI read prevents disconnect",()->{
+            Fake f=new Fake();f.rssi=-90;f.start();f.advance(6000);
+            f.duringRead=()->f.monitor.weakPauseUntil(60000);
+            f.advance(7000);check(f.attempts==0&&f.monitor.cooldownUntil()==0&&!f.feedback,"pause race");
+        });
         System.out.println("TOTAL "+passed+" monitor scenarios passed");
     }
 }

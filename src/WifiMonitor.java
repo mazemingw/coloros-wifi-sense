@@ -5,7 +5,7 @@ final class WifiMonitor {
     static final long FALLBACK_MS = 7_000;
     static final long VERIFY_MS = 1_000;
     static final long EVENT_DEBOUNCE_MS = 250;
-    enum State { PAUSED, NO_WIFI, IDLE, SUSPECT, VERIFY, COOLDOWN, CONFIG_ERROR, STOPPED }
+    enum State { PAUSED, WEAK_PAUSED, NO_WIFI, IDLE, SUSPECT, VERIFY, COOLDOWN, CONFIG_ERROR, STOPPED }
     enum Attempt { ACCEPTED, REJECTED, STALE, ASLEEP }
     static final class Snapshot {
         final Object network;
@@ -55,6 +55,7 @@ final class WifiMonitor {
     private State state = State.PAUSED;
     private boolean active, stopped, scheduled, eventSample, observeConnection, forceRead, configured = true;
     private long dueAt, lastReadAt = Long.MIN_VALUE;
+    private long weakPauseUntil;
     private int threshold = -80;
     private Snapshot last, requested;
     private String requestedReason, lastDisconnectedBssid;
@@ -67,6 +68,17 @@ final class WifiMonitor {
     long deadline() { return policy.deadline(); }
     long cooldownUntil() { return policy.cooldownUntil(); }
     boolean hasSampleTask() { return scheduled; }
+    boolean weakPaused() { return weakPauseUntil > port.now(); }
+
+    void weakPauseUntil(long until) {
+        if (weakPauseUntil == until) return;
+        weakPauseUntil = until;
+        cancelPending("temporary pause");
+        unschedule();
+        lastReadAt = Long.MIN_VALUE;
+        forceRead = true;
+        if (active && !stopped && configured) request(0,true);
+    }
 
     void screen(boolean on, boolean keepMonitoring) {
         metrics.screenEvents++;
@@ -116,6 +128,7 @@ final class WifiMonitor {
             state = State.NO_WIFI;
             return;
         }
+        if (weakPaused()) { next(); return; }
         event("network");
     }
 
@@ -158,6 +171,7 @@ final class WifiMonitor {
 
     private void event(String kind) {
         if (stopped || !active || !configured || !port.singleWifi()) return;
+        if (weakPaused()) return;
         if (policy.coolingDown(port.now()) && !observeConnection) return;
         if (!policy.pending()) state = State.SUSPECT;
         long earliest = lastReadAt == Long.MIN_VALUE ? 0 : Math.max(0, lastReadAt + VERIFY_MS - port.now());
@@ -193,6 +207,8 @@ final class WifiMonitor {
         if (!active || !port.monitoringAllowed()) {
             metrics.lateTasksSuppressed++; pause(); return;
         }
+        if (weakPaused()) { next(); return; }
+        weakPauseUntil = 0;
         metrics.scheduledRuns++;
         if (periodic) metrics.periodicRuns++;
         if (!port.singleWifi()) {
@@ -204,6 +220,7 @@ final class WifiMonitor {
             Snapshot info = read();
             forceRead = false;
             if (!port.monitoringAllowed()) { pause(); return; }
+            if (weakPaused()) { next(); return; }
             if (generation != port.epoch()) {
                 metrics.staleSuppressed++; request(VERIFY_MS, true); return;
             }
@@ -234,11 +251,12 @@ final class WifiMonitor {
     }
 
     boolean immediate() {
-        if (stopped || !active || !configured || !policy.pending()) return false;
+        if (stopped || !active || !configured || weakPaused() || !policy.pending()) return false;
         return attempt(true, port.epoch());
     }
 
     private boolean attempt(boolean manual, long generation) {
+        if (weakPaused()) return false;
         if (!active || !port.monitoringAllowed()) { pause(); return false; }
         if (!port.singleWifi() || generation != port.epoch()) {
             metrics.staleSuppressed++; return false;
@@ -246,6 +264,7 @@ final class WifiMonitor {
         try {
             Snapshot fresh = read();  // Re-read; broadcast extras and old samples are never an authorization.
             if (!port.monitoringAllowed()) { pause(); return false; }
+            if (weakPaused()) return false;
             if (generation != port.epoch()) { metrics.staleSuppressed++; return false; }
             if (fresh == null || last == null || !Objects.equals(last.network, fresh.network)
                     || !policy.eligible(fresh.bssid, fresh.rssi, threshold, port.now(), manual)) {
@@ -301,7 +320,10 @@ final class WifiMonitor {
     private void next() {
         if (!active || stopped || !configured) return;
         if (!port.singleWifi()) { unschedule(); state = State.NO_WIFI; return; }
-        if (policy.coolingDown(port.now())) {
+        if (weakPaused()) {
+            state = State.WEAK_PAUSED;
+            request(weakPauseUntil - port.now(),false);
+        } else if (policy.coolingDown(port.now())) {
             state = State.COOLDOWN;
             request(Math.max(1, policy.cooldownUntil() - port.now()), false);
         } else if (policy.pending()) {

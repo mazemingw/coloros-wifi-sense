@@ -20,6 +20,9 @@ input[type=url]{display:block;width:100%;min-height:42px;margin:10px 0 16px;bord
 .setting-row .hint{margin-top:4px}
 .input-actions{gap:8px}
 .input-actions .seconds{width:60px}
+.pause-actions{margin-top:16px}
+.pause-actions .primary{flex:1;width:auto;margin-top:0}
+label[for=weak-pause-minutes]{font-size:13px}
 
 @media (prefers-color-scheme: dark) {
   :root {

@@ -3,6 +3,19 @@
 MODDIR=${0%/*}
 STATE_DIR=/data/adb/coloros_wifi_sense
 case "$1" in
+    weakpause|weakresume)
+        case "$1:$#" in
+            weakpause:2)
+                case "$2" in ''|*[!0-9]*) exit 1 ;; esac
+                [ "${#2}" -le 4 ] && [ "$2" -ge 1 ] && [ "$2" -le 1440 ] || exit 1 ;;
+            weakresume:1) ;;
+            *) exit 1 ;;
+        esac
+        export CLASSPATH="$MODDIR/wifi-sense.dex"
+        if [ "$1" = weakpause ]; then
+            exec /system/bin/app_process /system/bin WifiConnectionControl "$STATE_DIR" weakpause "$2"
+        fi
+        exec /system/bin/app_process /system/bin WifiConnectionControl "$STATE_DIR" weakresume ;;
     screenoff|recovery)
         case "$1:$#:${2-}" in
             screenoff:2:0|screenoff:2:1|recovery:2:[1-9]|recovery:2:10) ;;

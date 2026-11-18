@@ -20,12 +20,15 @@ public final class WifiConnectionControl {
         return new WifiConnectionConfig(j.getBoolean("avoid_enabled"),j.getInt("avoid_seconds"),
             j.getBoolean("probe_enabled"),j.getInt("probe_interval"),j.getString("probe_url"),
             j.has("screen_off_enabled") && j.getBoolean("screen_off_enabled"),
-            j.has("recovery_db") ? j.getInt("recovery_db") : WifiDisconnectPolicy.DEFAULT_RECOVERY_DB);
+            j.has("recovery_db") ? j.getInt("recovery_db") : WifiDisconnectPolicy.DEFAULT_RECOVERY_DB,
+            j.has("weak_pause_minutes") ? j.getInt("weak_pause_minutes") : 30,
+            j.has("weak_pause_until") ? j.getLong("weak_pause_until") : 0);
     }
     static JSONObject json(WifiConnectionConfig c)throws Exception {
         return new JSONObject().put("avoid_enabled",c.avoidEnabled).put("avoid_seconds",c.avoidSeconds)
             .put("probe_enabled",c.probeEnabled).put("probe_interval",c.probeInterval).put("probe_url",c.probeUrl)
-            .put("screen_off_enabled",c.screenOffEnabled).put("recovery_db",c.recoveryDb);
+            .put("screen_off_enabled",c.screenOffEnabled).put("recovery_db",c.recoveryDb)
+            .put("weak_pause_minutes",c.weakPauseMinutes).put("weak_pause_until",c.weakPauseUntil);
     }
     private static String read(File file,int max)throws IOException {
         if(!file.isFile()||file.length()>max)throw new IOException("配置/还原文件无效或过大："+file.getName());
@@ -124,6 +127,14 @@ public final class WifiConnectionControl {
                 saveSettings(dir,action,new JSONObject().put("screen_off_enabled","1".equals(args[2])));
             } else if ("recovery".equals(action) && args.length == 3 && args[2].matches("[1-9]|10")) {
                 saveSettings(dir,action,new JSONObject().put("recovery_db",Integer.parseInt(args[2])));
+            } else if ("weakpause".equals(action) && args.length == 3 && args[2].matches("[1-9][0-9]{0,3}")) {
+                int minutes = Integer.parseInt(args[2]);
+                if (minutes > 1440) throw new IllegalArgumentException("暂停时长须为 1–1440 分钟。");
+                saveSettings(dir,action,new JSONObject().put("weak_pause_minutes",minutes));
+                System.out.println("弱信号断开已暂停。");
+            } else if ("weakresume".equals(action) && args.length == 2) {
+                saveSettings(dir,action,new JSONObject().put("weak_pause_until",0));
+                System.out.println("弱信号断开已恢复。");
             } else if("restore".equals(action)&&args.length==2) {
                 restoreIfNeeded(dir);System.out.println("模块记录的自动连接设置已还原。");
             } else if("status".equals(action)&&args.length==2) {
@@ -143,6 +154,9 @@ public final class WifiConnectionControl {
                 next = parse(values);
             } else {
                 JSONObject saved = json(load(dir));
+                if ("weakpause".equals(action)) {
+                    values.put("weak_pause_until",System.currentTimeMillis()+values.getInt("weak_pause_minutes")*60_000L);
+                }
                 for (Iterator<String> keys = values.keys(); keys.hasNext();) {
                     String key = keys.next();
                     if ("probe".equals(action) && !key.startsWith("probe_")) continue;

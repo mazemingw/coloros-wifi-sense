@@ -3,7 +3,8 @@
   const path = '/data/adb/modules/coloros_wifi_sense/webctl.sh';
   const $ = id => document.getElementById(id);
   let busy = false, counter = 0, status = null, band = null, connection = null;
-  const labels = {PAUSED:'息屏暂停',NO_WIFI:'未连接 Wi-Fi',IDLE:'正常监控',SUSPECT:'检查信号',VERIFY:'弱信号验证',COOLDOWN:'断开冷却',CONFIG_ERROR:'检查阈值配置',STOPPED:'已停止'};
+  let pauseExpiryTimer;
+  const labels = {PAUSED:'息屏暂停',WEAK_PAUSED:'弱信号断开已暂停',NO_WIFI:'未连接 Wi-Fi',IDLE:'正常监控',SUSPECT:'检查信号',VERIFY:'弱信号验证',COOLDOWN:'断开冷却',CONFIG_ERROR:'检查阈值配置',STOPPED:'已停止'};
   const metrics = {
     rssi_events:'RSSI 广播',network_events:'网络事件',screen_events:'屏幕事件',rssi_reads:'RSSI 主动读取',
     periodic_runs:'周期任务',countdown_starts:'倒计时启动',countdown_cancels:'倒计时取消',
@@ -28,9 +29,29 @@
   }
   function lock(value) {
     busy = value;
-    for (const id of ['refresh','save','threshold','recovery','save-recovery','screenoff','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-avoid','save-probe','restore-autojoin']) $(id).disabled=value;
+    for (const id of ['refresh','weak-pause','weak-resume','weak-pause-minutes','save','threshold','recovery','save-recovery','screenoff','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-avoid','save-probe','restore-autojoin']) $(id).disabled=value;
     if (!value && status && !status.fluid_installed) $('fluid').disabled=true;
     if (!value && (!band || (!band.supported && !band.requested && !band.restore_pending))) $('band5g').disabled=true;
+    if (!value) $('weak-resume').disabled = !weakPauseActive();
+  }
+  function weakPauseActive() {
+    return Number(connection?.weak_pause_until ?? 0) > Date.now();
+  }
+  function renderWeakPause() {
+    clearTimeout(pauseExpiryTimer);
+    const until = Number(connection?.weak_pause_until ?? 0);
+    const active = weakPauseActive();
+    $('weak-pause-status').textContent = active
+      ? '已暂停，将于 ' + new Date(until).toLocaleString([], {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + ' 恢复。'
+      : '未暂停';
+    $('weak-pause').textContent = active ? '重新计时' : '开始暂停';
+    $('weak-resume').disabled = busy || !active;
+    if (active) {
+      pauseExpiryTimer = setTimeout(renderWeakPause, Math.min(until - Date.now() + 50, 2147483647));
+    } else if (status?.state === 'WEAK_PAUSED') {
+      $('state').textContent = '等待检测';
+      $('state-detail').textContent = '暂停已结束，正在恢复检测。';
+    }
   }
   function threshold(value) {
     const n=Number(value);
@@ -64,6 +85,7 @@
       : data.state === 'VERIFY' ? Math.ceil(data.countdown_ms/1000) + ' 秒后检查是否断开。'
       : data.state === 'COOLDOWN' ? '还需等 ' + Math.ceil(data.cooldown_ms/1000) + ' 秒才能再次断开。'
       : data.state === 'PAUSED' ? '亮屏后继续检测。'
+      : data.state === 'WEAK_PAUSED' ? '到期自动恢复。'
       : data.wifi_connections !== 1 ? '连接 Wi-Fi 后开始检测。'
       : !data.interactive && data.screen_off_enabled ? '正在息屏检测。' : '';
     const list=$('metrics'); list.replaceChildren();
@@ -80,6 +102,10 @@
   }
   async function refreshConnection(section) {
     connection=JSON.parse(await exec('connectionstatus'));
+    if (!section || section === 'weakpause') {
+      $('weak-pause-minutes').value = connection.weak_pause_minutes ?? 30;
+      renderWeakPause();
+    }
     if (!section || section === 'screenoff') $('screenoff').checked = !!connection.screen_off_enabled;
     if (!section || section === 'recovery') {
       $('recovery').value = connection.recovery_db ?? 3;
@@ -97,20 +123,20 @@
       $('connection-help').textContent=connection.probe_enabled ? status?.probe_result || '' : '';
     }
   }
-  function readSeconds(id, min, max, name) {
+  function readNumber(id, min, max, name, unit = '秒') {
     const raw = $(id).value;
     const seconds = Number(raw);
     if (!/^\d+$/.test(raw) || !Number.isInteger(seconds) || seconds < min || seconds > max) {
-      throw new Error(`${name}必须是 ${min}–${max} 秒的整数。`);
+      throw new Error(`${name}必须是 ${min}–${max} ${unit}的整数。`);
     }
     return seconds;
   }
   function connectionValues(section) {
     if (section === 'avoid') return {
       avoid_enabled: $('avoid').checked,
-      avoid_seconds: readSeconds('avoid-seconds', 10, 86400, '暂避时长')
+      avoid_seconds: readNumber('avoid-seconds', 10, 86400, '暂避时长')
     };
-    const interval = readSeconds('probe-interval', 1, 3600, '重试间隔');
+    const interval = readNumber('probe-interval', 1, 3600, '重试间隔');
     let url;
     try { url = new URL($('probe-url').value.trim()); }
     catch (error) { throw new Error('请输入有效的 HTTP/HTTPS 探测地址。'); }
@@ -161,6 +187,18 @@
     if (busy) return; $('threshold').value=b.dataset.threshold; showThreshold();
   }));
   $('refresh').addEventListener('click',() => action(refresh));
+  const pauseFeedback = (text, error) => settingFeedback('weak-pause', text, error);
+  $('weak-pause').addEventListener('click', () => action(async () => {
+    const minutes = readNumber('weak-pause-minutes', 1, 1440, '暂停时长', '分钟');
+    await exec('weakpause ' + minutes);
+    await refreshConnection('weakpause');
+    pauseFeedback('弱信号断开已暂停。');
+  }, pauseFeedback));
+  $('weak-resume').addEventListener('click', () => action(async () => {
+    await exec('weakresume');
+    await refreshConnection('weakpause');
+    pauseFeedback('弱信号断开已恢复。');
+  }, pauseFeedback));
   const screenFeedback = (text, error) => settingFeedback('screenoff', text, error);
   $('screenoff').addEventListener('change', () => action(async () => {
     const enabled = $('screenoff').checked;
@@ -171,7 +209,7 @@
   }, screenFeedback));
   const recoveryFeedback = (text, error) => settingFeedback('recovery', text, error);
   $('save-recovery').addEventListener('click', () => action(async () => {
-    const margin = readSeconds('recovery', 1, 10, '回升余量');
+    const margin = readNumber('recovery', 1, 10, '回升余量', 'dB');
     await exec('recovery ' + margin);
     await refreshConnection('recovery');
     recoveryFeedback('已保存。');

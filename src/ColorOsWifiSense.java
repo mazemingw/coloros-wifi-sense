@@ -187,6 +187,9 @@ public final class ColorOsWifiSense {
             if(disabled()||epoch.get()!=generation||stopRequested)return WifiMonitor.Attempt.STALE;
             if(!connectionConfig.equals(WifiConnectionControl.load(stateDir))||readThresholdValue()!=monitor.threshold()
                 ||readCountdownValue()*1000L!=monitor.countdownMs())return WifiMonitor.Attempt.STALE;
+            if (!"offline".equals(reason) && connectionConfig.weakPauseUntil > System.currentTimeMillis()) {
+                return WifiMonitor.Attempt.STALE;
+            }
             WifiMonitor.Snapshot fresh=readWifi();
             if (!expected.sameAp(fresh) || !fresh.valid()
                     || (!"offline".equals(reason) && monitor.signalRecovered(fresh.rssi))) return WifiMonitor.Attempt.STALE;
@@ -337,6 +340,8 @@ public final class ColorOsWifiSense {
             if(!next.sameProbe(connectionConfig)){cancelProbe();probePolicy.reset();}
             connectionConfig=next;
             monitor.recoveryDb(next.recoveryDb);
+            long pauseRemaining = Math.max(0,next.weakPauseUntil-System.currentTimeMillis());
+            monitor.weakPauseUntil(pauseRemaining > 0 ? SystemClock.elapsedRealtime()+pauseRemaining : 0);
             if(!next.avoidEnabled)restoreAutojoin(true);
         }catch(Exception e){connectionError="连接策略配置无效："+WifiConnectionControl.message(e);cancelProbe();connectionConfig=WifiConnectionConfig.defaults();restoreAutojoin(true);}
         monitor.updateMonitoring();
@@ -550,6 +555,7 @@ public final class ColorOsWifiSense {
                 .put("wifi_connections",connections.size())
                 .put("threshold",monitor.threshold()).put("fluid_enabled",fluidEnabled)
                 .put("countdown_seconds",monitor.countdownMs()/1000)
+                .put("weak_pause_until",connectionConfig.weakPauseUntil)
                 .put("fluid_installed",new File(moduleDir,"wifi-fluid.dex").isFile())
                 .put("rssi",last==null?JSONObject.NULL:last.rssi).put("sample_scheduled",monitor.hasSampleTask())
                 .put("countdown_ms",Math.max(0,monitor.deadline()-SystemClock.elapsedRealtime()))

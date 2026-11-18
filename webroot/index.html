@@ -9,6 +9,14 @@
 <body>
 <main>
   <header><h1>Wi-Fi 感知</h1></header>
+  <section class="card" aria-labelledby="weak-pause-title">
+    <h2 id="weak-pause-title">暂停弱信号断开</h2>
+    <p id="weak-pause-status" class="muted">未暂停</p>
+    <div class="row"><label for="weak-pause-minutes">暂停时长（分钟）</label><input id="weak-pause-minutes" class="seconds" type="number" min="1" max="1440" step="1" value="30" inputmode="numeric"></div>
+    <p class="hint">可设 1 分钟至 24 小时。到期自动恢复，通网检测照常运行。</p>
+    <div class="row pause-actions"><button id="weak-pause" class="primary" type="button">开始暂停</button><button id="weak-resume" class="secondary" type="button" disabled>立即恢复</button></div>
+    <p id="weak-pause-feedback" class="setting-feedback" role="status" aria-live="polite"></p>
+  </section>
   <section class="card overview" aria-labelledby="status-title">
     <div class="row"><h2 id="status-title">当前状态</h2><span id="state" class="badge">等待连接</span></div>
     <div class="signal"><strong id="rssi">—</strong><span>dBm</span></div>

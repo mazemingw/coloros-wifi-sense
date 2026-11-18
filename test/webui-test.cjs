@@ -12,9 +12,23 @@ const initial={state:'IDLE',threshold:-80,rssi:-63,interactive:true,wifi_connect
 const drain=()=>new Promise(resolve=>setImmediate(resolve));
 async function fixture(options={}){
   const elements={},buttons=[-75,-80,-85,-90].map(n=>{const e=new Element();e.dataset.threshold=String(n);return e;});
-  const ids=['message','refresh','save','threshold','fluid','threshold-value','state','rssi','fluid-help','updated','state-detail','metrics','countdown','save-countdown','threshold-help','recovery','save-recovery','recovery-help','recovery-feedback','screenoff','screenoff-feedback','band5g','band-help','avoid','avoid-seconds','probe','probe-url','probe-interval','save-probe','save-avoid','restore-autojoin','connection-help','avoid-help','probe-feedback','avoid-feedback'];
+  const ids=['weak-pause-minutes','weak-pause','weak-resume','weak-pause-status','weak-pause-feedback','message','refresh','save','threshold','fluid','threshold-value','state','rssi','fluid-help','updated','state-detail','metrics','countdown','save-countdown','threshold-help','recovery','save-recovery','recovery-help','recovery-feedback','screenoff','screenoff-feedback','band5g','band-help','avoid','avoid-seconds','probe','probe-url','probe-interval','save-probe','save-avoid','restore-autojoin','connection-help','avoid-help','probe-feedback','avoid-feedback'];
   for(const id of ids)elements[id]=new Element();elements.threshold.value='-80';
-  let data={...initial,...options.data};let band={requested:false,supported:true,applied:false,mask:7,message:'当前允许系统选择频段。',...options.band};const config={screen_off_enabled:false,recovery_db:3,avoid_enabled:false,avoid_seconds:300,probe_enabled:false,probe_interval:30,probe_url:'http://connect.rom.miui.com/generate_204'};const calls=[];let failure=null;
+  let data={...initial,...options.data};let band={requested:false,supported:true,applied:false,mask:7,message:'当前允许系统选择频段。',...options.band};const config={weak_pause_minutes:30,weak_pause_until:0,screen_off_enabled:false,recovery_db:3,avoid_enabled:false,avoid_seconds:300,probe_enabled:false,probe_interval:30,probe_url:'http://connect.rom.miui.com/generate_204',...options.config};const calls=[];let failure=null;
+  let clock=Date.now();
+  class ClockDate extends Date {static now(){return clock;}}
+  const timers=new Map();
+  function setTimer(callback,delay){
+    const timer=setTimeout(()=>{timers.delete(timer);callback();},delay);
+    timer.unref();
+    timers.set(timer,{callback,due:clock+delay});
+    return timer;
+  }
+  function clearTimer(timer){clearTimeout(timer);timers.delete(timer);}
+  function advance(milliseconds){
+    clock+=milliseconds;
+    for(const [timer,task] of [...timers])if(task.due<=clock){clearTimer(timer);task.callback();}
+  }
   const window={};
   if(!options.noBridge)window.ksu={exec:(command,opts,callback)=>{
     calls.push(command);assert.equal(opts,'{}');
@@ -23,6 +37,8 @@ async function fixture(options={}){
     queueMicrotask(()=>{
       if(failure)return window[callback](1,'',failure);
       if(['probeconfig','avoidconfig'].includes(args[0]))Object.assign(config,JSON.parse(Buffer.from(args[1],'base64').toString('utf8')));
+      if(args[0]==='weakpause'){config.weak_pause_minutes=Number(args[1]);config.weak_pause_until=clock+Number(args[1])*60000;}
+      if(args[0]==='weakresume')config.weak_pause_until=0;
       if(args[0]==='screenoff')config.screen_off_enabled=args[1]==='1';
       if(args[0]==='recovery')config.recovery_db=Number(args[1]);
       if(args[0]==='threshold'){assert.match(args[1],/^-\d+$/);data.threshold=Number(args[1]);}
@@ -32,9 +48,9 @@ async function fixture(options={}){
       window[callback](0,args[0]==='status'?JSON.stringify({...data,request:args[1]}):args[0]==='bandstatus'?JSON.stringify(band):args[0]==='connectionstatus'?JSON.stringify(config):'saved','');
     });
   }};
-  const context=vm.createContext({window,document:{getElementById:id=>elements[id],querySelectorAll:()=>buttons,createElement:()=>new Element()},setTimeout,clearTimeout,Date,console,URL,btoa:s=>Buffer.from(s,'binary').toString('base64'),unescape,encodeURIComponent});
+  const context=vm.createContext({window,document:{getElementById:id=>elements[id],querySelectorAll:()=>buttons,createElement:()=>new Element()},setTimeout:setTimer,clearTimeout:clearTimer,Date:ClockDate,console,URL,btoa:s=>Buffer.from(s,'binary').toString('base64'),unescape,encodeURIComponent});
   vm.runInContext(code,context);await drain();await drain();
-  return {elements,buttons,calls,data,band,config,fail:text=>failure=text};
+  return {elements,buttons,calls,data,band,config,advance,fail:text=>failure=text};
 }
 (async()=>{
   let passed=0;
@@ -97,5 +113,52 @@ async function fixture(options={}){
     }
   });
   await test('manual restore uses fixed command',async()=>{const f=await fixture();await f.elements['restore-autojoin'].fire('click');assert.match(f.calls[3],/restoreautojoin$/);});
+  await test('temporary pause is first and optional',async()=>{
+    const f=await fixture();
+    assert.equal(f.elements['weak-pause-minutes'].value,'30');
+    assert.equal(f.elements['weak-resume'].disabled,true);
+    const html=fs.readFileSync(require('node:path').join(__dirname,'../webroot/index.html'),'utf8');
+    assert.ok(html.indexOf('id="weak-pause-title"')<html.indexOf('id="status-title"'));
+  });
+  await test('pause duration saves and can be resumed early',async()=>{
+    const f=await fixture();
+    f.elements['weak-pause-minutes'].value='45';
+    await f.elements['weak-pause'].fire('click');
+    assert.match(f.calls[3],/weakpause 45$/);
+    assert.equal(f.config.weak_pause_minutes,45);
+    assert.equal(f.elements['weak-resume'].disabled,false);
+    assert.match(f.elements['weak-pause-status'].textContent,/已暂停/);
+    await f.elements['weak-resume'].fire('click');
+    assert.match(f.calls[5],/weakresume$/);
+    assert.equal(f.config.weak_pause_until,0);
+    assert.equal(f.elements['weak-resume'].disabled,true);
+  });
+  await test('pause expiry updates locally without root polling',async()=>{
+    const f=await fixture();
+    f.elements['weak-pause-minutes'].value='1';
+    await f.elements['weak-pause'].fire('click');
+    const count=f.calls.length;
+    f.advance(60100);
+    assert.equal(f.elements['weak-pause-status'].textContent,'未暂停');
+    assert.equal(f.elements['weak-resume'].disabled,true);
+    assert.equal(f.calls.length,count);
+  });
+  await test('invalid pause minutes never reach root',async()=>{
+    for(const value of ['0','1441','1.5','1;id','']){
+      const f=await fixture();
+      f.elements['weak-pause-minutes'].value=value;
+      await f.elements['weak-pause'].fire('click');
+      assert.equal(f.calls.length,3);
+      assert.match(f.elements['weak-pause-feedback'].textContent,/分钟/);
+      assert.ok(f.elements['weak-pause-feedback'].classes.has('error'));
+    }
+  });
+  await test('failed pause request is visible beside its controls',async()=>{
+    const f=await fixture();
+    f.fail('暂停未保存');
+    await f.elements['weak-pause'].fire('click');
+    assert.equal(f.elements['weak-pause-feedback'].textContent,'暂停未保存');
+    assert.equal(f.elements['weak-resume'].disabled,true);
+  });
   console.log('TOTAL '+passed+' WebUI tests passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});
