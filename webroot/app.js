@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   let busy = false, counter = 0, status = null, band = null, connection = null;
   let pauseExpiryTimer;
-  const labels = {PAUSED:'息屏暂停',WEAK_PAUSED:'弱信号断开已暂停',NO_WIFI:'未连接 Wi-Fi',IDLE:'正常监控',SUSPECT:'检查信号',VERIFY:'弱信号验证',COOLDOWN:'断开冷却',CONFIG_ERROR:'检查阈值配置',STOPPED:'已停止'};
+  const labels = {PAUSED:'息屏暂停',WEAK_PAUSED:'已暂停',NO_WIFI:'未连接 Wi-Fi',IDLE:'正常监控',SUSPECT:'检查信号',VERIFY:'弱信号验证',COOLDOWN:'断开冷却',CONFIG_ERROR:'检查阈值配置',STOPPED:'已停止'};
   const metrics = {
     rssi_events:'RSSI 广播',network_events:'网络事件',screen_events:'屏幕事件',rssi_reads:'RSSI 主动读取',
     periodic_runs:'周期任务',countdown_starts:'倒计时启动',countdown_cancels:'倒计时取消',
@@ -192,12 +192,12 @@
     const minutes = readNumber('weak-pause-minutes', 1, 1440, '暂停时长', '分钟');
     await exec('weakpause ' + minutes);
     await refreshConnection('weakpause');
-    pauseFeedback('弱信号断开已暂停。');
+    pauseFeedback('已暂停。');
   }, pauseFeedback));
   $('weak-resume').addEventListener('click', () => action(async () => {
     await exec('weakresume');
     await refreshConnection('weakpause');
-    pauseFeedback('弱信号断开已恢复。');
+    pauseFeedback('已恢复。');
   }, pauseFeedback));
   const screenFeedback = (text, error) => settingFeedback('screenoff', text, error);
   $('screenoff').addEventListener('change', () => action(async () => {

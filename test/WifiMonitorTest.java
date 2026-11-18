@@ -6,7 +6,7 @@ public final class WifiMonitorTest {
         long time, generation;
         boolean on=true, wifi=true, valid=true, ui=true, screenOffEnabled;
         String ap="ap-a"; Object network="net-a";
-        int rssi=-60, attempts, starts, stops, results;
+        int rssi=-60, attempts, starts, stops, results, pauseExpirations;
         boolean feedback, resultVisible;
         Runnable duringRead, beforeAttempt;
         WifiMonitor.Attempt reply=WifiMonitor.Attempt.ACCEPTED;
@@ -32,6 +32,7 @@ public final class WifiMonitorTest {
         public void cancelWarning(){if(!resultVisible)clearFeedback();}
         public void clearFeedback(){if(feedback)stops++;feedback=false;resultVisible=false;}
         public void result(String reason){if(ui&&on){results++;feedback=true;resultVisible=true;}}
+        public void pauseExpired(){pauseExpirations++;}
         void start(){monitor.screen(on,screenOffEnabled);advance(0);}
         void advance(long target){
             int limit=100000;
@@ -274,11 +275,23 @@ public final class WifiMonitorTest {
             f.screen(false);f.advance(30000);check(f.attempts==0,"screen-off cut");
             f.screen(true);f.advance(30000);check(f.monitor.deadline()==37000,"wake did not resume with fresh countdown");
         });
-        test("pause does not stop offline verification",()->{
+        test("pause blocks offline verification until early resume",()->{
             Fake f=new Fake();f.start();WifiMonitor.Snapshot expected=f.monitor.last();
             f.monitor.weakPauseUntil(60000);f.advance(0);
-            check(f.monitor.offlineConfirmed(expected,f.generation)&&f.attempts==1,"offline detection was paused");
-            check("offline".equals(f.monitor.metrics.lastDisconnect),"offline reason");
+            check(!f.monitor.offlineConfirmed(expected,f.generation)&&f.attempts==0,"paused offline cut");
+            f.monitor.weakPauseUntil(0);f.advance(0);
+            check(f.monitor.offlineConfirmed(expected,f.generation)&&f.attempts==1,"offline did not resume");
+        });
+        test("automatic pause expiry notifies the probe scheduler once",()->{
+            Fake f=new Fake();f.monitor.weakPauseUntil(10000);f.start();
+            f.advance(9999);check(f.pauseExpirations==0,"early expiry");
+            f.advance(30000);check(f.pauseExpirations==1,"probe resume notification");
+        });
+        test("network event after sleep replaces an overdue uptime task",()->{
+            Fake f=new Fake();f.monitor.weakPauseUntil(10000);f.start();
+            f.time=20000;f.tasks.replaceAll((task,due)->due+20000);
+            f.event();f.advance(21000);
+            check(f.pauseExpirations==1,"expiry stalled after CPU resumed");
         });
         test("pause racing final RSSI read prevents disconnect",()->{
             Fake f=new Fake();f.rssi=-90;f.start();f.advance(6000);

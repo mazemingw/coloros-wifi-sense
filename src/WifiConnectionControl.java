@@ -131,10 +131,10 @@ public final class WifiConnectionControl {
                 int minutes = Integer.parseInt(args[2]);
                 if (minutes > 1440) throw new IllegalArgumentException("暂停时长须为 1–1440 分钟。");
                 saveSettings(dir,action,new JSONObject().put("weak_pause_minutes",minutes));
-                System.out.println("弱信号断开已暂停。");
+                System.out.println("自动断开已暂停。");
             } else if ("weakresume".equals(action) && args.length == 2) {
-                saveSettings(dir,action,new JSONObject().put("weak_pause_until",0));
-                System.out.println("弱信号断开已恢复。");
+                resumeDetection(dir);
+                System.out.println("自动断开已恢复。");
             } else if("restore".equals(action)&&args.length==2) {
                 restoreIfNeeded(dir);System.out.println("模块记录的自动连接设置已还原。");
             } else if("status".equals(action)&&args.length==2) {
@@ -143,6 +143,9 @@ public final class WifiConnectionControl {
                 System.out.println(j);
             } else throw new IllegalArgumentException("Unknown action");
         } catch(Exception e){System.err.println(message(e));System.exit(1);}
+    }
+    static void resumeDetection(File dir)throws Exception {
+        saveSettings(dir,"weakresume",new JSONObject().put("weak_pause_until",0));
     }
     private static void saveSettings(File dir,String action,JSONObject values)throws Exception {
         File lockFile = new File(dir,"connection.lock");

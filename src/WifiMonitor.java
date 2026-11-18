@@ -40,6 +40,7 @@ final class WifiMonitor {
         void cancelWarning();
         void clearFeedback();
         void result(String reason);
+        default void pauseExpired() { }
     }
     static final class Metrics {
         long rssiEvents, networkEvents, screenEvents, rssiReads, scheduledRuns, periodicRuns;
@@ -181,7 +182,7 @@ final class WifiMonitor {
     private void request(long delay, boolean event) {
         if (!active || stopped) return;
         long target = port.now() + Math.max(0, delay);
-        if (scheduled && dueAt <= target) return;
+        if (scheduled && dueAt > port.now() && dueAt <= target) return;
         unschedule();
         scheduled = true; dueAt = target; eventSample = event;
         port.schedule(sampleTask, Math.max(0, target - port.now()));
@@ -208,7 +209,10 @@ final class WifiMonitor {
             metrics.lateTasksSuppressed++; pause(); return;
         }
         if (weakPaused()) { next(); return; }
-        weakPauseUntil = 0;
+        if (weakPauseUntil != 0) {
+            weakPauseUntil = 0;
+            port.pauseExpired();
+        }
         metrics.scheduledRuns++;
         if (periodic) metrics.periodicRuns++;
         if (!port.singleWifi()) {
@@ -277,11 +281,12 @@ final class WifiMonitor {
     }
 
     boolean offlineConfirmed(Snapshot expected,long generation) {
-        if(stopped||!active||!configured||!port.monitoringAllowed())return false;
+        if(stopped||!active||!configured||weakPaused()||!port.monitoringAllowed())return false;
         if(!port.singleWifi()||generation!=port.epoch()||policy.coolingDown(port.now()))return false;
         try {
             Snapshot fresh=read();
             if(!port.monitoringAllowed()){pause();return false;}
+            if (weakPaused()) return false;
             if(generation!=port.epoch()||fresh==null||!fresh.sameAp(expected)) {
                 metrics.staleSuppressed++;return false;
             }

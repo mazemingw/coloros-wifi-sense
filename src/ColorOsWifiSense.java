@@ -65,7 +65,8 @@ public final class ColorOsWifiSense {
     private String fluidToken;
     private BufferedWriter fluidInput;
     private java.lang.Process fluidChild;
-    private boolean fluidResult, demo, demoActionSeen;
+    private boolean fluidResult, fluidPaused, demo, demoActionSeen;
+    private long fluidPauseUntil;
     private Warning pendingWarning;
     private static final class StopLoop extends RuntimeException {
         StopLoop() { super(null, null, false, false); }
@@ -75,7 +76,8 @@ public final class ColorOsWifiSense {
         final int rssi, threshold; final long deadline, duration;
         final String reason;
         Warning(int rssi, int threshold, long deadline, long duration) { this.rssi=rssi; this.threshold=threshold; this.deadline=deadline; this.duration=duration;this.reason=null; }
-        Warning(String reason){this.rssi=0;this.threshold=0;this.deadline=0;this.duration=0;this.reason=reason;}
+        Warning(String reason){this(reason,0);}
+        Warning(String reason,long deadline){this.rssi=0;this.threshold=0;this.deadline=deadline;this.duration=0;this.reason=reason;}
     }
 
     private ColorOsWifiSense(File moduleDir, File stateDir) throws ReflectiveOperationException {
@@ -123,6 +125,14 @@ public final class ColorOsWifiSense {
 
     private boolean monitoringAllowed() {
         return !stopRequested && (connectionConfig.screenOffEnabled || interactive());
+    }
+
+    private boolean temporarilyPaused() {
+        return connectionConfig.weakPauseUntil > System.currentTimeMillis();
+    }
+
+    private boolean probeAllowed() {
+        return monitoringAllowed() && !temporarilyPaused();
     }
 
     private final class AndroidPort implements WifiMonitor.Port {
@@ -187,7 +197,7 @@ public final class ColorOsWifiSense {
             if(disabled()||epoch.get()!=generation||stopRequested)return WifiMonitor.Attempt.STALE;
             if(!connectionConfig.equals(WifiConnectionControl.load(stateDir))||readThresholdValue()!=monitor.threshold()
                 ||readCountdownValue()*1000L!=monitor.countdownMs())return WifiMonitor.Attempt.STALE;
-            if (!"offline".equals(reason) && connectionConfig.weakPauseUntil > System.currentTimeMillis()) {
+            if (temporarilyPaused()) {
                 return WifiMonitor.Attempt.STALE;
             }
             WifiMonitor.Snapshot fresh=readWifi();
@@ -205,8 +215,9 @@ public final class ColorOsWifiSense {
         }
         public void warn(WifiMonitor.Snapshot info, int threshold, long deadline) { startFluid(info.rssi, threshold, deadline); }
         public void cancelWarning() { if (!fluidResult) stopFluid(); }
-        public void clearFeedback() { stopFluid(); }
+        public void clearFeedback() { if (!fluidPaused) stopFluid(); }
         public void result(String reason) { showFluidResult(reason); }
+        public void pauseExpired() { updateProbeSchedule(); reconcilePauseFluid(); }
     }
 
     private void listen() throws Exception {
@@ -252,7 +263,7 @@ public final class ColorOsWifiSense {
                         || "disable".equals(path) || "remove".equals(path)) {
                     if (disabled()) { stopRequested = true; epoch.incrementAndGet(); handler.post(() -> closeLoop()); }
                 } else if ("fluid_enabled".equals(path)) {
-                    configDirty = true; handler.post(() -> { if (interactive()) reloadConfig(); });
+                    configDirty = true; handler.post(() -> reloadConfig());
                 }
             }
         };
@@ -279,6 +290,7 @@ public final class ColorOsWifiSense {
                     else if (!on) handler.removeCallbacks(bandTask);
                     monitor.screen(on, connectionConfig.screenOffEnabled);
                     updateProbeSchedule();
+                    reconcilePauseFluid();
                 });
             }
             public void wifi(String action) {
@@ -346,6 +358,7 @@ public final class ColorOsWifiSense {
         }catch(Exception e){connectionError="连接策略配置无效："+WifiConnectionControl.message(e);cancelProbe();connectionConfig=WifiConnectionConfig.defaults();restoreAutojoin(true);}
         monitor.updateMonitoring();
         updateProbeSchedule();
+        reconcilePauseFluid();
     }
 
     private void scheduleBand() {
@@ -371,22 +384,23 @@ public final class ColorOsWifiSense {
         HttpURLConnection c=probeConnection;if(c!=null)c.disconnect();
     }
     private void updateProbeSchedule() {
-        if (monitoringAllowed()) {
+        if (probeAllowed()) {
             scheduleProbe();
         } else {
             cancelProbe();
-            probePolicy.suspend();
+            if (temporarilyPaused() && !probePolicy.complete()) probePolicy.reset();
+            else probePolicy.suspend();
         }
     }
     private void scheduleProbe() {
         if(connections.size()==1&&!probePolicy.sameNetwork(connections.iterator().next()))probePolicy.reset();
-        if(!connectionConfig.probeEnabled||!monitoringAllowed()||connections.size()!=1||probePolicy.complete()
+        if(!connectionConfig.probeEnabled||!probeAllowed()||connections.size()!=1||probePolicy.complete()
             ||(probeWorker!=null&&probeWorker.isAlive())||handler.hasCallbacks(probeTask))return;
         long wait=probePolicy.failures()==0?3000:connectionConfig.probeInterval*1000L;
         handler.postDelayed(probeTask,Math.max(wait,monitor.cooldownUntil()-SystemClock.elapsedRealtime()));
     }
     private void runProbe() {
-        if(!connectionConfig.probeEnabled||!monitoringAllowed()||connections.size()!=1)return;
+        if(!connectionConfig.probeEnabled||!probeAllowed()||connections.size()!=1)return;
         try {
             WifiMonitor.Snapshot expected=new AndroidPort().readWifi();
             if(expected==null||!expected.valid())return;
@@ -397,18 +411,18 @@ public final class ColorOsWifiSense {
             probeWorker=new Thread(()->{
                 boolean online=false;String result;HttpURLConnection c=null;
                 try {
-                    if(token!=probeToken||!monitoringAllowed())throw new IOException("检测已取消");
+                    if(token!=probeToken||!probeAllowed())throw new IOException("检测已取消");
                     c=(HttpURLConnection)((Network)expected.network).openConnection(new URL(config.probeUrl),Proxy.NO_PROXY);
                     c.setConnectTimeout(3000);c.setReadTimeout(3000);c.setInstanceFollowRedirects(false);c.setUseCaches(false);
                     c.setRequestMethod("GET");probeConnection=c;
-                    if(token!=probeToken||!monitoringAllowed())throw new IOException("检测已取消");
+                    if(token!=probeToken||!probeAllowed())throw new IOException("检测已取消");
                     int code=c.getResponseCode();online=code==204;result="HTTP "+code;
                 }catch(Exception e){result="探测失败（超时或目标不可达）";}
                 finally{if(c!=null)c.disconnect();probeConnection=null;}
                 final boolean success=online;final String detail=result;
                 handler.post(()->{
                     probeWorker=null;
-                    if(token!=probeToken||!monitoringAllowed()||!connectionConfig.sameProbe(config)){probeDiscarded++;scheduleProbe();return;}
+                    if(token!=probeToken||!probeAllowed()||!connectionConfig.sameProbe(config)){probeDiscarded++;scheduleProbe();return;}
                     try {
                         WifiMonitor.Snapshot fresh=new AndroidPort().readWifi();
                         if(!expected.sameAp(fresh)){probeDiscarded++;probePolicy.finish();probeResult="接入点已变化，本轮已结束";return;}
@@ -444,10 +458,33 @@ public final class ColorOsWifiSense {
         if (fluidChild != null) { stopChild(); return; }
         launchPendingWarning();
     }
+    private void reconcilePauseFluid() {
+        boolean pendingPause = pendingWarning != null && "pause".equals(pendingWarning.reason);
+        if (!fluidEnabled || !temporarilyPaused() || closed || stopRequested) {
+            if (fluidPaused || pendingPause) stopFluid();
+            return;
+        }
+        if (fluidPaused && fluidInput != null) {
+            if (fluidPauseUntil != connectionConfig.weakPauseUntil) {
+                sendFluid("pause " + connectionConfig.weakPauseUntil);
+                fluidPauseUntil = connectionConfig.weakPauseUntil;
+            }
+            return;
+        }
+        pendingWarning = new Warning("pause",connectionConfig.weakPauseUntil);
+        if (fluidChild != null) {
+            if (fluidInput != null) stopChild();
+            return;
+        }
+        launchPendingWarning();
+    }
     private void launchPendingWarning() {
         Warning warning = pendingWarning;
-        if (warning == null || fluidChild != null || !fluidEnabled || !interactive()) return;
+        boolean pauseCard = warning != null && "pause".equals(warning.reason);
+        if (warning == null || fluidChild != null || !fluidEnabled || closed || stopRequested
+                || (!pauseCard && !interactive())) return;
         pendingWarning = null;
+        if (pauseCard && !temporarilyPaused()) return;
         if (warning.reason==null && !demo && (monitor.deadline() != warning.deadline || warning.deadline <= SystemClock.elapsedRealtime())) return;
         String token = UUID.randomUUID().toString();
         try {
@@ -459,6 +496,8 @@ public final class ColorOsWifiSense {
             builder.redirectErrorStream(true);
             java.lang.Process child = builder.start(); fluidStarts++;
             fluidChild = child; fluidToken = token; fluidResult = warning.reason!=null;
+            fluidPaused = pauseCard;
+            fluidPauseUntil = pauseCard ? warning.deadline : 0;
             fluidInput = new BufferedWriter(new OutputStreamWriter(child.getOutputStream(), "UTF-8"));
             Thread reader = new Thread(() -> {
                 try (BufferedReader output = new BufferedReader(new InputStreamReader(child.getInputStream(), "UTF-8"))) {
@@ -485,7 +524,7 @@ public final class ColorOsWifiSense {
                         fluidChild=null;
                         if (token.equals(fluidToken)) {
                             BufferedWriter oldInput=fluidInput;
-                            fluidToken=null; fluidInput=null; fluidResult=false;
+                            fluidToken=null; fluidInput=null; fluidResult=false;fluidPaused=false;
                             if(oldInput!=null) try { oldInput.close(); } catch(IOException ignored) { }
                         }
                         launchPendingWarning();
@@ -497,6 +536,19 @@ public final class ColorOsWifiSense {
     }
     private void onFluidEvent(String token,String event) {
         if (!token.equals(fluidToken) || "ready".equals(event)) return;
+        if ("resume".equals(event)) {
+            if (!fluidPaused || !temporarilyPaused()) return;
+            try {
+                WifiConnectionControl.resumeDetection(stateDir);
+                configDirty = true;
+                epoch.incrementAndGet();
+                reloadConfig();
+            } catch (Exception error) {
+                connectionError = "恢复失败：" + WifiConnectionControl.message(error);
+                Log.w(TAG,connectionError);
+            }
+            return;
+        }
         if (!"immediate".equals(event) && !"expired".equals(event)) return;
         if (demo) {
             if (demoActionSeen) return;
@@ -527,7 +579,7 @@ public final class ColorOsWifiSense {
         catch(IOException e) { fluidErrors++; }
     }
     private synchronized void stopChild() {
-        fluidToken=null; fluidResult=false;
+        fluidToken=null; fluidResult=false;fluidPaused=false;
         BufferedWriter input=fluidInput; fluidInput=null;
         if(input!=null) {
             try { input.write("cancel\n"); input.flush(); } catch(IOException ignored) { }
@@ -574,7 +626,7 @@ public final class ColorOsWifiSense {
                 .put("broadcast_deliveries",events==null?0:events.broadcastDeliveries)
                 .put("cpu_ticks",cpuTicks());
             j.put("probe_requests",probeRequests).put("probe_successes",probeSuccesses).put("probe_failures",probeFailures)
-                .put("probe_discarded",probeDiscarded).put("probe_result",probeResult).put("probe_complete",probePolicy.complete())
+                .put("probe_discarded",probeDiscarded).put("probe_result",temporarilyPaused()?"已暂停":probeResult).put("probe_complete",probePolicy.complete())
                 .put("held_networks",heldNetworks).put("connection_error",connectionError);
             File temp=new File(stateDir,"status.tmp"), target=new File(stateDir,"status.json");
             try(FileOutputStream out=new FileOutputStream(temp)) { out.write(j.toString().getBytes("UTF-8")); }

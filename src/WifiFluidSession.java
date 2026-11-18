@@ -19,6 +19,8 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.Executor;
+import java.text.DateFormat;
+import java.util.Date;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -38,6 +40,8 @@ public final class WifiFluidSession {
     };
     private final String token;
     private final boolean demo;
+    private final boolean paused;
+    private long pauseUntil;
     private final String initialResult;
     private final int rssi;
     private final int threshold;
@@ -56,6 +60,7 @@ public final class WifiFluidSession {
     private boolean actionEmitted;
     private final Runnable tickTask = () -> tick(false);
     private final Runnable acknowledgementTimeout = this::finish;
+    private final Runnable pauseExpiry = this::finish;
 
     public static void main(String[] args) {
         try {
@@ -73,12 +78,14 @@ public final class WifiFluidSession {
 
     private WifiFluidSession(String[] args) throws Exception {
         demo = "demo".equals(args[0]);
+        paused = "pause".equals(args[0]);
         initialResult=args[0].startsWith("offline")?args[0]:null;
         token = args[1];
         rssi = Integer.parseInt(args[2]);
         threshold = Integer.parseInt(args[3]);
         duration = Long.parseLong(args[4]);
         long requestedDeadline = Long.parseLong(args[5]);
+        pauseUntil = paused ? requestedDeadline : 0;
         deadline = requestedDeadline == 0 ? SystemClock.elapsedRealtime() + duration : requestedDeadline;
         Class<?> at = Class.forName("android.app.ActivityThread");
         Object thread = at.getMethod("systemMain").invoke(null);
@@ -96,9 +103,11 @@ public final class WifiFluidSession {
     }
 
     private void run() throws Exception {
-        if (!power.isInteractive()) { finish(); return; }
-        display = context.getSystemService(DisplayManager.class);
-        display.registerDisplayListener(displayListener, handler);
+        if (!paused && !power.isInteractive()) { finish(); return; }
+        if (!paused) {
+            display = context.getSystemService(DisplayManager.class);
+            display.registerDisplayListener(displayListener, handler);
+        }
         String action = "com.nvmex.wifisense.IMMEDIATE." + token;
         // Sending a one-shot PendingIntent cancels it. Its Binder cancellation callback works
         // without an installed APK or an AMS-managed process for a BroadcastReceiver.
@@ -111,7 +120,7 @@ public final class WifiFluidSession {
                 if ("equals".equals(method.getName())) return proxy == args[0];
                 if ("toString".equals(method.getName())) return "WifiSenseCancelListener";
                 if ("onCanceled".equals(method.getName())) {
-                    handler.post(() -> { if (!finished) emit("immediate"); });
+                    handler.post(() -> { if (!finished) emit(paused ? "resume" : "immediate"); });
                 }
                 return null;
             });
@@ -134,7 +143,8 @@ public final class WifiFluidSession {
         }, "wifi-fluid-input");
         input.setDaemon(true);
         input.start();
-        if(initialResult==null)tick(true);
+        if (paused) { publishPause(); System.out.println("WIFI_SENSE ready " + token); }
+        else if(initialResult==null)tick(true);
         else {command("result "+initialResult);System.out.println("WIFI_SENSE ready "+token);}
         Looper.loop();
     }
@@ -198,8 +208,15 @@ public final class WifiFluidSession {
 
     private void command(String command) {
         if (finished) return;
-        if (!power.isInteractive()) { finish(); return; }
         if ("cancel".equals(command)) { finish(); return; }
+        if (paused) {
+            if (command.startsWith("pause ")) {
+                try { pauseUntil=Long.parseLong(command.substring(6)); publishPause(); }
+                catch (Exception error) { error.printStackTrace(System.err); finish(); }
+            }
+            return;
+        }
+        if (!power.isInteractive()) { finish(); return; }
         if (!"working".equals(command) && !command.startsWith("result ")) return;
         terminal = true;
         handler.removeCallbacks(tickTask);
@@ -208,6 +225,31 @@ public final class WifiFluidSession {
         try { send("sendLiveAlert", buildResult(reason)); }
         catch (Exception error) { error.printStackTrace(System.err); finish(); return; }
         handler.postDelayed(acknowledgementTimeout, reason.endsWith("working") ? 5000 : 15000);
+    }
+
+    private void publishPause() throws Exception {
+        long remaining = pauseUntil-System.currentTimeMillis();
+        if (remaining <= 0) { finish(); return; }
+        String title = "自动断开已暂停";
+        String text = DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(pauseUntil)) + " 恢复";
+        Bundle extras = new Bundle();
+        extras.putParcelable("wifiSenseResume",immediate);
+        JSONObject primary = obj("type","t_standard","title",obj("text",title),
+            "labels",new JSONArray().put(new JSONArray().put(obj("text",text))));
+        JSONObject button = obj("type","TEXT","text","恢复检测","desc","恢复检测",
+            "style","BUTTON","state","DEFAULT","intent","pi/wifiSenseResume");
+        JSONObject actions = obj("type","t_actions","btns",new JSONArray().put(button));
+        extras.putString("oplus.livealert.card",obj("primaryData",primary,"subData",actions).toString());
+        // EntryType.ENTRY_NOTIFICATION = 16 on the ColorOS live-alert provider.
+        extras.putString("oplusLiveAlertOptions",obj("id",TAG,"isMilestone",false,
+            "showHostMap",new JSONArray().put(16),"remindType",0,
+            "extensibleActionMap",obj("isDismissible",true)).toString());
+        Notification notification = new Notification.Builder(context,TAG)
+            .setSmallIcon(android.R.drawable.stat_sys_warning).setContentTitle(title).setContentText(text)
+            .setOnlyAlertOnce(true).setOngoing(true).setShowWhen(false).addExtras(extras).build();
+        send("sendLiveAlert",notification);
+        handler.removeCallbacks(pauseExpiry);
+        handler.postDelayed(pauseExpiry,remaining);
     }
 
     private Notification buildResult(String reason) throws Exception {
