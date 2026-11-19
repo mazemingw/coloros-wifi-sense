@@ -9,6 +9,7 @@ final class WifiProbePolicy {
     private boolean complete;
     int failures(){return failures;}
     boolean complete(){return complete;}
+    boolean hasNetwork(){return network!=null;}
     boolean sameNetwork(Object n){return Objects.equals(network,n);}
     boolean begin(){if(complete||attempts>=2){complete=true;return false;}attempts++;return true;}
     void finish(){complete=true;}

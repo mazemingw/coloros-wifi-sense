@@ -12,7 +12,7 @@ $repoRoot = $PSScriptRoot
 $build = Join-Path $repoRoot 'build'
 $staging = Join-Path $build 'coloros-wifi-sense-work'
 $sourceNames = @('src/ColorOsWifiSense.java', 'src/WifiDisconnectPolicy.java', 'src/WifiMonitor.java', 'src/WifiSystemEvents.java', 'src/WifiFluidSession.java', 'src/WifiBandControl.java', 'src/WifiBandPolicy.java')
-$sourceNames += @('src/WifiConnectionConfig.java','src/WifiConnectionControl.java','src/WifiProbePolicy.java','src/WifiSsidGuard.java')
+$sourceNames += @('src/WifiConnectionConfig.java','src/WifiConnectionControl.java','src/WifiProbePolicy.java','src/WifiSsidGuard.java','src/WifiNetworkSelector.java')
 $sources = @($sourceNames | ForEach-Object { Join-Path $PSScriptRoot $_ })
 $moduleProp = Get-Content (Join-Path $PSScriptRoot 'module.prop') -Encoding UTF8
 $versionLine = $moduleProp | Where-Object { $_ -match '^version=v[0-9.]+$' } | Select-Object -First 1
@@ -24,7 +24,7 @@ New-Item -ItemType Directory -Path $staging -Force | Out-Null
 Get-ChildItem -LiteralPath $staging -Filter '*.class' -File | ForEach-Object { Remove-Item -LiteralPath $_.FullName }
 & (Join-Path $Jdk 'bin/javac.exe') -encoding UTF-8 --release 8 -classpath $androidJar -d $staging $sources
 if ($LASTEXITCODE -ne 0) { throw 'Module Java compilation failed' }
-$coreClasses = @(Get-ChildItem $staging -Filter '*.class' | Where-Object { $_.Name -match '^(ColorOsWifiSense|WifiDisconnectPolicy|WifiMonitor|WifiSystemEvents|WifiBand|WifiConnection|WifiProbe|WifiSsid)' } | ForEach-Object FullName)
+$coreClasses = @(Get-ChildItem $staging -Filter '*.class' | Where-Object { $_.Name -match '^(ColorOsWifiSense|WifiDisconnectPolicy|WifiMonitor|WifiSystemEvents|WifiBand|WifiConnection|WifiProbe|WifiSsid|WifiNetworkSelector)' } | ForEach-Object FullName)
 & $d8 --min-api 29 --lib $androidJar --output $staging $coreClasses
 if ($LASTEXITCODE -ne 0) { throw 'Module DEX generation failed' }
 $fluidStaging = Join-Path $staging 'fluid'

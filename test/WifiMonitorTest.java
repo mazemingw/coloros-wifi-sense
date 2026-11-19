@@ -13,7 +13,7 @@ public final class WifiMonitorTest {
         final Map<Runnable,Long> tasks=new HashMap<>();
         final WifiMonitor monitor=new WifiMonitor(this);
         public long now(){return time;} public long epoch(){return generation;}
-        public boolean monitoringAllowed(){return on||screenOffEnabled;} public boolean singleWifi(){return wifi;}
+        public boolean monitoringAllowed(){return on||screenOffEnabled;} public boolean hasWifi(){return wifi;}
         public WifiMonitor.Snapshot readWifi(){
             WifiMonitor.Snapshot s=valid&&wifi?new WifiMonitor.Snapshot(network,ap,rssi):null;
             if(duringRead!=null){Runnable r=duringRead;duringRead=null;r.run();}
@@ -117,6 +117,23 @@ public final class WifiMonitorTest {
         test("BSSID changes during verification",()->{
             Fake f=new Fake();f.rssi=-90;f.start();f.advance(6000);f.ap="ap-b";f.event();f.advance(7000);
             check(f.attempts==0,"stale AP disconnected");f.advance(14000);check(f.attempts==1,"new AP not verified");
+        });
+        test("secondary WLAN availability and loss keep primary countdown",()->{
+            Fake f=new Fake();f.rssi=-90;f.start();f.advance(2000);
+            f.generation++;f.monitor.network(null,false);f.advance(3000);
+            f.generation++;f.monitor.network("aux",false);f.advance(6999);
+            check(f.starts==1&&f.monitor.deadline()==7000&&f.attempts==0,"aux reset timer");
+            f.advance(7000);check(f.attempts==1,"primary not disconnected");
+        });
+        test("primary WLAN promotion starts a fresh countdown",()->{
+            Fake f=new Fake();f.rssi=-90;f.start();f.advance(6000);
+            f.network="former-aux";f.ap="ap-b";f.event();f.advance(7000);
+            check(f.attempts==0&&f.starts==2,"promotion used old countdown");
+            f.advance(14000);check(f.attempts==1,"promoted primary not verified");
+        });
+        test("primary role change before final read blocks disconnect",()->{
+            Fake f=new Fake();f.rssi=-90;f.start();f.network="former-aux";
+            check(!f.monitor.immediate()&&f.attempts==0,"wrong primary disconnected");
         });
         test("disconnect then reconnect, cooldown retained",()->{
             Fake f=new Fake();f.rssi=-90;f.start();f.advance(7000);f.topology(false);

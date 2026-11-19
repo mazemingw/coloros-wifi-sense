@@ -26,6 +26,10 @@ import java.net.Proxy;
 import java.util.Objects;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,9 +38,11 @@ import org.json.JSONObject;
 
 public final class ColorOsWifiSense {
     private static final String TAG = "ColorOsWifiSense", ROOT_PACKAGE = "root";
+    private static final Method IS_PRIMARY = findIsPrimary();
     private final File moduleDir, stateDir, thresholdFile;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Set<Network> connections = new HashSet<>();
+    private final Map<Network,WifiNetworkSelector.Candidate<Network>> wifiCandidates = new HashMap<>();
     private final AtomicLong epoch = new AtomicLong();
     private final Context context;
     private final PowerManager power;
@@ -139,14 +145,36 @@ public final class ColorOsWifiSense {
         public long now() { return SystemClock.elapsedRealtime(); }
         public long epoch() { return epoch.get(); }
         public boolean monitoringAllowed() { return ColorOsWifiSense.this.monitoringAllowed(); }
-        public boolean singleWifi() { return connections.size() == 1; }
+        public boolean hasWifi() { return !connections.isEmpty(); }
         public void schedule(Runnable task, long delay) { handler.postDelayed(task, delay); }
         public void cancel(Runnable task) { handler.removeCallbacks(task); }
         public WifiMonitor.Snapshot readWifi() throws Exception {
-            if (stopRequested || (screenOff && !connectionConfig.screenOffEnabled) || connections.size() != 1) return null;
-            Network network = connections.iterator().next();
+            return readWifi(false);
+        }
+        private WifiMonitor.Snapshot readWifi(boolean freshNetworks) throws Exception {
+            if (stopRequested || (screenOff && !connectionConfig.screenOffEnabled) || connections.isEmpty()) return null;
             WifiInfo info = readConnectionInfo();
             if (info.getSupplicantState() != SupplicantState.COMPLETED) return null;
+            List<WifiNetworkSelector.Candidate<Network>> candidates = new ArrayList<>();
+            for (Network n : connections) {
+                WifiNetworkSelector.Candidate<Network> candidate = wifiCandidates.get(n);
+                if (freshNetworks) candidate = wifiCandidate(n,connectivity.getNetworkCapabilities(n));
+                if (candidate == null) {
+                    if (freshNetworks) continue;
+                    candidate = new WifiNetworkSelector.Candidate<>(n,null,null);
+                }
+                candidates.add(candidate);
+            }
+            Network network = WifiNetworkSelector.select(candidates,info.getBSSID());
+            if (network == null) return null;
+            if (freshNetworks) {
+                WifiInfo latest = readConnectionInfo();
+                if (latest.getSupplicantState() != SupplicantState.COMPLETED
+                        || latest.getNetworkId() != info.getNetworkId()
+                        || !Objects.equals(latest.getBSSID(),info.getBSSID())
+                        || !Objects.equals(latest.getSSID(),info.getSSID())) return null;
+                info = latest;
+            }
             return new WifiMonitor.Snapshot(network, info.getBSSID(), info.getRssi(),info.getSSID(),info.getNetworkId());
         }
         public WifiMonitor.Attempt disconnect(WifiMonitor.Snapshot expected, long generation) {
@@ -166,7 +194,7 @@ public final class ColorOsWifiSense {
                     configDirty=true;epoch.incrementAndGet();handler.post(()->reloadConfig());return WifiMonitor.Attempt.STALE;
                 }
             } catch (Exception e) { return WifiMonitor.Attempt.STALE; }
-            if (closed || stopRequested || epoch.get() != generation || connections.size() != 1
+            if (closed || stopRequested || epoch.get() != generation
                     || !connections.contains(expected.network)) return WifiMonitor.Attempt.STALE;
             NetworkCapabilities caps = connectivity.getNetworkCapabilities((Network) expected.network);
             if (caps == null || !caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return WifiMonitor.Attempt.STALE;
@@ -200,7 +228,7 @@ public final class ColorOsWifiSense {
             if (temporarilyPaused()) {
                 return WifiMonitor.Attempt.STALE;
             }
-            WifiMonitor.Snapshot fresh=readWifi();
+            WifiMonitor.Snapshot fresh=readWifi(true);
             if (!expected.sameAp(fresh) || !fresh.valid()
                     || (!"offline".equals(reason) && monitor.signalRecovered(fresh.rssi))) return WifiMonitor.Attempt.STALE;
             if(!monitoringAllowed())return WifiMonitor.Attempt.ASLEEP;
@@ -231,29 +259,38 @@ public final class ColorOsWifiSense {
         }, "wifi-sense-cleanup"));
         ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback() {
             private final ConcurrentHashMap<Network,String> signals = new ConcurrentHashMap<>();
-            private void enqueue(Network n, int kind) {
+            private final ConcurrentHashMap<Network,String> identities = new ConcurrentHashMap<>();
+            private void enqueue(Network n, int kind, WifiNetworkSelector.Candidate<Network> candidate) {
                 if (kind != 0) epoch.incrementAndGet();
                 handler.post(() -> {
                     if (closed) return;
                     boolean changed = false;
                     if (kind == 1) changed = connections.add(n);
-                    if (kind == -1) changed = connections.remove(n);
-                    monitor.network(kind == -1 ? n : null, changed);
+                    if (kind == -1) { changed = connections.remove(n); wifiCandidates.remove(n); }
+                    if (candidate != null && connections.contains(n)) wifiCandidates.put(n,candidate);
+                    WifiMonitor.Snapshot observed = monitor.last();
+                    Network primary = cachedPrimaryNetwork();
+                    boolean observedChanged = observed == null || Objects.equals(observed.network,n)
+                        || (primary != null && !Objects.equals(observed.network,primary));
+                    monitor.network(kind == -1 ? n : null, changed && observedChanged);
                     if (kind == 1 && changed) scheduleBand();
-                    if(changed){cancelProbe();probePolicy.reset();scheduleProbe();}
+                    if (changed && observedChanged) { cancelProbe(); probePolicy.reset(); }
+                    scheduleProbe();
                 });
             }
-            @Override public void onAvailable(Network n) { enqueue(n, 1); }
-            @Override public void onLost(Network n) { signals.remove(n); enqueue(n, -1); }
+            @Override public void onAvailable(Network n) { enqueue(n, 1,null); }
+            @Override public void onLost(Network n) { signals.remove(n); identities.remove(n); enqueue(n, -1,null); }
             @Override public void onCapabilitiesChanged(Network n, NetworkCapabilities caps) {
                 Object info=caps.getTransportInfo();
                 String bssid=info instanceof WifiInfo?((WifiInfo)info).getBSSID():null;
-                String signal=caps.getSignalStrength()+":"+bssid;
+                Boolean primary = info instanceof WifiInfo ? primaryFlag((WifiInfo)info) : null;
+                String identity = bssid + ":" + primary;
+                String signal=caps.getSignalStrength()+":"+identity;
                 String previous = signals.put(n,signal);
                 if (signal.equals(previous)) { ignoredCapabilityEvents.incrementAndGet(); return; }
-                // An RSSI update schedules a fresh sample. Only a known AP change invalidates an in-flight read.
-                if (bssid != null && previous != null && !previous.endsWith(":" + bssid)) epoch.incrementAndGet();
-                enqueue(n, 0);
+                String oldIdentity = identities.put(n,identity);
+                if (oldIdentity != null && !oldIdentity.equals(identity)) epoch.incrementAndGet();
+                enqueue(n, 0,wifiCandidate(n,caps));
             }
         };
         FileObserver moduleObserver = new FileObserver(moduleDir, FileObserver.CREATE | FileObserver.CLOSE_WRITE
@@ -328,11 +365,34 @@ public final class ColorOsWifiSense {
     @SuppressWarnings("deprecation")
     private void refreshConnections() {
         connections.clear();
+        wifiCandidates.clear();
         for (Network n : connectivity.getAllNetworks()) {
             NetworkCapabilities c = connectivity.getNetworkCapabilities(n);
             if (c != null && c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-                    && c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) connections.add(n);
+                    && c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                connections.add(n);
+                wifiCandidates.put(n,wifiCandidate(n,c));
+            }
         }
+    }
+    private Network cachedPrimaryNetwork() {
+        return WifiNetworkSelector.select(new ArrayList<>(wifiCandidates.values()),null);
+    }
+    private static Method findIsPrimary() {
+        try { return WifiInfo.class.getMethod("isPrimary"); }
+        catch (NoSuchMethodException error) { return null; }
+    }
+    private static Boolean primaryFlag(WifiInfo info) {
+        if (IS_PRIMARY == null) return null;
+        try { return (Boolean) IS_PRIMARY.invoke(info); }
+        catch (ReflectiveOperationException error) { return null; }
+    }
+    private static WifiNetworkSelector.Candidate<Network> wifiCandidate(Network n,NetworkCapabilities caps) {
+        if (caps == null || !caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return null;
+        Object transportInfo = caps.getTransportInfo();
+        WifiInfo info = transportInfo instanceof WifiInfo ? (WifiInfo) transportInfo : null;
+        return new WifiNetworkSelector.Candidate<>(n,info == null ? null : info.getBSSID(),
+            info == null ? null : primaryFlag(info));
     }
     private void reloadConfig() {
         if (!configDirty) return;
@@ -393,16 +453,19 @@ public final class ColorOsWifiSense {
         }
     }
     private void scheduleProbe() {
-        if(connections.size()==1&&!probePolicy.sameNetwork(connections.iterator().next()))probePolicy.reset();
-        if(!connectionConfig.probeEnabled||!probeAllowed()||connections.size()!=1||probePolicy.complete()
+        Network primary = cachedPrimaryNetwork();
+        if(primary != null && probePolicy.hasNetwork() && !probePolicy.sameNetwork(primary)) {
+            cancelProbe(); probePolicy.reset();
+        }
+        if(!connectionConfig.probeEnabled||!probeAllowed()||connections.isEmpty()||probePolicy.complete()
             ||(probeWorker!=null&&probeWorker.isAlive())||handler.hasCallbacks(probeTask))return;
         long wait=probePolicy.failures()==0?3000:connectionConfig.probeInterval*1000L;
         handler.postDelayed(probeTask,Math.max(wait,monitor.cooldownUntil()-SystemClock.elapsedRealtime()));
     }
     private void runProbe() {
-        if(!connectionConfig.probeEnabled||!probeAllowed()||connections.size()!=1)return;
+        if(!connectionConfig.probeEnabled||!probeAllowed()||connections.isEmpty())return;
         try {
-            WifiMonitor.Snapshot expected=new AndroidPort().readWifi();
+            WifiMonitor.Snapshot expected=new AndroidPort().readWifi(true);
             if(expected==null||!expected.valid())return;
             probePolicy.connection(expected.network,expected.ssid);
             if(!probePolicy.begin())return;
@@ -424,7 +487,7 @@ public final class ColorOsWifiSense {
                     probeWorker=null;
                     if(token!=probeToken||!probeAllowed()||!connectionConfig.sameProbe(config)){probeDiscarded++;scheduleProbe();return;}
                     try {
-                        WifiMonitor.Snapshot fresh=new AndroidPort().readWifi();
+                        WifiMonitor.Snapshot fresh=new AndroidPort().readWifi(true);
                         if(!expected.sameAp(fresh)){probeDiscarded++;probePolicy.finish();probeResult="接入点已变化，本轮已结束";return;}
                         probeResult=detail;if(success)probeSuccesses++;else probeFailures++;
                         if(probePolicy.result(expected.network,expected.ssid,success))monitor.offlineConfirmed(expected,epoch.get());

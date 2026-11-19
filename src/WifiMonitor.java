@@ -30,7 +30,7 @@ final class WifiMonitor {
         long now();
         long epoch();
         boolean monitoringAllowed();
-        boolean singleWifi();
+        boolean hasWifi();
         Snapshot readWifi() throws Exception;
         Attempt disconnect(Snapshot expected, long epoch) throws Exception;
         default Attempt disconnect(Snapshot expected,long epoch,String reason)throws Exception{return disconnect(expected,epoch);}
@@ -124,8 +124,8 @@ final class WifiMonitor {
             observeConnection = true;
             lastReadAt = Long.MIN_VALUE;
         }
-        if (!port.singleWifi()) {
-            unschedule(); cancelPending("no single Wi-Fi"); last = null;
+        if (!port.hasWifi()) {
+            unschedule(); cancelPending("no Wi-Fi"); last = null;
             state = State.NO_WIFI;
             return;
         }
@@ -171,7 +171,7 @@ final class WifiMonitor {
     }
 
     private void event(String kind) {
-        if (stopped || !active || !configured || !port.singleWifi()) return;
+        if (stopped || !active || !configured || !port.hasWifi()) return;
         if (weakPaused()) return;
         if (policy.coolingDown(port.now()) && !observeConnection) return;
         if (!policy.pending()) state = State.SUSPECT;
@@ -215,8 +215,8 @@ final class WifiMonitor {
         }
         metrics.scheduledRuns++;
         if (periodic) metrics.periodicRuns++;
-        if (!port.singleWifi()) {
-            cancelPending("no single Wi-Fi"); state = State.NO_WIFI; last = null; return;
+        if (!port.hasWifi()) {
+            cancelPending("no Wi-Fi"); state = State.NO_WIFI; last = null; return;
         }
         try {
             if (policy.coolingDown(port.now()) && !observeConnection && !forceRead) { next(); return; }
@@ -262,7 +262,7 @@ final class WifiMonitor {
     private boolean attempt(boolean manual, long generation) {
         if (weakPaused()) return false;
         if (!active || !port.monitoringAllowed()) { pause(); return false; }
-        if (!port.singleWifi() || generation != port.epoch()) {
+        if (!port.hasWifi() || generation != port.epoch()) {
             metrics.staleSuppressed++; return false;
         }
         try {
@@ -282,7 +282,7 @@ final class WifiMonitor {
 
     boolean offlineConfirmed(Snapshot expected,long generation) {
         if(stopped||!active||!configured||weakPaused()||!port.monitoringAllowed())return false;
-        if(!port.singleWifi()||generation!=port.epoch()||policy.coolingDown(port.now()))return false;
+        if(!port.hasWifi()||generation!=port.epoch()||policy.coolingDown(port.now()))return false;
         try {
             Snapshot fresh=read();
             if(!port.monitoringAllowed()){pause();return false;}
@@ -324,7 +324,7 @@ final class WifiMonitor {
 
     private void next() {
         if (!active || stopped || !configured) return;
-        if (!port.singleWifi()) { unschedule(); state = State.NO_WIFI; return; }
+        if (!port.hasWifi()) { unschedule(); state = State.NO_WIFI; return; }
         if (weakPaused()) {
             state = State.WEAK_PAUSED;
             request(weakPauseUntil - port.now(),false);

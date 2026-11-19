@@ -86,8 +86,9 @@
       : data.state === 'COOLDOWN' ? '还需等 ' + Math.ceil(data.cooldown_ms/1000) + ' 秒才能再次断开。'
       : data.state === 'PAUSED' ? '亮屏后继续检测。'
       : data.state === 'WEAK_PAUSED' ? '到期自动恢复。'
-      : data.wifi_connections !== 1 ? '连接 Wi-Fi 后开始检测。'
-      : !data.interactive && data.screen_off_enabled ? '正在息屏检测。' : '';
+      : !data.wifi_connections ? '连接 Wi-Fi 后开始检测。'
+      : !data.interactive && data.screen_off_enabled ? '正在息屏检测。'
+      : data.wifi_connections > 1 ? '正在检测主 Wi-Fi。' : '';
     const list=$('metrics'); list.replaceChildren();
     Object.entries(metrics).forEach(([key,label]) => {
       const dt=document.createElement('dt'), dd=document.createElement('dd');
