@@ -8,68 +8,54 @@
 </head>
 <body>
 <main>
-  <header><h1>Wi-Fi 感知</h1></header>
-  <section class="card" aria-labelledby="weak-pause-title">
-    <h2 id="weak-pause-title">暂停自动断开</h2>
-    <p id="weak-pause-status" class="muted">未暂停</p>
-    <div class="row"><label for="weak-pause-minutes">暂停时长（分钟）</label><input id="weak-pause-minutes" class="seconds" type="number" min="1" max="1440" step="1" value="30" inputmode="numeric"></div>
-    <p class="hint">暂停全部检测，到期自动恢复。</p>
-    <div class="row pause-actions"><button id="weak-pause" class="primary" type="button">开始暂停</button><button id="weak-resume" class="secondary" type="button" disabled>立即恢复</button></div>
-    <p id="weak-pause-feedback" class="setting-feedback" role="status" aria-live="polite"></p>
+<header><h1>Wi-Fi 感知</h1><span class="muted">连接设置</span></header>
+<section class="card pause-card" aria-labelledby="weak-pause-title">
+    <div class="row"><h2 id="weak-pause-title">暂停自动断开</h2><span id="weak-pause-status" class="muted">未暂停</span></div>
+    <div class="pause-controls"><label for="weak-pause-minutes" class="number-field"><input id="weak-pause-minutes" class="seconds" type="number" min="1" max="1440" value="30" inputmode="numeric" aria-label="暂停时长（分钟）">分钟</label><button id="weak-pause" class="primary" type="button">开始暂停</button><button id="weak-resume" class="secondary" type="button" disabled>立即恢复</button></div>
+    <p class="hint">暂停全部检测，到期自动恢复。</p><p id="weak-pause-feedback" class="setting-feedback" role="status" aria-live="polite"></p>
   </section>
-  <section class="card overview" aria-labelledby="status-title">
+<section class="card overview" aria-labelledby="status-title">
     <div class="row"><h2 id="status-title">当前状态</h2><span id="state" class="badge">等待连接</span></div>
-    <div class="signal"><strong id="rssi">—</strong><span>dBm</span></div>
+    <div class="status-line"><strong id="network-name">当前 Wi-Fi</strong><div class="signal"><strong id="rssi">—</strong><span>dBm</span></div></div>
     <p id="state-detail"></p>
     <div class="row muted"><span id="updated"></span><button id="refresh" class="secondary" type="button">刷新</button></div>
-    <div class="row setting-row"><div><label for="screenoff">息屏也可断开</label><p class="hint">开启后，息屏仍会检测 Wi-Fi，可能更耗电。</p></div><input id="screenoff" type="checkbox" role="switch"></div>
-    <p id="screenoff-feedback" class="setting-feedback" role="status" aria-live="polite"></p>
+
   </section>
-  <section class="card" aria-labelledby="threshold-title">
-    <div class="row"><h2 id="threshold-title">弱信号阈值</h2><output id="threshold-value" for="threshold">−80 dBm</output></div>
+<div class="settings-grid"><section class="card" aria-labelledby="threshold-title">
+    <div class="row"><h2 id="threshold-title">弱信号断开</h2><output id="threshold-value" for="threshold">−80 dBm</output></div>
     <p id="threshold-help" class="muted">信号降到阈值就开始倒计时。</p>
     <label class="sr-only" for="threshold">RSSI 阈值</label><input id="threshold" type="range" min="-100" max="-20" step="1" value="-80">
     <div class="row scale"><span>−100 · 更弱才断</span><span>−20 · 更早断开</span></div>
     <div class="presets" aria-label="常用阈值"><button type="button" data-threshold="-75">−75</button><button type="button" data-threshold="-80">−80</button><button type="button" data-threshold="-85">−85</button><button type="button" data-threshold="-90">−90</button></div>
     <button id="save" class="primary" type="button">保存阈值</button>
-    <div class="row setting-row"><label for="recovery">回升余量（dB）</label><div class="row input-actions"><input id="recovery" class="seconds" type="number" min="1" max="10" step="1" value="3" inputmode="numeric"><button id="save-recovery" class="secondary" type="button" aria-label="保存回升余量">保存</button></div></div>
+    <div class="row setting-row"><label id="countdown-title" for="countdown">倒计时（秒）</label><div class="row input-actions"><input id="countdown" class="seconds" type="number" min="1" max="300" value="7" inputmode="numeric"><button id="save-countdown" class="secondary" type="button" aria-label="保存倒计时">保存</button></div></div>
+    <div class="row compact-setting"><label for="recovery">回升余量（dB）</label><div class="row input-actions"><input id="recovery" class="seconds" type="number" min="1" max="10" step="1" value="3" inputmode="numeric"><button id="save-recovery" class="secondary" type="button" aria-label="保存回升余量">保存</button></div></div>
     <p id="recovery-help" class="hint">信号回到 −77 dBm 就取消倒计时。</p>
     <p id="recovery-feedback" class="setting-feedback" role="status" aria-live="polite"></p>
   </section>
-  <section class="card" aria-labelledby="countdown-title">
-    <h2 id="countdown-title">自动断开倒计时</h2>
-    <div class="row"><label for="countdown">等待时长（秒）</label><input id="countdown" class="seconds" type="number" min="1" max="300" step="1" value="7" inputmode="numeric"></div>
-    <button id="save-countdown" class="primary" type="button">保存倒计时</button>
-    <p class="hint">1–300 秒，默认 7 秒。</p>
-  </section>
-  <section class="card" aria-labelledby="band-title">
-    <div class="row"><div><h2 id="band-title">仅使用 5GHz</h2><p id="band-help" class="muted">正在检查驱动支持…</p></div><input id="band5g" type="checkbox" role="switch" aria-label="强制仅使用 5GHz" disabled></div>
-    <p class="hint">没有 5GHz 热点时，Wi-Fi 可能连不上。</p>
-  </section>
-  <section class="card" aria-labelledby="avoid-title">
-    <div class="row"><div><h2 id="avoid-title">暂避原 Wi-Fi</h2><p class="muted">断开后，暂时不自动连回同名 Wi-Fi。</p></div><input id="avoid" type="checkbox" role="switch" aria-label="暂避原 Wi-Fi"></div>
+<details class="card"><summary>连接与重连<span class="summary-hint">频段、暂避、冷却例外</span></summary><div class="detail-body"><div class="row"><div><h2 id="band-title">仅使用 5GHz</h2><p id="band-help" class="muted">正在检查驱动支持…</p></div><input id="band5g" type="checkbox" role="switch" aria-label="强制仅使用 5GHz" disabled></div>
+    <p class="hint">没有 5GHz 热点时，Wi-Fi 可能连不上。</p><div class="setting-row"><div class="row"><div><h2 id="avoid-title">暂避原 Wi-Fi</h2><p class="muted">断开后，暂时不自动连回同名 Wi-Fi。</p></div><input id="avoid" type="checkbox" role="switch" aria-label="暂避原 Wi-Fi"></div>
     <div class="row"><label for="avoid-seconds">暂避时长（秒）</label><input id="avoid-seconds" class="seconds" type="number" min="10" max="86400" step="1" value="300"></div>
     <p class="hint">10–86400 秒，默认 5 分钟。需要在同名热点间漫游时，建议关闭。</p>
     <button id="save-avoid" class="primary" type="button">保存暂避时长</button>
     <p id="avoid-feedback" class="setting-feedback" role="status" aria-live="polite"></p>
     <p id="avoid-help" class="hint"></p>
-    <button id="restore-autojoin" class="secondary" type="button">立即恢复自动连接</button>
-  </section>
-  <section class="card" aria-labelledby="probe-title">
-    <div class="row"><div><h2 id="probe-title">通网检测</h2><p class="muted">连上后最多查两次，两次失败就断开。</p></div><input id="probe" type="checkbox" role="switch" aria-label="通网检测"></div>
+    <button id="restore-autojoin" class="secondary" type="button">立即恢复自动连接</button></div><div class="setting-row"><div class="row"><h2>冷却例外</h2><button id="add-current" class="secondary" type="button" disabled>添加当前 Wi-Fi</button></div>
+    <p class="hint">名单中的 Wi-Fi 重连后不等待 60 秒冷却，仍按倒计时断开。此名单不影响暂避设置。</p>
+    <label class="sr-only" for="cooldown-ssids">冷却例外名单，每行一个 Wi-Fi 名称</label><textarea id="cooldown-ssids" rows="3" maxlength="1056" placeholder="每行一个完整 Wi-Fi 名称"></textarea>
+    <button id="save-cooldown" class="primary" type="button">保存名单</button><p id="cooldown-feedback" class="setting-feedback" role="status" aria-live="polite"></p></div></div></details>
+<details class="card"><summary>通网检测<span class="summary-hint">连上后最多检查两次</span></summary><div class="detail-body"><div class="row"><div><h2 id="probe-title">通网检测</h2><p class="muted">连上后最多查两次，两次失败就断开。</p></div><input id="probe" type="checkbox" role="switch" aria-label="通网检测"></div>
     <label for="probe-url">应返回 HTTP 204 的地址</label><input id="probe-url" type="url" value="http://connect.rom.miui.com/generate_204" maxlength="2048" aria-label="探测地址">
     <div class="row"><label for="probe-interval">失败重试间隔（秒）</label><input id="probe-interval" class="seconds" type="number" min="1" max="3600" step="1" value="30" inputmode="numeric"></div>
     <p class="hint">1–3600 秒。需网页登录的 Wi-Fi 也可能被判定为断网。</p>
     <button id="save-probe" class="primary" type="button">保存检测设置</button>
     <p id="probe-feedback" class="setting-feedback" role="status" aria-live="polite"></p>
-    <p id="connection-help" class="hint">正在读取设置…</p>
-  </section>
-  <section class="card" aria-labelledby="fluid-title">
-    <div class="row"><div><h2 id="fluid-title">流体云提醒</h2><p id="fluid-help" class="muted">提醒中关闭开关，可立即断开。</p></div><input id="fluid" type="checkbox" role="switch" aria-label="开启流体云提醒"></div>
-  </section>
-  <details class="card"><summary>运行诊断 <span class="muted">本次运行</span></summary>
+    <p id="connection-help" class="hint">正在读取设置…</p></div></details>
+<details class="card"><summary>运行与提醒<span class="summary-hint">息屏检测、流体云</span></summary><div class="detail-body"><div class="row setting-row"><div><label for="screenoff">息屏也可断开</label><p class="hint">开启后，息屏仍会检测 Wi-Fi，可能更耗电。</p></div><input id="screenoff" type="checkbox" role="switch"></div>
+    <p id="screenoff-feedback" class="setting-feedback" role="status" aria-live="polite"></p><div class="setting-row"><div class="row"><div><h2 id="fluid-title">流体云提醒</h2><p id="fluid-help" class="muted">提醒中关闭开关，可立即断开。</p></div><input id="fluid" type="checkbox" role="switch" aria-label="开启流体云提醒"></div></div></div></details>
+<details class="card"><summary>运行诊断 <span class="muted">本次运行</span></summary>
     <dl id="metrics"></dl>
-  </details>
-  <p id="message" role="status" aria-live="polite"></p>
+  </details></div>
+<p id="message" role="status" aria-live="polite"></p>
 </main><script src="app.js"></script>
 </body></html>

@@ -23,11 +23,11 @@ case "$1" in
         esac
         export CLASSPATH="$MODDIR/wifi-sense.dex"
         exec /system/bin/app_process /system/bin WifiConnectionControl "$STATE_DIR" "$1" "$2" ;;
-    connectionconfig|probeconfig|avoidconfig|connectionstatus|restoreautojoin)
+    connectionconfig|probeconfig|avoidconfig|cooldownconfig|connectionstatus|restoreautojoin)
         case "$1:$#" in
-            connectionconfig:2|probeconfig:2|avoidconfig:2)
+            connectionconfig:2|probeconfig:2|avoidconfig:2|cooldownconfig:2)
                 case "$2" in ''|*[!a-zA-Z0-9+/=]*) exit 1 ;; esac
-                [ "${#2}" -le 12000 ] || exit 1
+                [ "${#2}" -le 24000 ] || exit 1
                 cws_action=${1%config}
                 [ "$cws_action" != connection ] || cws_action=configure ;;
             connectionstatus:1) cws_action=status ;;

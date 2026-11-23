@@ -146,6 +146,7 @@ public final class ColorOsWifiSense {
         public long epoch() { return epoch.get(); }
         public boolean monitoringAllowed() { return ColorOsWifiSense.this.monitoringAllowed(); }
         public boolean hasWifi() { return !connections.isEmpty(); }
+        public boolean cooldownExempt(WifiMonitor.Snapshot info) { return connectionConfig.cooldownExempt(info.ssid); }
         public void schedule(Runnable task, long delay) { handler.postDelayed(task, delay); }
         public void cancel(Runnable task) { handler.removeCallbacks(task); }
         public WifiMonitor.Snapshot readWifi() throws Exception {
@@ -410,7 +411,9 @@ public final class ColorOsWifiSense {
         try {
             WifiConnectionConfig next=WifiConnectionControl.load(stateDir);
             if(!next.sameProbe(connectionConfig)){cancelProbe();probePolicy.reset();}
+            boolean cooldownChanged=!next.cooldownExemptSsids.equals(connectionConfig.cooldownExemptSsids);
             connectionConfig=next;
+            if(cooldownChanged)monitor.cooldownRulesChanged();
             monitor.recoveryDb(next.recoveryDb);
             long pauseRemaining = Math.max(0,next.weakPauseUntil-System.currentTimeMillis());
             monitor.weakPauseUntil(pauseRemaining > 0 ? SystemClock.elapsedRealtime()+pauseRemaining : 0);
@@ -460,10 +463,15 @@ public final class ColorOsWifiSense {
         if(!connectionConfig.probeEnabled||!probeAllowed()||connections.isEmpty()||probePolicy.complete()
             ||(probeWorker!=null&&probeWorker.isAlive())||handler.hasCallbacks(probeTask))return;
         long wait=probePolicy.failures()==0?3000:connectionConfig.probeInterval*1000L;
-        handler.postDelayed(probeTask,Math.max(wait,monitor.cooldownUntil()-SystemClock.elapsedRealtime()));
+        WifiMonitor.Snapshot observed=monitor.last();
+        // The monitor resolves a new primary before this 3s task. Recheck its
+        // effective cooldown then, so an exempt reconnection is not delayed.
+        boolean newPrimary=primary!=null&&(observed==null||!Objects.equals(primary,observed.network));
+        handler.postDelayed(probeTask,Math.max(wait,newPrimary?0:monitor.cooldownUntil()-SystemClock.elapsedRealtime()));
     }
     private void runProbe() {
         if(!connectionConfig.probeEnabled||!probeAllowed()||connections.isEmpty())return;
+        if(monitor.cooldownUntil()>SystemClock.elapsedRealtime()){scheduleProbe();return;}
         try {
             WifiMonitor.Snapshot expected=new AndroidPort().readWifi(true);
             if(expected==null||!expected.valid())return;
@@ -668,6 +676,8 @@ public final class ColorOsWifiSense {
                 .put("updated_ms",System.currentTimeMillis()).put("state",monitor.state().name())
                 .put("interactive",interactive()).put("screen_off_enabled",connectionConfig.screenOffEnabled)
                 .put("wifi_connections",connections.size())
+                .put("current_ssid",last==null||WifiConnectionConfig.ssidName(last.ssid)==null
+                    ? JSONObject.NULL:WifiConnectionConfig.ssidName(last.ssid))
                 .put("threshold",monitor.threshold()).put("fluid_enabled",fluidEnabled)
                 .put("countdown_seconds",monitor.countdownMs()/1000)
                 .put("weak_pause_until",connectionConfig.weakPauseUntil)

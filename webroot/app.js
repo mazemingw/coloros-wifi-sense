@@ -29,10 +29,11 @@
   }
   function lock(value) {
     busy = value;
-    for (const id of ['refresh','weak-pause','weak-resume','weak-pause-minutes','save','threshold','recovery','save-recovery','screenoff','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-avoid','save-probe','restore-autojoin']) $(id).disabled=value;
+    for (const id of ['refresh','weak-pause','weak-resume','weak-pause-minutes','save','threshold','recovery','save-recovery','screenoff','fluid','countdown','save-countdown','band5g','avoid','avoid-seconds','probe','probe-url','probe-interval','save-avoid','save-probe','restore-autojoin','cooldown-ssids','save-cooldown','add-current']) $(id).disabled=value;
     if (!value && status && !status.fluid_installed) $('fluid').disabled=true;
     if (!value && (!band || (!band.supported && !band.requested && !band.restore_pending))) $('band5g').disabled=true;
     if (!value) $('weak-resume').disabled = !weakPauseActive();
+    if (!value) $('add-current').disabled = !status?.current_ssid;
   }
   function weakPauseActive() {
     return Number(connection?.weak_pause_until ?? 0) > Date.now();
@@ -73,6 +74,7 @@
     status=data;
     $('state').textContent=labels[data.state] || '状态未知';
     $('rssi').textContent=data.rssi == null ? '—' : String(data.rssi);
+    $('network-name').textContent=data.current_ssid || '当前 Wi-Fi';
     $('threshold').value=threshold(data.threshold); showThreshold();
     const seconds=Number(data.countdown_seconds ?? 7);
     $('countdown').value=Number.isInteger(seconds)&&seconds>=1&&seconds<=300?seconds:7;
@@ -117,6 +119,9 @@
       $('avoid-seconds').value=connection.avoid_seconds;
       $('avoid-help').textContent=[connection.error,status?.connection_error].filter(Boolean).join(' · ');
     }
+    if (!section || section === 'cooldown') {
+      $('cooldown-ssids').value=(connection.cooldown_exempt_ssids || []).join('\n');
+    }
     if (!section || section === 'probe') {
       $('probe').checked=!!connection.probe_enabled;
       $('probe-url').value=connection.probe_url;
@@ -145,6 +150,14 @@
       throw new Error('探测地址无效，不能包含账号密码或片段。');
     }
     return {probe_enabled: $('probe').checked, probe_interval: interval, probe_url: url.href};
+  }
+  function exemptNames() {
+    const names=[...new Set($('cooldown-ssids').value.split(/\r?\n/).filter(name=>name.length))];
+    if (names.length>32) throw new Error('最多填写 32 个 Wi-Fi 名称。');
+    if (names.some(name=>unescape(encodeURIComponent(name)).length>32 || /[\r\0]/.test(name))) {
+      throw new Error('每个 Wi-Fi 名称不能超过 32 字节，请填写完整名称。');
+    }
+    return names;
   }
   async function saveConnection(section, feedback) {
     let config;
@@ -188,6 +201,23 @@
     if (busy) return; $('threshold').value=b.dataset.threshold; showThreshold();
   }));
   $('refresh').addEventListener('click',() => action(refresh));
+  const cooldownFeedback=(text,error)=>settingFeedback('cooldown',text,error);
+  $('add-current').addEventListener('click',()=>{
+    if(busy||!status?.current_ssid)return;
+    try {
+      const names=exemptNames();
+      if(!names.includes(status.current_ssid))names.push(status.current_ssid);
+      if(names.length>32)throw new Error('最多填写 32 个 Wi-Fi 名称。');
+      $('cooldown-ssids').value=names.join('\n');
+      cooldownFeedback('已填入，请保存名单。');
+    } catch(error) { cooldownFeedback(error.message,true); }
+  });
+  $('save-cooldown').addEventListener('click',()=>action(async()=>{
+    const payload={cooldown_exempt_ssids:exemptNames()};
+    await exec('cooldownconfig '+btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
+    await refresh();
+    cooldownFeedback('名单已保存。');
+  },cooldownFeedback));
   const pauseFeedback = (text, error) => settingFeedback('weak-pause', text, error);
   $('weak-pause').addEventListener('click', () => action(async () => {
     const minutes = readNumber('weak-pause-minutes', 1, 1440, '暂停时长', '分钟');

@@ -26,10 +26,13 @@ final class WifiDisconnectPolicy {
     boolean recovered(int rssi, int currentThreshold) { return rssi >= currentThreshold + recoveryDb; }
 
     Decision sample(String currentBssid, int rssi, int currentThreshold, long now) {
+        return sample(currentBssid,rssi,currentThreshold,now,false);
+    }
+    Decision sample(String currentBssid,int rssi,int currentThreshold,long now,boolean skipCooldown) {
         boolean wasPending = pending();
         boolean sameSession = wasPending && Objects.equals(bssid, currentBssid) && threshold == currentThreshold;
         boolean strongEnough = sameSession ? recovered(rssi, currentThreshold) : rssi > currentThreshold;
-        if (currentBssid == null || strongEnough || now < nextDisconnectAt) {
+        if (currentBssid == null || strongEnough || (!skipCooldown && now < nextDisconnectAt)) {
             clear();
             return wasPending ? Decision.CANCEL : Decision.NONE;
         }
@@ -50,8 +53,11 @@ final class WifiDisconnectPolicy {
     }
 
     boolean eligible(String currentBssid, int rssi, int currentThreshold, long now, boolean immediate) {
+        return eligible(currentBssid,rssi,currentThreshold,now,immediate,false);
+    }
+    boolean eligible(String currentBssid,int rssi,int currentThreshold,long now,boolean immediate,boolean skipCooldown) {
         return pending() && Objects.equals(bssid, currentBssid) && threshold == currentThreshold
-            && !recovered(rssi, currentThreshold) && now >= nextDisconnectAt && (immediate || now >= deadline);
+            && !recovered(rssi, currentThreshold) && (skipCooldown || now >= nextDisconnectAt) && (immediate || now >= deadline);
     }
 
     void commit(long now) {

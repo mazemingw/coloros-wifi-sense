@@ -31,6 +31,7 @@ final class WifiMonitor {
         long epoch();
         boolean monitoringAllowed();
         boolean hasWifi();
+        default boolean cooldownExempt(Snapshot info) { return false; }
         Snapshot readWifi() throws Exception;
         Attempt disconnect(Snapshot expected, long epoch) throws Exception;
         default Attempt disconnect(Snapshot expected,long epoch,String reason)throws Exception{return disconnect(expected,epoch);}
@@ -58,7 +59,7 @@ final class WifiMonitor {
     private long dueAt, lastReadAt = Long.MIN_VALUE;
     private long weakPauseUntil;
     private int threshold = -80;
-    private Snapshot last, requested;
+    private Snapshot last, requested, lastDisconnected;
     private String requestedReason, lastDisconnectedBssid;
 
     WifiMonitor(Port port) { this.port = port; }
@@ -67,7 +68,12 @@ final class WifiMonitor {
     long countdownMs() { return policy.countdownMs(); }
     Snapshot last() { return last; }
     long deadline() { return policy.deadline(); }
-    long cooldownUntil() { return policy.cooldownUntil(); }
+    long cooldownUntil() { return skipCooldown(last) ? 0 : policy.cooldownUntil(); }
+    private boolean skipCooldown(Snapshot info) {
+        return info!=null && lastDisconnected!=null && !lastDisconnected.sameAp(info) && port.cooldownExempt(info);
+    }
+    private boolean coolingDown(Snapshot info) { return policy.coolingDown(port.now()) && !skipCooldown(info); }
+    void cooldownRulesChanged() { cancelPending("cooldown rules changed"); refresh(); }
     boolean hasSampleTask() { return scheduled; }
     boolean weakPaused() { return weakPauseUntil > port.now(); }
 
@@ -173,7 +179,7 @@ final class WifiMonitor {
     private void event(String kind) {
         if (stopped || !active || !configured || !port.hasWifi()) return;
         if (weakPaused()) return;
-        if (policy.coolingDown(port.now()) && !observeConnection) return;
+        if (coolingDown(last) && !observeConnection) return;
         if (!policy.pending()) state = State.SUSPECT;
         long earliest = lastReadAt == Long.MIN_VALUE ? 0 : Math.max(0, lastReadAt + VERIFY_MS - port.now());
         request(Math.max(EVENT_DEBOUNCE_MS, earliest), true);
@@ -219,7 +225,7 @@ final class WifiMonitor {
             cancelPending("no Wi-Fi"); state = State.NO_WIFI; last = null; return;
         }
         try {
-            if (policy.coolingDown(port.now()) && !observeConnection && !forceRead) { next(); return; }
+            if (coolingDown(last) && !observeConnection && !forceRead) { next(); return; }
             long generation = port.epoch();
             Snapshot info = read();
             forceRead = false;
@@ -229,7 +235,8 @@ final class WifiMonitor {
                 metrics.staleSuppressed++; request(VERIFY_MS, true); return;
             }
             if (info == null) { cancelPending("invalid Wi-Fi state"); last = null; next(); return; }
-            if (policy.coolingDown(port.now())) {
+            if (coolingDown(info)) {
+                cancelPending("disconnect cooldown");
                 if (observeConnection && Objects.equals(lastDisconnectedBssid, info.bssid) && info.rssi <= threshold)
                     metrics.weakReconnects++;
                 last = info; observeConnection = false; next(); return;
@@ -238,7 +245,7 @@ final class WifiMonitor {
             if (last != null && (!Objects.equals(last.network, info.network) || !Objects.equals(last.bssid, info.bssid)))
                 cancelPending("AP identity change");
             last = info;
-            WifiDisconnectPolicy.Decision d = policy.sample(info.bssid, info.rssi, threshold, port.now());
+            WifiDisconnectPolicy.Decision d = policy.sample(info.bssid, info.rssi, threshold, port.now(),skipCooldown(info));
             if (d == WifiDisconnectPolicy.Decision.WARN) {
                 metrics.countdownStarts++; port.warn(info, threshold, policy.deadline());
             } else if (d == WifiDisconnectPolicy.Decision.DISCONNECT) {
@@ -271,7 +278,7 @@ final class WifiMonitor {
             if (weakPaused()) return false;
             if (generation != port.epoch()) { metrics.staleSuppressed++; return false; }
             if (fresh == null || last == null || !Objects.equals(last.network, fresh.network)
-                    || !policy.eligible(fresh.bssid, fresh.rssi, threshold, port.now(), manual)) {
+                    || !policy.eligible(fresh.bssid, fresh.rssi, threshold, port.now(), manual,skipCooldown(fresh))) {
                 cancelPending("final state changed"); return false;
             }
             return submit(fresh,generation,manual?"manual":"auto");
@@ -282,7 +289,7 @@ final class WifiMonitor {
 
     boolean offlineConfirmed(Snapshot expected,long generation) {
         if(stopped||!active||!configured||weakPaused()||!port.monitoringAllowed())return false;
-        if(!port.hasWifi()||generation!=port.epoch()||policy.coolingDown(port.now()))return false;
+        if(!port.hasWifi()||generation!=port.epoch()||coolingDown(expected))return false;
         try {
             Snapshot fresh=read();
             if(!port.monitoringAllowed()){pause();return false;}
@@ -305,6 +312,7 @@ final class WifiMonitor {
             metrics.disconnectAttempts++;
             metrics.lastDisconnect = "auto".equals(reason)?"countdown":reason;
             lastDisconnectedBssid = fresh.bssid;
+            lastDisconnected = fresh;
             if (result == Attempt.ACCEPTED) {
                 metrics.disconnectAccepted++;
                 requested = fresh; requestedReason = reason;
@@ -328,7 +336,7 @@ final class WifiMonitor {
         if (weakPaused()) {
             state = State.WEAK_PAUSED;
             request(weakPauseUntil - port.now(),false);
-        } else if (policy.coolingDown(port.now())) {
+        } else if (coolingDown(last)) {
             state = State.COOLDOWN;
             request(Math.max(1, policy.cooldownUntil() - port.now()), false);
         } else if (policy.pending()) {

@@ -12,7 +12,7 @@ const initial={state:'IDLE',threshold:-80,rssi:-63,interactive:true,wifi_connect
 const drain=()=>new Promise(resolve=>setImmediate(resolve));
 async function fixture(options={}){
   const elements={},buttons=[-75,-80,-85,-90].map(n=>{const e=new Element();e.dataset.threshold=String(n);return e;});
-  const ids=['weak-pause-minutes','weak-pause','weak-resume','weak-pause-status','weak-pause-feedback','message','refresh','save','threshold','fluid','threshold-value','state','rssi','fluid-help','updated','state-detail','metrics','countdown','save-countdown','threshold-help','recovery','save-recovery','recovery-help','recovery-feedback','screenoff','screenoff-feedback','band5g','band-help','avoid','avoid-seconds','probe','probe-url','probe-interval','save-probe','save-avoid','restore-autojoin','connection-help','avoid-help','probe-feedback','avoid-feedback'];
+  const ids=['network-name','cooldown-ssids','save-cooldown','add-current','cooldown-feedback','weak-pause-minutes','weak-pause','weak-resume','weak-pause-status','weak-pause-feedback','message','refresh','save','threshold','fluid','threshold-value','state','rssi','fluid-help','updated','state-detail','metrics','countdown','save-countdown','threshold-help','recovery','save-recovery','recovery-help','recovery-feedback','screenoff','screenoff-feedback','band5g','band-help','avoid','avoid-seconds','probe','probe-url','probe-interval','save-probe','save-avoid','restore-autojoin','connection-help','avoid-help','probe-feedback','avoid-feedback'];
   for(const id of ids)elements[id]=new Element();elements.threshold.value='-80';
   let data={...initial,...options.data};let band={requested:false,supported:true,applied:false,mask:7,message:'当前允许系统选择频段。',...options.band};const config={weak_pause_minutes:30,weak_pause_until:0,screen_off_enabled:false,recovery_db:3,avoid_enabled:false,avoid_seconds:300,probe_enabled:false,probe_interval:30,probe_url:'http://connect.rom.miui.com/generate_204',...options.config};const calls=[];let failure=null;
   let clock=Date.now();
@@ -36,7 +36,7 @@ async function fixture(options={}){
     const args=command.split(' ').slice(2);
     queueMicrotask(()=>{
       if(failure)return window[callback](1,'',failure);
-      if(['probeconfig','avoidconfig'].includes(args[0]))Object.assign(config,JSON.parse(Buffer.from(args[1],'base64').toString('utf8')));
+      if(['probeconfig','avoidconfig','cooldownconfig'].includes(args[0]))Object.assign(config,JSON.parse(Buffer.from(args[1],'base64').toString('utf8')));
       if(args[0]==='weakpause'){config.weak_pause_minutes=Number(args[1]);config.weak_pause_until=clock+Number(args[1])*60000;}
       if(args[0]==='weakresume')config.weak_pause_until=0;
       if(args[0]==='screenoff')config.screen_off_enabled=args[1]==='1';
@@ -57,6 +57,36 @@ async function fixture(options={}){
   const test=async(name,f)=>{await f();passed++;console.log('PASS '+name);};
   await test('initial status only, no background polling',async()=>{const f=await fixture();assert.equal(f.calls.length,3);await drain();assert.equal(f.calls.length,3);assert.equal(f.elements.rssi.textContent,'-63');assert.equal(f.elements.message.textContent,'');assert.match(f.elements['threshold-help'].textContent,/7 秒/);});
   await test('dual WLAN shows primary monitoring and RSSI',async()=>{const f=await fixture({data:{wifi_connections:2}});assert.equal(f.elements.state.textContent,'正常监控');assert.equal(f.elements.rssi.textContent,'-63');assert.equal(f.elements['state-detail'].textContent,'正在检测主 Wi-Fi。');});
+  await test('current Wi-Fi can be added once without saving implicitly',async()=>{
+    const f=await fixture({data:{current_ssid:'我的车机'}});
+    assert.equal(f.elements['network-name'].textContent,'我的车机');
+    await f.elements['add-current'].fire('click');await f.elements['add-current'].fire('click');
+    assert.equal(f.elements['cooldown-ssids'].value,'我的车机');assert.equal(f.calls.length,3);
+  });
+  await test('cooldown names save independently and preserve significant spaces',async()=>{
+    const f=await fixture({config:{avoid_enabled:true}});
+    f.elements['cooldown-ssids'].value='Car WiFi\n我的车机\n Car \nCar WiFi';
+    await f.elements['save-cooldown'].fire('click');
+    assert.match(f.calls[3],/cooldownconfig [A-Za-z0-9+/=]+$/);
+    assert.deepEqual(f.config.cooldown_exempt_ssids,['Car WiFi','我的车机',' Car ']);
+    assert.equal(f.config.avoid_enabled,true);assert.equal(f.config.probe_enabled,false);
+    assert.match(f.elements['cooldown-feedback'].textContent,/已保存/);
+  });
+  await test('invalid cooldown names never reach root; empty list clears rules',async()=>{
+    for(const names of ['车'.repeat(11),Array.from({length:33},(_,i)=>'car'+i).join('\n')]) {
+      const f=await fixture();f.elements['cooldown-ssids'].value=names;
+      await f.elements['save-cooldown'].fire('click');assert.equal(f.calls.length,3);
+      assert.ok(f.elements['cooldown-feedback'].classes.has('error'));
+    }
+    const f=await fixture({config:{cooldown_exempt_ssids:['Car']}});f.elements['cooldown-ssids'].value='';
+    await f.elements['save-cooldown'].fire('click');assert.deepEqual(f.config.cooldown_exempt_ssids,[]);
+  });
+  await test('secondary groups use native collapsed panels without extra requests',async()=>{
+    const html=fs.readFileSync(require('node:path').join(__dirname,'../webroot/index.html'),'utf8');
+    assert.match(html,/<summary>连接与重连/);assert.match(html,/<summary>运行与提醒/);
+    assert.doesNotMatch(html,/<details[^>]*\bopen\b/);
+    const f=await fixture();assert.equal(f.elements['add-current'].disabled,true);assert.equal(f.calls.length,3);
+  });
   await test('no WLAN still shows connection guidance',async()=>{const f=await fixture({data:{wifi_connections:0,state:'NO_WIFI',rssi:null}});assert.equal(f.elements.rssi.textContent,'—');assert.equal(f.elements['state-detail'].textContent,'连接 Wi-Fi 后开始检测。');});
   await test('preset saves validated threshold then refreshes',async()=>{const f=await fixture();await f.buttons[2].fire('click');assert.equal(f.calls.length,3);await f.elements.save.fire('click');assert.equal(f.data.threshold,-85);assert.match(f.calls[3],/threshold -85$/);});
   await test('invalid threshold cannot reach root bridge',async()=>{const f=await fixture();f.elements.threshold.value='-80; id';await f.elements.save.fire('click');assert.equal(f.calls.length,3);assert.match(f.elements.message.textContent,/阈值必须/);});

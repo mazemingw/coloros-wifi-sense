@@ -24,6 +24,25 @@ public final class WifiConnectionTest {
         boolean on(int id){for(WifiSsidGuard.Config c:configs)if(c.id==id)return c.autojoin;throw new AssertionError();}
     }
     public static void main(String[] args)throws Exception {
+        test("cooldown SSID rules match complete names without changing probe settings",()->{
+            WifiConnectionConfig base=WifiConnectionConfig.defaults();
+            WifiConnectionConfig c=new WifiConnectionConfig(false,300,false,30,base.probeUrl,false,3,30,0,Arrays.asList("我的车机","Car WiFi","Car WiFi"));
+            check(c.cooldownExempt("\"我的车机\"")&&c.cooldownExempt("\"Car WiFi\"")&&c.cooldownExemptSsids.size()==2,"name normalization");
+            check(!c.cooldownExempt("\"Car\"")&&!c.cooldownExempt("\"car wifi\"")&&!c.cooldownExempt(null)&&!c.cooldownExempt("<unknown ssid>"),"broad match");
+            check(!c.equals(base)&&c.sameProbe(base)&&base.cooldownExemptSsids.isEmpty(),"old defaults or probe changed");
+            try{c.cooldownExemptSsids.add("other");throw new AssertionError("mutable");}catch(UnsupportedOperationException expected){}
+        });
+        test("cooldown names preserve spaces and validate UTF-8 byte limits",()->{
+            WifiConnectionConfig base=WifiConnectionConfig.defaults();
+            WifiConnectionConfig c=new WifiConnectionConfig(false,300,false,30,base.probeUrl,false,3,30,0,Arrays.asList(" Car "));
+            check(c.cooldownExempt("\" Car \"")&&!c.cooldownExempt("\"Car\""),"spaces lost");
+            for(String name:Arrays.asList("",String.join("",Collections.nCopies(11,"车")),"car\nother","car\r","car\0")) {
+                try{new WifiConnectionConfig(false,300,false,30,base.probeUrl,false,3,30,0,Arrays.asList(name));throw new AssertionError("invalid name");}
+                catch(IllegalArgumentException expected){}
+            }
+            try{new WifiConnectionConfig(false,300,false,30,base.probeUrl,false,3,30,0,Collections.nCopies(33,"car"));throw new AssertionError("too many");}
+            catch(IllegalArgumentException expected){}
+        });
         test("defaults opt out of network requests and SSID mutation",()->{WifiConnectionConfig c=WifiConnectionConfig.defaults();check(!c.probeEnabled&&!c.avoidEnabled&&!c.screenOffEnabled&&c.avoidSeconds==300&&c.recoveryDb==3,"defaults");});
         test("invalid durations and probe URLs rejected",()->{
             int rejected=0;for(String url:new String[]{"file:///data/a","http://user:pass@example.com/","http://example.com/#x","garbage"})try{new WifiConnectionConfig(true,300,true,30,url,false,3);}catch(IllegalArgumentException e){rejected++;}

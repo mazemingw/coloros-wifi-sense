@@ -14,21 +14,32 @@ public final class WifiConnectionControl {
     static WifiConnectionConfig load(File dir)throws Exception {
         File file=new File(dir,"connection.json");
         if(!file.exists())return WifiConnectionConfig.defaults();
-        return parse(new JSONObject(read(file,8192)));
+        return parse(new JSONObject(read(file,16384)));
     }
     private static WifiConnectionConfig parse(JSONObject j)throws Exception {
+        List<String> exempt=new ArrayList<>();
+        if(j.has("cooldown_exempt_ssids")) {
+            JSONArray names=j.getJSONArray("cooldown_exempt_ssids");
+            if(names.length()>32)throw new IOException("冷却例外最多填写 32 个 Wi-Fi 名称。");
+            for(int i=0;i<names.length();i++) {
+                Object name=names.get(i);
+                if(!(name instanceof String))throw new IOException("Wi-Fi 名称必须是文字。");
+                exempt.add((String)name);
+            }
+        }
         return new WifiConnectionConfig(j.getBoolean("avoid_enabled"),j.getInt("avoid_seconds"),
             j.getBoolean("probe_enabled"),j.getInt("probe_interval"),j.getString("probe_url"),
             j.has("screen_off_enabled") && j.getBoolean("screen_off_enabled"),
             j.has("recovery_db") ? j.getInt("recovery_db") : WifiDisconnectPolicy.DEFAULT_RECOVERY_DB,
             j.has("weak_pause_minutes") ? j.getInt("weak_pause_minutes") : 30,
-            j.has("weak_pause_until") ? j.getLong("weak_pause_until") : 0);
+            j.has("weak_pause_until") ? j.getLong("weak_pause_until") : 0,exempt);
     }
     static JSONObject json(WifiConnectionConfig c)throws Exception {
         return new JSONObject().put("avoid_enabled",c.avoidEnabled).put("avoid_seconds",c.avoidSeconds)
             .put("probe_enabled",c.probeEnabled).put("probe_interval",c.probeInterval).put("probe_url",c.probeUrl)
             .put("screen_off_enabled",c.screenOffEnabled).put("recovery_db",c.recoveryDb)
-            .put("weak_pause_minutes",c.weakPauseMinutes).put("weak_pause_until",c.weakPauseUntil);
+            .put("weak_pause_minutes",c.weakPauseMinutes).put("weak_pause_until",c.weakPauseUntil)
+            .put("cooldown_exempt_ssids",new JSONArray(c.cooldownExemptSsids));
     }
     private static String read(File file,int max)throws IOException {
         if(!file.isFile()||file.length()>max)throw new IOException("配置/还原文件无效或过大："+file.getName());
@@ -118,8 +129,8 @@ public final class WifiConnectionControl {
             if(Process.myUid()!=0||args.length<2)throw new IllegalArgumentException("Root/state/action required");
             File dir=new File(args[0]);if(!dir.isDirectory())throw new IOException("模块配置目录不存在。");
             String action=args[1];
-            if(("configure".equals(action)||"probe".equals(action)||"avoid".equals(action))&&args.length==3) {
-                if(args[2].length()>12000||!args[2].matches("[A-Za-z0-9+/=]+"))throw new IOException("设置编码无效。");
+            if(("configure".equals(action)||"probe".equals(action)||"avoid".equals(action)||"cooldown".equals(action))&&args.length==3) {
+                if(args[2].length()>24000||!args[2].matches("[A-Za-z0-9+/=]+"))throw new IOException("设置编码无效。");
                 JSONObject j=new JSONObject(new String(Base64.decode(args[2],Base64.DEFAULT),"UTF-8"));
                 saveSettings(dir,action,j);
                 System.out.println("设置已保存。");
@@ -164,6 +175,7 @@ public final class WifiConnectionControl {
                     String key = keys.next();
                     if ("probe".equals(action) && !key.startsWith("probe_")) continue;
                     if ("avoid".equals(action) && !key.startsWith("avoid_")) continue;
+                    if ("cooldown".equals(action) && !"cooldown_exempt_ssids".equals(key)) continue;
                     saved.put(key,values.get(key));
                 }
                 next = parse(saved);

@@ -4,7 +4,7 @@ public final class WifiMonitorTest {
     static int passed;
     static class Fake implements WifiMonitor.Port {
         long time, generation;
-        boolean on=true, wifi=true, valid=true, ui=true, screenOffEnabled;
+        boolean on=true, wifi=true, valid=true, ui=true, screenOffEnabled, exempt;
         String ap="ap-a"; Object network="net-a";
         int rssi=-60, attempts, starts, stops, results, pauseExpirations;
         boolean feedback, resultVisible;
@@ -14,6 +14,7 @@ public final class WifiMonitorTest {
         final WifiMonitor monitor=new WifiMonitor(this);
         public long now(){return time;} public long epoch(){return generation;}
         public boolean monitoringAllowed(){return on||screenOffEnabled;} public boolean hasWifi(){return wifi;}
+        public boolean cooldownExempt(WifiMonitor.Snapshot info){return exempt;}
         public WifiMonitor.Snapshot readWifi(){
             WifiMonitor.Snapshot s=valid&&wifi?new WifiMonitor.Snapshot(network,ap,rssi):null;
             if(duringRead!=null){Runnable r=duringRead;duringRead=null;r.run();}
@@ -140,6 +141,47 @@ public final class WifiMonitorTest {
             check(f.results==1&&f.tasks.isEmpty(),"disconnect confirmation");
             f.advance(7500);f.topology(true);f.advance(8000);long reads=f.monitor.metrics.rssiReads;
             f.advance(66000);check(f.attempts==1&&f.monitor.metrics.rssiReads==reads,"cooldown polled");
+        });
+        test("exempt car reconnects within cooldown and starts a fresh weak countdown",()->{
+            Fake f=new Fake();f.exempt=true;f.rssi=-90;f.start();f.advance(7000);f.topology(false);
+            f.advance(8000);f.network="car-rejoined";f.topology(true);f.advance(9000);
+            long deadline=f.monitor.deadline();
+            check(deadline>9000&&deadline<67000&&f.monitor.cooldownUntil()==0,"cooldown did not yield");
+            f.advance(deadline-1);check(f.attempts==1,"skipped countdown");
+            f.advance(deadline);check(f.attempts==2,"car was not disconnected again");
+        });
+        test("exempt strong reconnect stays connected and recovery still cancels",()->{
+            Fake f=new Fake();f.exempt=true;f.rssi=-90;f.start();f.advance(7000);f.topology(false);
+            f.network="car-rejoined";f.rssi=-60;f.topology(true);f.advance(9000);
+            check(f.monitor.state()==WifiMonitor.State.IDLE&&f.attempts==1,"strong car disconnected");
+            f.rssi=-90;f.event();f.advance(10000);check(f.monitor.deadline()>0,"weak recheck missing");
+            f.rssi=-60;f.event();f.advance(30000);check(f.attempts==1&&f.monitor.deadline()==0,"recovery bypassed");
+        });
+        test("exemption does not repeat rejected requests on an unchanged connection",()->{
+            Fake f=new Fake();f.exempt=true;f.reply=WifiMonitor.Attempt.REJECTED;f.rssi=-90;f.start();
+            f.advance(30000);check(f.attempts==1&&f.monitor.state()==WifiMonitor.State.COOLDOWN,"radio request loop");
+        });
+        test("removing exemption restores existing cooldown without clearing protection",()->{
+            Fake f=new Fake();f.exempt=true;f.rssi=-90;f.start();f.advance(7000);f.topology(false);
+            f.network="car-rejoined";f.topology(true);f.advance(9000);check(f.monitor.deadline()>0,"missing countdown");
+            f.exempt=false;f.monitor.cooldownRulesChanged();f.advance(30000);
+            check(f.attempts==1&&f.monitor.deadline()==0&&f.monitor.state()==WifiMonitor.State.COOLDOWN,"removed rule still exempt");
+        });
+        test("exemption keeps screen-off and BSSID checks",()->{
+            Fake f=new Fake();f.exempt=true;f.rssi=-90;f.start();f.advance(7000);f.topology(false);
+            f.network="car-rejoined";f.topology(true);f.advance(9000);f.ap="other-ap";
+            check(!f.monitor.immediate()&&f.attempts==1,"wrong BSSID cut");
+            f.screen(false);f.advance(60000);check(f.attempts==1&&!f.monitor.hasSampleTask(),"screen gate bypassed");
+        });
+        test("unlisted reconnect keeps normal cooldown",()->{
+            Fake f=new Fake();f.rssi=-90;f.start();f.advance(7000);f.topology(false);
+            f.network="new-net";f.topology(true);f.advance(30000);
+            check(f.attempts==1&&f.monitor.state()==WifiMonitor.State.COOLDOWN,"normal cooldown regressed");
+        });
+        test("offline confirmation can re-evaluate an exempt reconnected network",()->{
+            Fake f=new Fake();f.exempt=true;f.rssi=-90;f.start();f.advance(7000);f.topology(false);
+            f.network="car-rejoined";f.rssi=-60;f.topology(true);f.advance(9000);
+            check(f.monitor.offlineConfirmed(f.readWifi(),f.generation)&&f.attempts==2,"offline cooldown not scoped");
         });
         test("weak same AP reconnect counted without rapid redisconnect",()->{
             Fake f=new Fake();f.rssi=-90;f.start();f.advance(7000);f.topology(false);f.topology(true);f.advance(8000);
